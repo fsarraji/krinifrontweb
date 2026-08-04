@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
+import Dropdown from './Dropdown';
 import api from '../api';
 import { jwtDecode } from 'jwt-decode';
 
@@ -432,16 +433,16 @@ const ReservationForm = () => {
                                 </div>
                                 <div className="col-span-1 md:col-span-2 lg:col-span-3">
                                     <label className="block text-[10px] uppercase tracking-wider font-bold text-on-surface-variant mb-2 ml-1">Mode de Paiement (Avance)</label>
-                                    <select 
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3.5 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none hover:bg-slate-100 cursor-pointer appearance-none"
+                                    <Dropdown
+                                        options={[
+                                            { value: 'Espèce', label: 'Espèce' },
+                                            { value: 'Chèque', label: 'Chèque' },
+                                            { value: 'TPE', label: 'TPE' },
+                                            { value: 'Virement', label: 'Virement' }
+                                        ]}
                                         value={formData.methode_paiement}
-                                        onChange={(e) => setFormData({...formData, methode_paiement: e.target.value})}
-                                    >
-                                        <option value="Espèce">Espèce</option>
-                                        <option value="Chèque">Chèque</option>
-                                        <option value="TPE">TPE</option>
-                                        <option value="Virement">Virement</option>
-                                    </select>
+                                        onChange={(v) => setFormData({...formData, methode_paiement: v})}
+                                    />
                                 </div>
                             </div>
                             

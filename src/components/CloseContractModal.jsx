@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import FuelGaugeSelector from './FuelGaugeSelector';
 import DamageSelector from './DamageSelector';
+import Dropdown from './Dropdown';
 import axios from 'axios';
 
 const STEPS = [
@@ -459,16 +460,16 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                         </div>
                         <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Mode de Paiement</label>
-                            <select
+                            <Dropdown
+                                options={[
+                                    { value: 'Espèce', label: 'Espèce' },
+                                    { value: 'Chèque', label: 'Chèque' },
+                                    { value: 'Virement', label: 'Virement' },
+                                    { value: 'TPE', label: 'TPE' }
+                                ]}
                                 value={paymentMethod}
-                                onChange={e => setPaymentMethod(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none"
-                            >
-                                <option value="Espèce">Espèce</option>
-                                <option value="Chèque">Chèque</option>
-                                <option value="Virement">Virement</option>
-                                <option value="TPE">TPE</option>
-                            </select>
+                                onChange={(v) => setPaymentMethod(v)}
+                            />
                         </div>
                     </div>
                 </div>

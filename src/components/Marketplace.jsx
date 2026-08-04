@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { resolveImage } from '../imageUrl';
+import Dropdown from './Dropdown';
 
 const Marketplace = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -101,16 +103,16 @@ const Marketplace = () => {
               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">Vehicle Category</label>
               <div className="bg-slate-50 flex items-center px-4 py-3 rounded-lg border-b-2 border-transparent focus-within:border-[#00236f] transition-all">
                 <span className="material-symbols-outlined text-slate-400 mr-2">directions_car</span>
-                <select 
-                  className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium appearance-none"
+                <Dropdown
+                  options={[
+                    { value: 'All Vehicles', label: 'All Vehicles' },
+                    { value: 'Luxury Sedan', label: 'Luxury Sedan' },
+                    { value: 'Premium SUV', label: 'Premium SUV' },
+                    { value: 'Sports Coupe', label: 'Sports Coupe' }
+                  ]}
                   value={filters.category}
-                  onChange={(e) => setFilters({...filters, category: e.target.value})}
-                >
-                  <option>All Vehicles</option>
-                  <option>Luxury Sedan</option>
-                  <option>Premium SUV</option>
-                  <option>Sports Coupe</option>
-                </select>
+                  onChange={(v) => setFilters({...filters, category: v})}
+                />
               </div>
             </div>
             <button className="bg-[#00236f] hover:bg-[#1e3a8a] text-white px-8 py-3.5 rounded-lg font-bold transition-all h-[50px] flex items-center gap-2">
@@ -168,11 +170,22 @@ const Marketplace = () => {
               <p className="text-sm text-slate-500">Showing <span className="font-bold text-slate-900">{filteredVehicles.length} luxury vehicles</span> available</p>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase font-bold text-slate-400">Sort by</span>
-                <select className="text-sm font-bold bg-transparent border-none focus:ring-0 py-0 cursor-pointer">
-                  <option>Relevance</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                </select>
+                <Dropdown
+                  options={[
+                    { value: 'Relevance', label: 'Relevance' },
+                    { value: 'Price: Low to High', label: 'Price: Low to High' },
+                    { value: 'Price: High to Low', label: 'Price: High to Low' }
+                  ]}
+                  defaultValue={{ value: 'Relevance', label: 'Relevance' }}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: '36px',
+                      padding: '0 4px'
+                    })
+                  }}
+                  className="w-48"
+                />
               </div>
             </div>
 
@@ -185,11 +198,12 @@ const Marketplace = () => {
                 {filteredVehicles.map(vehicle => (
                   <div key={vehicle.id} className="group bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
                     <div className="relative h-64 overflow-hidden bg-slate-100">
-                      {vehicle.image ? (
+                      {resolveImage(vehicle.image) ? (
                         <img 
                           alt={vehicle.modele_name} 
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                          src={vehicle.image}
+                          src={resolveImage(vehicle.image)}
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-400">

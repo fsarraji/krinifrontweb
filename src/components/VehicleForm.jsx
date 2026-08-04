@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 // Force Vercel redeploy - fix vehicle edit image issue
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Select from 'react-select';
+import Dropdown from './Dropdown';
 import api from '../api';
 
 const VehicleForm = () => {
@@ -333,17 +334,17 @@ const VehicleForm = () => {
                             </div>
                             <div className="space-y-1">
                                 <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Carburant</label>
-                                <select 
+                                <Dropdown
                                     name="carburant"
+                                    options={[
+                                        { value: 'Diesel', label: 'Diesel' },
+                                        { value: 'Essence', label: 'Essence' },
+                                        { value: 'Hybride', label: 'Hybride' },
+                                        { value: 'Electrique', label: 'Électrique' }
+                                    ]}
                                     value={formData.carburant}
-                                    onChange={handleChange}
-                                    className="w-full bg-slate-50 border-b-2 border-slate-200 border-t-0 border-l-0 border-r-0 py-3.5 px-4 font-manrope text-lg font-semibold text-slate-900 focus:ring-0 focus:border-primary focus:bg-white transition-all appearance-none"
-                                >
-                                    <option value="Diesel">Diesel</option>
-                                    <option value="Essence">Essence</option>
-                                    <option value="Hybride">Hybride</option>
-                                    <option value="Electrique">Électrique</option>
-                                </select>
+                                    onChange={(v) => handleChange({ target: { name: 'carburant', value: v } })}
+                                />
                             </div>
                             <div className="space-y-1">
                                 <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Couleur</label>

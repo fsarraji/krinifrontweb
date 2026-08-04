@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select';
+import Dropdown from './Dropdown';
 import api from '../api';
 
 const EditContract = () => {
@@ -406,16 +407,16 @@ const EditContract = () => {
                             
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Méthode de Paiement <span className="text-error">*</span></label>
-                                <select 
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-700 font-medium"
+                                <Dropdown
+                                    options={[
+                                        { value: 'Espèce', label: 'Espèce (Cash)' },
+                                        { value: 'TPE', label: 'Carte Bancaire (TPE)' },
+                                        { value: 'Virement', label: 'Virement Bancaire' },
+                                        { value: 'Chèque', label: 'Chèque' }
+                                    ]}
                                     value={paymentFormData.payment_method}
-                                    onChange={(e) => setPaymentFormData({...paymentFormData, payment_method: e.target.value})}
-                                >
-                                    <option value="Espèce">Espèce (Cash)</option>
-                                    <option value="TPE">Carte Bancaire (TPE)</option>
-                                    <option value="Virement">Virement Bancaire</option>
-                                    <option value="Chèque">Chèque</option>
-                                </select>
+                                    onChange={(v) => setPaymentFormData({...paymentFormData, payment_method: v})}
+                                />
                             </div>
 
                             <div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
+import Dropdown from './Dropdown';
 import api from '../api';
 import { jwtDecode } from 'jwt-decode';
 import DamageSelector from './DamageSelector';
@@ -503,16 +504,16 @@ const ContractForm = () => {
                                     </div>
                                     <div>
                                         <label className="block text-[10px] uppercase tracking-wider font-bold text-on-surface-variant mb-2 ml-1">Mode de Paiement</label>
-                                        <select 
-                                            className="w-full bg-surface-container-low border-none rounded-lg p-3 text-sm font-bold focus:ring-2 focus:ring-primary/20 appearance-none"
+                                        <Dropdown
+                                            options={[
+                                                { value: 'Espèce', label: 'Espèce' },
+                                                { value: 'Chèque', label: 'Chèque' },
+                                                { value: 'TPE', label: 'TPE' },
+                                                { value: 'Virement', label: 'Virement' }
+                                            ]}
                                             value={formData.methode_paiement || 'Espèce'}
-                                            onChange={(e) => setFormData({...formData, methode_paiement: e.target.value})}
-                                        >
-                                            <option value="Espèce">Espèce</option>
-                                            <option value="Chèque">Chèque</option>
-                                            <option value="TPE">TPE</option>
-                                            <option value="Virement">Virement</option>
-                                        </select>
+                                            onChange={(v) => setFormData({...formData, methode_paiement: v})}
+                                        />
                                     </div>
                                 </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import Dropdown from './Dropdown';
 
 const AgencyManagement = () => {
     const [agencies, setAgencies] = useState([]);
@@ -169,14 +170,14 @@ const AgencyManagement = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Statut</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                        value={currentAgency.is_active}
-                                        onChange={e => setCurrentAgency({...currentAgency, is_active: e.target.value === 'true'})}
-                                    >
-                                        <option value="true">Actif</option>
-                                        <option value="false">Inactif</option>
-                                    </select>
+                                    <Dropdown
+                                        options={[
+                                            { value: 'true', label: 'Actif' },
+                                            { value: 'false', label: 'Inactif' }
+                                        ]}
+                                        value={currentAgency.is_active ? 'true' : 'false'}
+                                        onChange={(v) => setCurrentAgency({...currentAgency, is_active: v === 'true'})}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">RC</label>

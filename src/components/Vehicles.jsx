@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import SearchFilterBar from './SearchFilterBar';
+import { resolveImage } from '../imageUrl';
 
 const Vehicles = () => {
     const [vehicles, setVehicles] = useState([]);
@@ -136,6 +137,7 @@ const Vehicles = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/80 border-b border-slate-100">
+                                <th className="px-6 py-4 font-label text-xs font-bold uppercase tracking-wider text-slate-500">Photo</th>
                                 <th className="px-6 py-4 font-label text-xs font-bold uppercase tracking-wider text-slate-500">Matricule</th>
                                 <th className="px-6 py-4 font-label text-xs font-bold uppercase tracking-wider text-slate-500">Marque & Modèle</th>
                                 <th className="px-6 py-4 font-label text-xs font-bold uppercase tracking-wider text-slate-500">Année</th>
@@ -149,6 +151,15 @@ const Vehicles = () => {
                         <tbody className="divide-y divide-slate-50">
                             {filteredVehicles.map(vehicle => (
                                 <tr key={vehicle.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-5">
+                                        {resolveImage(vehicle.image) ? (
+                                            <img src={resolveImage(vehicle.image)} alt={vehicle.matricule} className="w-16 h-12 rounded-lg object-cover border border-slate-100" />
+                                        ) : (
+                                            <div className="w-16 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300">
+                                                <span className="material-symbols-outlined text-xl">directions_car</span>
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-5">
                                         <span className="font-mono text-sm font-bold bg-blue-50 px-2 py-1 rounded text-primary">{vehicle.matricule}</span>
                                     </td>
@@ -188,7 +199,7 @@ const Vehicles = () => {
                             ))}
                             {filteredVehicles.length === 0 && (
                                 <tr>
-                                    <td colSpan="8" className="px-6 py-10 text-center text-slate-400">Aucun véhicule trouvé.</td>
+                                    <td colSpan="9" className="px-6 py-10 text-center text-slate-400">Aucun véhicule trouvé.</td>
                                 </tr>
                             )}
                         </tbody>

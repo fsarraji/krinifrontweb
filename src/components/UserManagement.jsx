@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import Dropdown from './Dropdown';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -199,27 +200,25 @@ const UserManagement = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Agence</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                    <Dropdown
+                                        options={[
+                                            { value: '', label: '-- Aucune (Super Admin) --' },
+                                            ...agencies.map(a => ({ value: String(a.id), label: a.nom_agence }))
+                                        ]}
                                         value={currentUser.agency || ''}
-                                        onChange={e => setCurrentUser({...currentUser, agency: e.target.value})}
-                                    >
-                                        <option value="">-- Aucune (Super Admin) --</option>
-                                        {agencies.map(a => (
-                                            <option key={a.id} value={a.id}>{a.nom_agence}</option>
-                                        ))}
-                                    </select>
+                                        onChange={(v) => setCurrentUser({...currentUser, agency: v || ''})}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Rôle</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                    <Dropdown
+                                        options={[
+                                            { value: 'OWNER', label: 'Propriétaire Agence' },
+                                            { value: 'EMPLOYEE', label: 'Employé' }
+                                        ]}
                                         value={currentUser.role}
-                                        onChange={e => setCurrentUser({...currentUser, role: e.target.value})}
-                                    >
-                                        <option value="OWNER">Propriétaire Agence</option>
-                                        <option value="EMPLOYEE">Employé</option>
-                                    </select>
+                                        onChange={(v) => setCurrentUser({...currentUser, role: v})}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Mot de passe {isEditing && '(laisser vide pour ne pas changer)'}</label>
@@ -233,14 +232,14 @@ const UserManagement = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Statut</label>
-                                    <select 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                        value={currentUser.is_active}
-                                        onChange={e => setCurrentUser({...currentUser, is_active: e.target.value === 'true'})}
-                                    >
-                                        <option value="true">Actif</option>
-                                        <option value="false">Inactif</option>
-                                    </select>
+                                    <Dropdown
+                                        options={[
+                                            { value: 'true', label: 'Actif' },
+                                            { value: 'false', label: 'Inactif' }
+                                        ]}
+                                        value={currentUser.is_active ? 'true' : 'false'}
+                                        onChange={(v) => setCurrentUser({...currentUser, is_active: v === 'true'})}
+                                    />
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 pt-4">

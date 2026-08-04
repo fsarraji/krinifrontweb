@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import Dropdown from './Dropdown';
 import SearchFilterBar from './SearchFilterBar';
 
 const Expenses = () => {
@@ -274,27 +275,25 @@ const Expenses = () => {
                                     
                                     <div className={`col-span-2 ${expenseType === 'VEHICLE' ? '' : 'hidden'}`}>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Véhicule Concerné <span className="text-error">*</span></label>
-                                        <select 
-                                            required={expenseType === 'VEHICLE'}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 text-sm font-bold outline-none"
-                                            value={formData.vehicle} onChange={e => setFormData({...formData, vehicle: e.target.value})}
-                                        >
-                                            <option value="">-- Sélectionner un véhicule --</option>
-                                            {vehicles.map(v => (
-                                                <option key={v.id} value={v.id}>{v.marque} {v.modele} - {v.matricule}</option>
-                                            ))}
-                                        </select>
+                                        <Dropdown
+                                            isSearchable
+                                            placeholder="-- Sélectionner un véhicule --"
+                                            options={vehicles.map(v => ({
+                                                value: String(v.id),
+                                                label: `${v.marque} ${v.modele} - ${v.matricule}`
+                                            }))}
+                                            value={formData.vehicle}
+                                            onChange={(v) => setFormData({...formData, vehicle: v || ''})}
+                                        />
                                     </div>
 
                                     <div className="col-span-2">
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Catégorie <span className="text-error">*</span></label>
-                                        <select 
-                                            required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 text-sm font-bold outline-none"
-                                            value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}
-                                        >
-                                            {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                        </select>
+                                        <Dropdown
+                                            options={CATEGORIES}
+                                            value={formData.category}
+                                            onChange={(v) => setFormData({...formData, category: v})}
+                                        />
                                     </div>
 
                                     <div className="col-span-2">
