@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import CloseContractModal from './CloseContractModal';
 import ActivateReservationModal from './ActivateReservationModal';
+import SearchFilterBar from './SearchFilterBar';
 
 const REQUEST_STATUS_META = {
     PENDING: { label: 'En attente', className: 'bg-amber-50 text-amber-700' },
-    CONFIRMED: { label: 'Confirmée', className: 'bg-green-50 text-green-700' },
-    CANCELLED: { label: 'Annulée', className: 'bg-red-50 text-red-600' },
+    CONFIRMED: { label: 'ConfirmÃ©e', className: 'bg-green-50 text-green-700' },
+    CANCELLED: { label: 'AnnulÃ©e', className: 'bg-red-50 text-red-600' },
 };
+
+const REQUEST_FILTER_OPTIONS = [
+    { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+    { value: 'PENDING', label: 'En attente', dot: 'bg-amber-500' },
+    { value: 'CONFIRMED', label: 'ConfirmÃ©e', dot: 'bg-green-500' },
+    { value: 'CANCELLED', label: 'AnnulÃ©e', dot: 'bg-red-500' },
+];
+
+const RESERVATION_FILTER_OPTIONS = [
+    { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+    { value: 'Paid', label: 'PayÃ©', dot: 'bg-green-500' },
+    { value: 'Partial', label: 'Partiel', dot: 'bg-amber-500' },
+    { value: 'Unpaid', label: 'ImpayÃ©', dot: 'bg-red-500' },
+];
 
 const Reservations = () => {
     const navigate = useNavigate();
@@ -18,6 +33,9 @@ const Reservations = () => {
     const [loading, setLoading] = useState(true);
     const [successMsg, setSuccessMsg] = useState('');
     const [busyId, setBusyId] = useState(null);
+    const [search, setSearch] = useState('');
+    const [requestFilter, setRequestFilter] = useState('ALL');
+    const [reservationFilter, setReservationFilter] = useState('ALL');
 
     const fetchAll = async () => {
         try {
@@ -31,7 +49,7 @@ const Reservations = () => {
             setRequests(Array.isArray(requestData) ? requestData : []);
             setLoading(false);
         } catch (error) {
-            console.error('Erreur lors de la récupération des réservations', error);
+            console.error('Erreur lors de la rÃ©cupÃ©ration des rÃ©servations', error);
             setLoading(false);
         }
     };
@@ -49,36 +67,36 @@ const Reservations = () => {
     };
 
     const handleActivated = () => {
-        setSuccessMsg('🚀 La réservation a été activée ! Le véhicule est maintenant loué.');
+        setSuccessMsg('ðŸš€ La rÃ©servation a Ã©tÃ© activÃ©e ! Le vÃ©hicule est maintenant louÃ©.');
         setTimeout(() => setSuccessMsg(''), 5000);
         fetchAll();
     };
 
     const handleConfirm = async (id) => {
-        if (!window.confirm('Confirmer cette demande de réservation ? Un contrat (Réservé) sera créé.')) return;
+        if (!window.confirm('Confirmer cette demande de rÃ©servation ? Un contrat (RÃ©servÃ©) sera crÃ©Ã©.')) return;
         setBusyId(id);
         try {
             await api.post(`reservations/${id}/confirm/`, {});
-            setSuccessMsg('✅ Réservation confirmée. Le contrat en statut Réservé a été créé.');
+            setSuccessMsg('âœ… RÃ©servation confirmÃ©e. Le contrat en statut RÃ©servÃ© a Ã©tÃ© crÃ©Ã©.');
             setTimeout(() => setSuccessMsg(''), 5000);
             fetchAll();
         } catch (error) {
             console.error("Erreur lors de la confirmation", error);
-            alert(error.response?.data?.detail || "Erreur lors de la confirmation de la réservation.");
+            alert(error.response?.data?.detail || "Erreur lors de la confirmation de la rÃ©servation.");
         } finally {
             setBusyId(null);
         }
     };
 
     const handleRefuse = async (id) => {
-        if (!window.confirm('Refuser cette demande de réservation ?')) return;
+        if (!window.confirm('Refuser cette demande de rÃ©servation ?')) return;
         setBusyId(id);
         try {
             await api.patch(`reservations/${id}/`, { statut: 'CANCELLED' });
             fetchAll();
         } catch (error) {
             console.error("Erreur lors du refus", error);
-            alert(error.response?.data?.detail || "Erreur lors du refus de la réservation.");
+            alert(error.response?.data?.detail || "Erreur lors du refus de la rÃ©servation.");
         } finally {
             setBusyId(null);
         }
@@ -97,13 +115,28 @@ const Reservations = () => {
             link.click();
             link.remove();
         } catch (error) {
-            console.error("Erreur lors du téléchargement du PDF", error);
-            alert("Erreur lors de la génération du PDF.");
+            console.error("Erreur lors du tÃ©lÃ©chargement du PDF", error);
+            alert("Erreur lors de la gÃ©nÃ©ration du PDF.");
         }
     };
 
     const reservations = contracts.filter(c => c.statut === 'RESERVE');
     const pendingRequests = requests.filter(r => r.statut === 'PENDING');
+
+    const matchesSearch = (obj, fields) => {
+        const q = search.trim().toLowerCase();
+        if (!q) return true;
+        return fields.filter(Boolean).some(f => String(f).toLowerCase().includes(q));
+    };
+
+    const visibleRequests = requests.filter(r =>
+        (requestFilter === 'ALL' || r.statut === requestFilter) &&
+        matchesSearch(r, [r.client_name, r.vehicle_name])
+    );
+    const visibleReservations = reservations.filter(c =>
+        (reservationFilter === 'ALL' || c.payment_status === reservationFilter) &&
+        matchesSearch(c, [c.client_name, c.client_prenom, c.vehicle_name, c.vehicle_matricule])
+    );
 
     const paymentStyles = {
         'Paid': 'bg-tertiary-container/20 text-on-tertiary-fixed-variant',
@@ -111,7 +144,7 @@ const Reservations = () => {
         'Unpaid': 'bg-error-container text-on-error-container',
     };
 
-    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement des réservations...</div>;
+    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement des rÃ©servations...</div>;
 
     return (
         <div className="p-0">
@@ -125,15 +158,15 @@ const Reservations = () => {
             {/* Editorial Header */}
             <div className="flex items-start justify-between mb-8">
                 <div className="flex flex-col">
-                    <span className="font-label text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold mb-1">Opérations de Flotte</span>
-                    <h1 className="font-headline text-3xl font-extrabold text-primary tracking-tight">Réservations</h1>
+                    <span className="font-label text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold mb-1">OpÃ©rations de Flotte</span>
+                    <h1 className="font-headline text-3xl font-extrabold text-primary tracking-tight">RÃ©servations</h1>
                 </div>
                 <button
                     onClick={() => navigate('/reservations/new')}
                     className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-headline font-bold text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:bg-primary/95 transition-all mt-1"
                 >
                     <span className="material-symbols-outlined text-lg">add</span>
-                    Nouvelle Réservation
+                    Nouvelle RÃ©servation
                 </button>
             </div>
 
@@ -141,7 +174,7 @@ const Reservations = () => {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
                 <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl shadow-sm border border-slate-50">
                     <div className="flex justify-between items-start mb-4">
-                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">Demandes Clients à Valider</span>
+                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">Demandes Clients Ã  Valider</span>
                         <span className="material-symbols-outlined text-amber-600 bg-amber-50 p-2 rounded-lg">mark_email_unread</span>
                     </div>
                     <div className="font-headline text-4xl font-bold text-amber-600">{pendingRequests.length}</div>
@@ -149,7 +182,7 @@ const Reservations = () => {
                 </div>
                 <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl shadow-sm border border-slate-50">
                     <div className="flex justify-between items-start mb-4">
-                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">Réservations en Attente</span>
+                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">RÃ©servations en Attente</span>
                         <span className="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">event_note</span>
                     </div>
                     <div className="font-headline text-4xl font-bold text-secondary">{reservations.length}</div>
@@ -171,9 +204,21 @@ const Reservations = () => {
                     onClick={() => setTab('reservations')}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === 'reservations' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:bg-slate-200/50'}`}
                 >
-                    Réservations en Attente
+                    RÃ©servations en Attente
                     <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20">{reservations.length}</span>
                 </button>
+            </div>
+
+            {/* Search & Filter */}
+            <div className="mb-6">
+                <SearchFilterBar
+                    placeholder={tab === 'demandes' ? "Rechercher (client, vÃ©hicule)..." : "Rechercher (client, vÃ©hicule, matricule)..."}
+                    search={search}
+                    onSearchChange={setSearch}
+                    options={tab === 'demandes' ? REQUEST_FILTER_OPTIONS : RESERVATION_FILTER_OPTIONS}
+                    filter={tab === 'demandes' ? requestFilter : reservationFilter}
+                    onFilterChange={tab === 'demandes' ? setRequestFilter : setReservationFilter}
+                />
             </div>
 
             {/* Table */}
@@ -184,15 +229,15 @@ const Reservations = () => {
                             <thead className="bg-slate-50/50">
                                 <tr>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Client</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Véhicule</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Dates Demandées</th>
+                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">VÃ©hicule</th>
+                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Dates DemandÃ©es</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Prix / Jour</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Statut</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {requests.map(request => {
+                                {visibleRequests.map(request => {
                                     const meta = REQUEST_STATUS_META[request.statut] || REQUEST_STATUS_META.PENDING;
                                     const busy = busyId === request.id;
                                     return (
@@ -247,9 +292,9 @@ const Reservations = () => {
                                         </tr>
                                     );
                                 })}
-                                {requests.length === 0 && (
+                                {visibleRequests.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune demande de réservation client.</td>
+                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune demande de rÃ©servation client.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -259,15 +304,15 @@ const Reservations = () => {
                             <thead className="bg-slate-50/50">
                                 <tr>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Client / ID</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Véhicule</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Dates de Réservation</th>
+                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">VÃ©hicule</th>
+                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Dates de RÃ©servation</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Montant Total</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Paiement</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold text-right">Actions rapides</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {reservations.map(contract => (
+                                {visibleReservations.map(contract => (
                                     <tr key={contract.id} className="group hover:bg-slate-50 transition-colors cursor-pointer">
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-3">
@@ -303,21 +348,21 @@ const Reservations = () => {
                                                 <button
                                                     onClick={() => openActivateModal(contract)}
                                                     className="p-2 text-green-500 hover:text-green-700 transition-colors bg-green-50 rounded-lg"
-                                                    title="Activer la Réservation (Transformer en Location En Cours)"
+                                                    title="Activer la RÃ©servation (Transformer en Location En Cours)"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">play_circle</span>
                                                 </button>
                                                 <button
                                                     onClick={() => navigate(`/contracts/edit/${contract.id}`)}
                                                     className="p-2 text-slate-400 hover:text-primary transition-colors"
-                                                    title="Modifier la Réservation"
+                                                    title="Modifier la RÃ©servation"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">edit</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleDownloadPDF(contract.id)}
                                                     className="p-2 text-slate-400 hover:text-primary transition-colors"
-                                                    title="Générer PDF de la Réservation"
+                                                    title="GÃ©nÃ©rer PDF de la RÃ©servation"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
                                                 </button>
@@ -325,9 +370,9 @@ const Reservations = () => {
                                         </td>
                                     </tr>
                                 ))}
-                                {reservations.length === 0 && (
+                                {visibleReservations.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune réservation en attente.</td>
+                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune rÃ©servation en attente.</td>
                                     </tr>
                                 )}
                             </tbody>

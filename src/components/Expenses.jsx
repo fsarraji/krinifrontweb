@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import SearchFilterBar from './SearchFilterBar';
 
 const Expenses = () => {
     const [expenses, setExpenses] = useState([]);
@@ -7,6 +8,14 @@ const Expenses = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [expenseType, setExpenseType] = useState('AGENCY'); // 'AGENCY' or 'VEHICLE'
+    const [search, setSearch] = useState('');
+    const [typeFilter, setTypeFilter] = useState('ALL');
+
+    const TYPE_FILTER_OPTIONS = [
+        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+        { value: 'AGENCY', label: 'Agence', dot: 'bg-red-500' },
+        { value: 'VEHICLE', label: 'Véhicule', dot: 'bg-blue-500' },
+    ];
 
     const [formData, setFormData] = useState({
         title: '',
@@ -87,6 +96,15 @@ const Expenses = () => {
     const totalVehicles = expenses.filter(e => e.vehicle).reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
     const totalGlobal = totalAgency + totalVehicles;
 
+    const visibleExpenses = expenses.filter(e => {
+        const q = search.trim().toLowerCase();
+        const matchType = typeFilter === 'ALL' || (typeFilter === 'AGENCY' ? !e.vehicle : !!e.vehicle);
+        const matchSearch = !q || [e.title, e.notes, e.category]
+            .filter(Boolean)
+            .some(v => String(v).toLowerCase().includes(q));
+        return matchType && matchSearch;
+    });
+
     return (
         <div className="max-w-7xl mx-auto px-0 mt-0">
             {/* Header */}
@@ -126,9 +144,21 @@ const Expenses = () => {
                 </div>
             </div>
 
+            {/* Search & Filter */}
+            <div className="mb-6">
+                <SearchFilterBar
+                    placeholder="Rechercher (titre, notes, catégorie)..."
+                    search={search}
+                    onSearchChange={setSearch}
+                    options={TYPE_FILTER_OPTIONS}
+                    filter={typeFilter}
+                    onFilterChange={setTypeFilter}
+                />
+            </div>
+
             {/* List */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                {expenses.length === 0 ? (
+                {visibleExpenses.length === 0 ? (
                     <div className="p-12 text-center text-slate-400">Aucune dépense enregistrée.</div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -142,7 +172,7 @@ const Expenses = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {expenses.map(e => (
+                                {visibleExpenses.map(e => (
                                     <tr key={e.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4 font-medium text-slate-600">
                                             {new Date(e.expense_date).toLocaleDateString()}

@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import SearchFilterBar from './SearchFilterBar';
 
 const Vehicles = () => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
+
+    const FILTER_OPTIONS = [
+        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+        { value: 'Available', label: 'Disponible', dot: 'bg-emerald-500' },
+        { value: 'Rented', label: 'Louée', dot: 'bg-red-500' },
+        { value: 'Maintenance', label: 'Maintenance', dot: 'bg-amber-500' },
+    ];
 
     useEffect(() => {
         const fetchVehicles = async () => {
@@ -39,6 +49,15 @@ const Vehicles = () => {
         'Rented': 'Louée',
         'Maintenance': 'Maintenance',
     };
+
+    const filteredVehicles = vehicles.filter(v => {
+        const q = search.trim().toLowerCase();
+        const matchStatus = statusFilter === 'ALL' || v.statut === statusFilter;
+        const matchSearch = !q || [v.matricule, v.marque_name, v.modele_name, v.carburant]
+            .filter(Boolean)
+            .some(x => x.toLowerCase().includes(q));
+        return matchStatus && matchSearch;
+    });
 
     if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement de la flotte...</div>;
 
@@ -96,18 +115,22 @@ const Vehicles = () => {
                 </div>
             </div>
 
+            {/* Search & Filter */}
+            <div className="mb-6">
+                <SearchFilterBar
+                    placeholder="Rechercher (matricule, marque, modèle)..."
+                    search={search}
+                    onSearchChange={setSearch}
+                    options={FILTER_OPTIONS}
+                    filter={statusFilter}
+                    onFilterChange={setStatusFilter}
+                />
+            </div>
+
             {/* Fleet Table Section */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
                 <div className="px-6 py-4 flex items-center justify-between bg-slate-50/50">
-                    <div className="flex gap-4">
-                        <button className="px-4 py-2 bg-white rounded-lg text-xs font-bold border border-slate-200 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">filter_list</span> Filtrer
-                        </button>
-                        <button className="px-4 py-2 bg-white rounded-lg text-xs font-bold border border-slate-200 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">download</span> Exporter
-                        </button>
-                    </div>
-                    <div className="text-xs text-slate-500 font-medium">Affichage de {vehicles.length} véhicules</div>
+                    <div className="text-xs text-slate-500 font-medium">Affichage de {filteredVehicles.length} véhicules</div>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -124,7 +147,7 @@ const Vehicles = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {vehicles.map(vehicle => (
+                            {filteredVehicles.map(vehicle => (
                                 <tr key={vehicle.id} className="hover:bg-slate-50/50 transition-colors group">
                                     <td className="px-6 py-5">
                                         <span className="font-mono text-sm font-bold bg-blue-50 px-2 py-1 rounded text-primary">{vehicle.matricule}</span>
@@ -163,6 +186,11 @@ const Vehicles = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {filteredVehicles.length === 0 && (
+                                <tr>
+                                    <td colSpan="8" className="px-6 py-10 text-center text-slate-400">Aucun véhicule trouvé.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

@@ -55,15 +55,31 @@ export default {
         "error": "#ba1a1a"
       },
       borderRadius: {
-        "DEFAULT": "0.125rem",
-        "lg": "0.25rem",
-        "xl": "0.5rem",
-        "full": "0.75rem"
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
       },
       fontFamily: {
         "headline": ["Manrope", "sans-serif"],
         "body": ["Inter", "sans-serif"],
-        "label": ["Inter", "sans-serif"]
+        "label": ["Inter", "sans-serif"],
+        "body-lg": ["Hanken Grotesk", "sans-serif"],
+        "headline-lg": ["Hanken Grotesk", "sans-serif"],
+        "label-caps": ["Hanken Grotesk", "sans-serif"],
+        "body-md": ["Hanken Grotesk", "sans-serif"],
+        "headline-md": ["Hanken Grotesk", "sans-serif"],
+        "label-sm": ["Hanken Grotesk", "sans-serif"],
+        "headline-lg-mobile": ["Hanken Grotesk", "sans-serif"]
+      },
+      fontSize: {
+        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+        "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }]
       },
     },
   },

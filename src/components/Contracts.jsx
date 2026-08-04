@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import CloseContractModal from './CloseContractModal';
+import SearchFilterBar from './SearchFilterBar';
 
 const Contracts = () => {
     const navigate = useNavigate();
@@ -10,7 +11,16 @@ const Contracts = () => {
     const [closeContract, setCloseContract] = useState(null);
     const [printContractId, setPrintContractId] = useState(null);
     const [successMsg, setSuccessMsg] = useState('');
-    const [activeFilter, setActiveFilter] = useState('ALL'); // 'ALL', 'EN_COURS', 'RESERVE', 'TERMINE'
+    const [activeFilter, setActiveFilter] = useState('ALL'); // 'ALL', 'EN_COURS', 'RESERVE', 'TERMINE', 'ANNULE'
+    const [search, setSearch] = useState('');
+
+    const FILTER_OPTIONS = [
+        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+        { value: 'RESERVE', label: 'Réservation', dot: 'bg-secondary-container' },
+        { value: 'EN_COURS', label: 'En cours', dot: 'bg-tertiary-container' },
+        { value: 'TERMINE', label: 'Terminé', dot: 'bg-surface-container-highest' },
+        { value: 'ANNULE', label: 'Annulé', dot: 'bg-error' },
+    ];
 
     const fetchContracts = async () => {
         try {
@@ -185,33 +195,16 @@ const Contracts = () => {
                 </div>
             </div>
 
-            {/* Filter & Actions Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                    {[
-                        { id: 'ALL', label: 'Tous' },
-                        { id: 'EN_COURS', label: 'En cours' },
-                        { id: 'TERMINE', label: 'Terminés' }
-                    ].map(filter => (
-                        <button 
-                            key={filter.id}
-                            onClick={() => setActiveFilter(filter.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${activeFilter === filter.id ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:bg-slate-200/50'}`}
-                        >
-                            {filter.label}
-                        </button>
-                    ))}
-                </div>
-                <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-2 bg-white border border-slate-100 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-                        <span className="material-symbols-outlined text-sm">filter_list</span>
-                        <span>Filtres</span>
-                    </button>
-                    <button className="flex items-center gap-2 bg-white border border-slate-100 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-                        <span className="material-symbols-outlined text-sm">file_download</span>
-                        <span>Exporter</span>
-                    </button>
-                </div>
+            {/* Search & Filter */}
+            <div className="mb-6">
+                <SearchFilterBar
+                    placeholder="Rechercher (client, matricule, marque)..."
+                    search={search}
+                    onSearchChange={setSearch}
+                    options={FILTER_OPTIONS}
+                    filter={activeFilter}
+                    onFilterChange={setActiveFilter}
+                />
             </div>
 
             {/* Contracts Table */}
@@ -231,7 +224,14 @@ const Contracts = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {contracts
-                                .filter(c => activeFilter === 'ALL' ? c.statut !== 'RESERVE' : c.statut === activeFilter)
+                                .filter(c => activeFilter === 'ALL' || c.statut === activeFilter)
+                                .filter(c => {
+                                    const q = search.trim().toLowerCase();
+                                    if (!q) return true;
+                                    return [c.client_name, c.client_prenom, c.vehicle_matricule, c.vehicle_name, String(c.id)]
+                                        .filter(Boolean)
+                                        .some(v => v.toLowerCase().includes(q));
+                                })
                                 .map(contract => (
                                 <tr key={contract.id} className="group hover:bg-slate-50 transition-colors cursor-pointer">
                                     <td className="px-6 py-5">

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import SearchFilterBar from './SearchFilterBar';
 
 const Payments = () => {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [methodFilter, setMethodFilter] = useState('ALL');
 
     useEffect(() => {
         const fetchPayments = async () => {
@@ -25,6 +28,22 @@ const Payments = () => {
 
     const totalCollected = payments.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
 
+    const methodOptions = [
+        { value: 'ALL', label: 'Toutes', dot: 'bg-primary' },
+        ...[...new Set(payments.map(p => p.payment_method).filter(Boolean))].map(m => ({
+            value: m, label: m, dot: 'bg-secondary-container',
+        })),
+    ];
+
+    const visiblePayments = payments.filter(p => {
+        const q = search.trim().toLowerCase();
+        const matchMethod = methodFilter === 'ALL' || p.payment_method === methodFilter;
+        const matchSearch = !q || [String(p.contract), p.reference, p.payment_method]
+            .filter(Boolean)
+            .some(v => String(v).toLowerCase().includes(q));
+        return matchMethod && matchSearch;
+    });
+
     return (
         <div className="max-w-7xl mx-auto px-0 mt-0">
             {/* Header */}
@@ -42,9 +61,21 @@ const Payments = () => {
                 </div>
             </div>
 
+            {/* Search & Filter */}
+            <div className="mb-6">
+                <SearchFilterBar
+                    placeholder="Rechercher (contrat, référence, méthode)..."
+                    search={search}
+                    onSearchChange={setSearch}
+                    options={methodOptions}
+                    filter={methodFilter}
+                    onFilterChange={setMethodFilter}
+                />
+            </div>
+
             {/* Content */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                {payments.length === 0 ? (
+                {visiblePayments.length === 0 ? (
                     <div className="p-12 text-center flex flex-col items-center">
                         <span className="material-symbols-outlined text-slate-200 text-6xl mb-4">money_off</span>
                         <p className="text-slate-500 font-bold">Aucun paiement enregistré pour le moment.</p>
@@ -63,7 +94,7 @@ const Payments = () => {
                                 </tr>
                             </thead>
                             <tbody className="text-sm">
-                                {payments.map(payment => (
+                                {visiblePayments.map(payment => (
                                     <tr key={payment.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
                                         <td className="px-6 py-4 font-bold text-slate-400">#{payment.id.toString().padStart(4, '0')}</td>
                                         <td className="px-6 py-4 font-medium text-slate-600">
