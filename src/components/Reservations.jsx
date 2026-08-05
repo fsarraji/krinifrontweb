@@ -6,23 +6,32 @@ import ActivateReservationModal from './ActivateReservationModal';
 import SearchFilterBar from './SearchFilterBar';
 
 const REQUEST_STATUS_META = {
-    PENDING: { label: 'En attente', className: 'bg-amber-50 text-amber-700' },
-    CONFIRMED: { label: 'ConfirmÃ©e', className: 'bg-green-50 text-green-700' },
-    CANCELLED: { label: 'AnnulÃ©e', className: 'bg-red-50 text-red-600' },
+    PENDING: { label: 'En attente', className: 'bg-amber-50 text-amber-700 ring-amber-600/20' },
+    CONFIRMED: { label: 'Confirmée', className: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' },
+    CANCELLED: { label: 'Annulée', className: 'bg-rose-50 text-rose-700 ring-rose-600/20' },
 };
 
 const REQUEST_FILTER_OPTIONS = [
-    { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+    { value: 'ALL', label: 'Tous', dot: 'bg-indigo-600' },
     { value: 'PENDING', label: 'En attente', dot: 'bg-amber-500' },
-    { value: 'CONFIRMED', label: 'ConfirmÃ©e', dot: 'bg-green-500' },
-    { value: 'CANCELLED', label: 'AnnulÃ©e', dot: 'bg-red-500' },
+    { value: 'CONFIRMED', label: 'Confirmée', dot: 'bg-emerald-500' },
+    { value: 'CANCELLED', label: 'Annulée', dot: 'bg-rose-500' },
 ];
 
 const RESERVATION_FILTER_OPTIONS = [
-    { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
-    { value: 'Paid', label: 'PayÃ©', dot: 'bg-green-500' },
+    { value: 'ALL', label: 'Tous', dot: 'bg-indigo-600' },
+    { value: 'Paid', label: 'Payé', dot: 'bg-emerald-500' },
     { value: 'Partial', label: 'Partiel', dot: 'bg-amber-500' },
-    { value: 'Unpaid', label: 'ImpayÃ©', dot: 'bg-red-500' },
+    { value: 'Unpaid', label: 'Impayé', dot: 'bg-rose-500' },
+];
+
+const AVATAR_COLORS = [
+    'bg-indigo-50 text-indigo-700 ring-indigo-100',
+    'bg-purple-50 text-purple-700 ring-purple-100',
+    'bg-amber-50 text-amber-700 ring-amber-100',
+    'bg-pink-50 text-pink-700 ring-pink-100',
+    'bg-cyan-50 text-cyan-700 ring-cyan-100',
+    'bg-emerald-50 text-emerald-700 ring-emerald-100',
 ];
 
 const Reservations = () => {
@@ -49,7 +58,7 @@ const Reservations = () => {
             setRequests(Array.isArray(requestData) ? requestData : []);
             setLoading(false);
         } catch (error) {
-            console.error('Erreur lors de la rÃ©cupÃ©ration des rÃ©servations', error);
+            console.error('Erreur lors de la récupération des réservations', error);
             setLoading(false);
         }
     };
@@ -67,36 +76,36 @@ const Reservations = () => {
     };
 
     const handleActivated = () => {
-        setSuccessMsg('ðŸš€ La rÃ©servation a Ã©tÃ© activÃ©e ! Le vÃ©hicule est maintenant louÃ©.');
+        setSuccessMsg('🚀 La réservation a été activée ! Le véhicule est maintenant loué.');
         setTimeout(() => setSuccessMsg(''), 5000);
         fetchAll();
     };
 
     const handleConfirm = async (id) => {
-        if (!window.confirm('Confirmer cette demande de rÃ©servation ? Un contrat (RÃ©servÃ©) sera crÃ©Ã©.')) return;
+        if (!window.confirm('Confirmer cette demande de réservation ? Un contrat (Réservé) sera créé.')) return;
         setBusyId(id);
         try {
             await api.post(`reservations/${id}/confirm/`, {});
-            setSuccessMsg('âœ… RÃ©servation confirmÃ©e. Le contrat en statut RÃ©servÃ© a Ã©tÃ© crÃ©Ã©.');
+            setSuccessMsg('✅ Réservation confirmée. Le contrat en statut Réservé a été créé.');
             setTimeout(() => setSuccessMsg(''), 5000);
             fetchAll();
         } catch (error) {
             console.error("Erreur lors de la confirmation", error);
-            alert(error.response?.data?.detail || "Erreur lors de la confirmation de la rÃ©servation.");
+            alert(error.response?.data?.detail || "Erreur lors de la confirmation de la réservation.");
         } finally {
             setBusyId(null);
         }
     };
 
     const handleRefuse = async (id) => {
-        if (!window.confirm('Refuser cette demande de rÃ©servation ?')) return;
+        if (!window.confirm('Refuser cette demande de réservation ?')) return;
         setBusyId(id);
         try {
             await api.patch(`reservations/${id}/`, { statut: 'CANCELLED' });
             fetchAll();
         } catch (error) {
             console.error("Erreur lors du refus", error);
-            alert(error.response?.data?.detail || "Erreur lors du refus de la rÃ©servation.");
+            alert(error.response?.data?.detail || "Erreur lors du refus de la réservation.");
         } finally {
             setBusyId(null);
         }
@@ -115,8 +124,8 @@ const Reservations = () => {
             link.click();
             link.remove();
         } catch (error) {
-            console.error("Erreur lors du tÃ©lÃ©chargement du PDF", error);
-            alert("Erreur lors de la gÃ©nÃ©ration du PDF.");
+            console.error("Erreur lors du téléchargement du PDF", error);
+            alert("Erreur lors de la génération du PDF.");
         }
     };
 
@@ -140,94 +149,96 @@ const Reservations = () => {
     );
 
     const paymentStyles = {
-        'Paid': 'bg-tertiary-container/20 text-on-tertiary-fixed-variant',
-        'Partial': 'bg-secondary-container text-on-secondary-container',
-        'Unpaid': 'bg-error-container text-on-error-container',
+        'Paid': 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+        'Partial': 'bg-amber-50 text-amber-700 ring-amber-600/20',
+        'Unpaid': 'bg-rose-50 text-rose-700 ring-rose-600/20',
     };
 
     const statusStyles = {
-        'RESERVE': 'bg-secondary-container text-on-secondary-container',
-        'EN_COURS': 'bg-tertiary-container text-on-tertiary-container',
-        'TERMINE': 'bg-surface-container-highest text-on-surface-variant',
-        'ANNULE': 'bg-error-container text-on-error-container',
+        'RESERVE': 'bg-blue-50 text-blue-700 ring-blue-600/20',
+        'EN_COURS': 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+        'TERMINE': 'bg-slate-100 text-slate-600 ring-slate-200',
+        'ANNULE': 'bg-rose-50 text-rose-700 ring-rose-600/20',
     };
 
     const statusLabels = {
-        'RESERVE': 'RÃ©servÃ©e',
+        'RESERVE': 'Réservée',
         'EN_COURS': 'En cours',
-        'TERMINE': 'TerminÃ©e',
-        'ANNULE': 'AnnulÃ©e',
+        'TERMINE': 'Terminée',
+        'ANNULE': 'Annulée',
     };
 
-    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement des rÃ©servations...</div>;
+    const initialsFor = (name) => {
+        if (!name) return '?';
+        const parts = name.trim().split(/\s+/);
+        const first = (parts[0] || '').charAt(0);
+        const second = parts.length > 1 ? (parts[1] || '').charAt(0) : '';
+        return (first + second).toUpperCase() || name.charAt(0).toUpperCase();
+    };
+
+    if (loading) return <div className="flex justify-center items-center h-64 text-slate-500 font-semibold">Chargement des réservations...</div>;
 
     return (
-        <div className="p-0">
+        <div className="flex flex-col h-full gap-6">
             {successMsg && (
-                <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-green-600 text-white px-5 py-3.5 rounded-xl shadow-xl text-sm font-semibold">
+                <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl text-sm font-semibold">
                     <span className="material-symbols-outlined text-[18px]">check_circle</span>
                     {successMsg}
                 </div>
             )}
 
             {/* Editorial Header */}
-            <div className="flex items-start justify-between mb-8">
-                <div className="flex flex-col">
-                    <span className="font-label text-[10px] uppercase tracking-[0.15em] text-slate-500 font-bold mb-1">OpÃ©rations de Flotte</span>
-                    <h1 className="font-headline text-3xl font-extrabold text-primary tracking-tight">RÃ©servations</h1>
+            <header className="flex items-end justify-between">
+                <div>
+                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Opérations de Flotte</p>
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Réservations</h2>
                 </div>
                 <button
                     onClick={() => navigate('/reservations/new')}
-                    className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-headline font-bold text-sm shadow-md shadow-primary/20 hover:shadow-lg hover:bg-primary/95 transition-all mt-1"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 flex items-center gap-2.5 hover:-translate-y-0.5"
                 >
                     <span className="material-symbols-outlined text-lg">add</span>
-                    Nouvelle RÃ©servation
+                    Nouvelle Réservation
                 </button>
-            </div>
+            </header>
 
-            {/* KPI Architecture */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
-                <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl shadow-sm border border-slate-50">
-                    <div className="flex justify-between items-start mb-4">
-                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">Demandes Clients Ã  Valider</span>
-                        <span className="material-symbols-outlined text-amber-600 bg-amber-50 p-2 rounded-lg">mark_email_unread</span>
-                    </div>
-                    <div className="font-headline text-4xl font-bold text-amber-600">{pendingRequests.length}</div>
-                    <p className="text-xs text-slate-400 mt-2">En attente de validation par l'agence</p>
+            {/* Filters & Search */}
+            <div className="flex flex-col gap-5">
+                {/* Tabs */}
+                <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+                    <button
+                        onClick={() => setTab('demandes')}
+                        className={`px-5 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2.5 ${
+                            tab === 'demandes'
+                                ? 'text-slate-900 bg-white rounded-lg shadow-sm ring-1 ring-slate-200/50'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                        }`}
+                    >
+                        Demandes Clients
+                        {pendingRequests.length > 0 && (
+                            <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full ring-1 ring-amber-200/50">
+                                {pendingRequests.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setTab('reservations')}
+                        className={`px-5 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2.5 ${
+                            tab === 'reservations'
+                                ? 'text-slate-900 bg-white rounded-lg shadow-sm ring-1 ring-slate-200/50'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                        }`}
+                    >
+                        Réservations
+                        <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full ring-1 ring-indigo-200/50">
+                            {reservations.length}
+                        </span>
+                    </button>
                 </div>
-                <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl shadow-sm border border-slate-50">
-                    <div className="flex justify-between items-start mb-4">
-                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">RÃ©servations</span>
-                        <span className="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">event_note</span>
-                    </div>
-                    <div className="font-headline text-4xl font-bold text-secondary">{reservations.length}</div>
-                </div>
-            </div>
 
-            {/* Tabs */}
-            <div className="flex items-center gap-3 mb-6">
-                <button
-                    onClick={() => setTab('demandes')}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === 'demandes' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:bg-slate-200/50'}`}
-                >
-                    Demandes Clients
-                    {pendingRequests.length > 0 && (
-                        <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20">{pendingRequests.length}</span>
-                    )}
-                </button>
-                <button
-                    onClick={() => setTab('reservations')}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === 'reservations' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:bg-slate-200/50'}`}
-                >
-                    RÃ©servations
-                    <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20">{reservations.length}</span>
-                </button>
-            </div>
-
-            {/* Search & Filter */}
-            <div className="mb-6">
+                {/* Search & Filter */}
                 <SearchFilterBar
-                    placeholder={tab === 'demandes' ? "Rechercher (client, vÃ©hicule)..." : "Rechercher (client, vÃ©hicule, matricule)..."}
+                    placeholder={tab === 'demandes' ? "Rechercher (client, véhicule)..." : "Rechercher (client, véhicule, matricule)..."}
                     search={search}
                     onSearchChange={setSearch}
                     options={tab === 'demandes' ? REQUEST_FILTER_OPTIONS : RESERVATION_FILTER_OPTIONS}
@@ -236,68 +247,63 @@ const Reservations = () => {
                 />
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-50">
-                <div className="overflow-x-auto">
+            {/* Data Table */}
+            <div className="flex-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                <div className="overflow-x-auto flex-1">
                     {tab === 'demandes' ? (
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-slate-50/50">
+                        <table className="min-w-full divide-y divide-slate-100">
+                            <thead className="bg-slate-50/80">
                                 <tr>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Client</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">VÃ©hicule</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Dates DemandÃ©es</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Prix / Jour</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Statut</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold text-right">Actions</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Client</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Véhicule</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Dates Demandées</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Prix / Jour</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Statut</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {visibleRequests.map(request => {
+                            <tbody className="bg-white divide-y divide-slate-100">
+                                {visibleRequests.map((request, i) => {
                                     const meta = REQUEST_STATUS_META[request.statut] || REQUEST_STATUS_META.PENDING;
                                     const busy = busyId === request.id;
+                                    const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
                                     return (
-                                        <tr key={request.id} className="group hover:bg-slate-50 transition-colors">
-                                            <td className="px-6 py-5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center font-headline font-bold text-primary">
-                                                        {(request.client_name || '?').charAt(0).toUpperCase()}
+                                        <tr key={request.id} className="hover:bg-slate-50/80 transition-colors group">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-3.5">
+                                                    <div className={`flex-shrink-0 h-10 w-10 rounded-xl ${avatarClass} flex items-center justify-center font-bold text-sm ring-1`}>
+                                                        {initialsFor(request.client_name)}
                                                     </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-headline font-bold text-slate-900 text-sm">{request.client_name}</span>
-                                                        <span className="text-[10px] text-slate-400 font-medium">#RES-{request.id.toString().padStart(5, '0')}</span>
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{request.client_name}</div>
+                                                        <div className="text-xs text-slate-500 font-medium mt-0.5">#RES-{request.id.toString().padStart(5, '0')}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5">
-                                                <div className="flex flex-col">
-                                                    <span className="font-body font-semibold text-sm">{request.vehicle_name}</span>
-                                                </div>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-semibold text-slate-900">{request.vehicle_name}</div>
                                             </td>
-                                            <td className="px-6 py-5">
-                                                <div className="flex flex-col text-xs">
-                                                    <span className="text-slate-900 font-medium">{request.formatted_dates?.range}</span>
-                                                </div>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-slate-800">{request.formatted_dates?.range}</div>
                                             </td>
-                                            <td className="px-6 py-5 font-headline font-bold text-sm text-primary">{request.prix_par_jour} DH</td>
-                                            <td className="px-6 py-5">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${meta.className}`}>
-                                                    {meta.label}
-                                                </span>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{request.prix_par_jour} DH</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-3 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full ring-1 ${meta.className}`}>{meta.label}</span>
                                             </td>
-                                            <td className="px-6 py-5 text-right">
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 {request.statut === 'PENDING' && (
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={() => handleRefuse(request.id)}
                                                             disabled={busy}
-                                                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+                                                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50"
                                                         >
                                                             Refuser
                                                         </button>
                                                         <button
                                                             onClick={() => handleConfirm(request.id)}
                                                             disabled={busy}
-                                                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-primary hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                                            className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                                         >
                                                             {busy ? '...' : 'Confirmer'}
                                                         </button>
@@ -309,93 +315,94 @@ const Reservations = () => {
                                 })}
                                 {visibleRequests.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune demande de rÃ©servation client.</td>
+                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune demande de réservation client.</td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     ) : (
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-slate-50/50">
+                        <table className="min-w-full divide-y divide-slate-100">
+                            <thead className="bg-slate-50/80">
                                 <tr>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Client / ID</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">VÃ©hicule</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Dates de RÃ©servation</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Montant Total</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Statut</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Paiement</th>
-                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold text-right">Actions rapides</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Client / ID</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Véhicule</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Dates de Réservation</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Montant Total</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Statut</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Paiement</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Actions Rapides</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {visibleReservations.map(contract => (
-                                    <tr key={contract.id} className="group hover:bg-slate-50 transition-colors cursor-pointer">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center font-headline font-bold text-primary">
-                                                    {contract.client_initials}
+                            <tbody className="bg-white divide-y divide-slate-100">
+                                {visibleReservations.map((contract, i) => {
+                                    const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
+                                    return (
+                                        <tr key={contract.id} className="hover:bg-slate-50/80 transition-colors group">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-3.5">
+                                                    <div className={`flex-shrink-0 h-10 w-10 rounded-xl ${avatarClass} flex items-center justify-center font-bold text-sm ring-1`}>
+                                                        {contract.client_initials || initialsFor(`${contract.client_prenom} ${contract.client_name}`)}
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{contract.client_name} {contract.client_prenom}</div>
+                                                        <div className="text-xs text-slate-500 font-medium mt-0.5">#RES-{contract.id.toString().padStart(5, '0')}</div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-headline font-bold text-slate-900 text-sm">{contract.client_name} {contract.client_prenom}</span>
-                                                    <span className="text-[10px] text-slate-400 font-medium">#RES-{contract.id.toString().padStart(5, '0')}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-col">
-                                                <span className="font-body font-semibold text-sm">{contract.vehicle_name}</span>
-                                                <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">{contract.vehicle_matricule}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-col text-xs">
-                                                <span className="text-slate-900 font-medium">{contract.formatted_dates.range}</span>
-                                                <span className="text-slate-500 italic">{contract.jours} Jours</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 font-headline font-bold text-sm text-primary">{contract.montant_total} DH</td>
-                                        <td className="px-6 py-5">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyles[contract.statut]}`}>
-                                                {statusLabels[contract.statut] || contract.statut}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${paymentStyles[contract.payment_status]}`}>
-                                                {contract.payment_status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {contract.statut === 'RESERVE' && (
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-semibold text-slate-900">{contract.vehicle_name}</div>
+                                                <div className="text-xs text-slate-500 font-medium mt-0.5">{contract.vehicle_matricule}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-slate-800">{contract.formatted_dates?.range}</div>
+                                                <div className="text-xs font-semibold text-indigo-600 mt-0.5">{contract.jours} Jours</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{contract.montant_total} DH</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-3 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full ring-1 ${statusStyles[contract.statut]}`}>
+                                                    {statusLabels[contract.statut] || contract.statut}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-3 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full ring-1 ${paymentStyles[contract.payment_status]}`}>
+                                                    {contract.payment_status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                                <div className="flex items-center gap-2">
+                                                    {contract.statut === 'RESERVE' ? (
+                                                        <button
+                                                            onClick={() => openActivateModal(contract)}
+                                                            className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 transition-colors"
+                                                            title="Activer la Réservation (Transformer en Location En Cours)"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg">play_circle</span>
+                                                        </button>
+                                                    ) : (
+                                                        <div className="w-9 h-9"></div>
+                                                    )}
                                                     <button
-                                                        onClick={() => openActivateModal(contract)}
-                                                        className="p-2 text-green-500 hover:text-green-700 transition-colors bg-green-50 rounded-lg"
-                                                        title="Activer la RÃ©servation (Transformer en Location En Cours)"
+                                                        onClick={() => navigate(`/contracts/edit/${contract.id}`)}
+                                                        className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                                                        title="Modifier la Réservation"
                                                     >
-                                                        <span className="material-symbols-outlined text-lg">play_circle</span>
+                                                        <span className="material-symbols-outlined text-lg">edit</span>
                                                     </button>
-                                                )}
-                                                <button
-                                                    onClick={() => navigate(`/contracts/edit/${contract.id}`)}
-                                                    className="p-2 text-slate-400 hover:text-primary transition-colors"
-                                                    title="Modifier la RÃ©servation"
-                                                >
-                                                    <span className="material-symbols-outlined text-lg">edit</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDownloadPDF(contract.id)}
-                                                    className="p-2 text-slate-400 hover:text-primary transition-colors"
-                                                    title="GÃ©nÃ©rer PDF de la RÃ©servation"
-                                                >
-                                                    <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                                    <button
+                                                        onClick={() => handleDownloadPDF(contract.id)}
+                                                        className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                                                        title="Générer PDF de la Réservation"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                                 {visibleReservations.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune rÃ©servation.</td>
+                                        <td colSpan="7" className="px-6 py-10 text-center text-slate-400">Aucune réservation.</td>
                                     </tr>
                                 )}
                             </tbody>

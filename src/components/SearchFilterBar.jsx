@@ -11,14 +11,16 @@ const SearchFilterBar = ({ placeholder, search, onSearchChange, options, filter,
 
     return (
         <section className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 w-full">
+            <div className="flex items-center gap-4 w-full">
                 {/* Search Bar */}
-                <div className="relative flex-grow">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <span className="material-symbols-outlined h-5 w-5 text-slate-400">search</span>
+                    </div>
                     <input
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        className="w-full h-12 pl-12 pr-4 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-sm transition-shadow"
+                        className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm shadow-sm transition-all"
                         placeholder={placeholder}
                         type="text"
                     />
@@ -29,25 +31,25 @@ const SearchFilterBar = ({ placeholder, search, onSearchChange, options, filter,
                     <div className="relative inline-block shrink-0">
                         <button
                             onClick={() => setOpen(o => !o)}
-                            className="flex items-center justify-between gap-2 px-4 h-12 bg-surface-container-lowest border border-outline-variant rounded-xl font-label-sm text-label-sm font-semibold text-on-surface hover:bg-surface-container-low transition-colors shadow-sm min-w-[7.5rem]"
+                            className="flex items-center justify-between gap-2.5 px-5 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-500/20 min-w-[7.5rem]"
                         >
-                            <div className="flex items-center gap-2">
-                                <span className={`w-2 h-2 ${(current && current.dot) || 'bg-primary'} rounded-full`}></span>
+                            <div className="flex items-center gap-2.5">
+                                <span className={`w-2 h-2 ${(current && current.dot) || 'bg-indigo-600'} rounded-full shadow-sm`}></span>
                                 <span>{(current && current.label) || 'Tous'}</span>
                             </div>
-                            <span className="material-symbols-outlined text-on-surface-variant text-base">expand_more</span>
+                            <span className="material-symbols-outlined text-slate-400 text-base">expand_more</span>
                         </button>
                         {open && (
                             <>
                                 <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-                                <div className="absolute top-full right-0 mt-2 w-48 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-50 py-1">
+                                <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1">
                                     {options.map(opt => (
                                         <button
                                             key={String(opt.value)}
                                             onClick={() => handleSelect(opt.value)}
-                                            className={`w-full text-left px-4 py-2 text-label-sm transition-colors flex items-center gap-2 ${opt.value === filter ? 'text-primary font-bold' : 'text-on-surface hover:bg-surface-container-low'}`}
+                                            className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2.5 ${opt.value === filter ? 'text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
                                         >
-                                            <span className={`w-2 h-2 ${opt.dot || 'bg-primary'} rounded-full`}></span>
+                                            <span className={`w-2 h-2 ${opt.dot || 'bg-indigo-600'} rounded-full`}></span>
                                             {opt.label}
                                         </button>
                                     ))}
