@@ -120,7 +120,8 @@ const Reservations = () => {
         }
     };
 
-    const reservations = contracts.filter(c => c.statut === 'RESERVE');
+    const RESERVATION_STATUSES = ['RESERVE', 'EN_COURS', 'TERMINE'];
+    const reservations = contracts.filter(c => RESERVATION_STATUSES.includes(c.statut));
     const pendingRequests = requests.filter(r => r.statut === 'PENDING');
 
     const matchesSearch = (obj, fields) => {
@@ -142,6 +143,20 @@ const Reservations = () => {
         'Paid': 'bg-tertiary-container/20 text-on-tertiary-fixed-variant',
         'Partial': 'bg-secondary-container text-on-secondary-container',
         'Unpaid': 'bg-error-container text-on-error-container',
+    };
+
+    const statusStyles = {
+        'RESERVE': 'bg-secondary-container text-on-secondary-container',
+        'EN_COURS': 'bg-tertiary-container text-on-tertiary-container',
+        'TERMINE': 'bg-surface-container-highest text-on-surface-variant',
+        'ANNULE': 'bg-error-container text-on-error-container',
+    };
+
+    const statusLabels = {
+        'RESERVE': 'RÃ©servÃ©e',
+        'EN_COURS': 'En cours',
+        'TERMINE': 'TerminÃ©e',
+        'ANNULE': 'AnnulÃ©e',
     };
 
     if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement des rÃ©servations...</div>;
@@ -182,7 +197,7 @@ const Reservations = () => {
                 </div>
                 <div className="col-span-12 md:col-span-4 bg-white p-6 rounded-xl shadow-sm border border-slate-50">
                     <div className="flex justify-between items-start mb-4">
-                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">RÃ©servations en Attente</span>
+                        <span className="font-label text-xs text-slate-500 font-bold uppercase tracking-wider">RÃ©servations</span>
                         <span className="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">event_note</span>
                     </div>
                     <div className="font-headline text-4xl font-bold text-secondary">{reservations.length}</div>
@@ -204,7 +219,7 @@ const Reservations = () => {
                     onClick={() => setTab('reservations')}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === 'reservations' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:bg-slate-200/50'}`}
                 >
-                    RÃ©servations en Attente
+                    RÃ©servations
                     <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20">{reservations.length}</span>
                 </button>
             </div>
@@ -307,6 +322,7 @@ const Reservations = () => {
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">VÃ©hicule</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Dates de RÃ©servation</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Montant Total</th>
+                                    <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Statut</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold">Paiement</th>
                                     <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-400 font-extrabold text-right">Actions rapides</th>
                                 </tr>
@@ -339,19 +355,26 @@ const Reservations = () => {
                                         </td>
                                         <td className="px-6 py-5 font-headline font-bold text-sm text-primary">{contract.montant_total} DH</td>
                                         <td className="px-6 py-5">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyles[contract.statut]}`}>
+                                                {statusLabels[contract.statut] || contract.statut}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${paymentStyles[contract.payment_status]}`}>
                                                 {contract.payment_status}
                                             </span>
                                         </td>
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => openActivateModal(contract)}
-                                                    className="p-2 text-green-500 hover:text-green-700 transition-colors bg-green-50 rounded-lg"
-                                                    title="Activer la RÃ©servation (Transformer en Location En Cours)"
-                                                >
-                                                    <span className="material-symbols-outlined text-lg">play_circle</span>
-                                                </button>
+                                                {contract.statut === 'RESERVE' && (
+                                                    <button
+                                                        onClick={() => openActivateModal(contract)}
+                                                        className="p-2 text-green-500 hover:text-green-700 transition-colors bg-green-50 rounded-lg"
+                                                        title="Activer la RÃ©servation (Transformer en Location En Cours)"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">play_circle</span>
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => navigate(`/contracts/edit/${contract.id}`)}
                                                     className="p-2 text-slate-400 hover:text-primary transition-colors"
@@ -372,7 +395,7 @@ const Reservations = () => {
                                 ))}
                                 {visibleReservations.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune rÃ©servation en attente.</td>
+                                        <td colSpan="6" className="px-6 py-10 text-center text-slate-400">Aucune rÃ©servation.</td>
                                     </tr>
                                 )}
                             </tbody>
