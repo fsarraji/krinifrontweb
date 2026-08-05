@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import api from '../api';
 import { jwtDecode } from 'jwt-decode';
 
@@ -252,29 +253,46 @@ const Settings = () => {
                 {allBrands.length === 0 ? (
                     <p className="text-sm text-slate-400">Aucune marque disponible.</p>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {allBrands.map(b => {
-                            const isChecked = selectedBrands.includes(String(b.id));
-                            return (
-                                <label
-                                    key={b.id}
-                                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isChecked ? 'bg-blue-50 border-primary/40' : 'bg-slate-50 border-slate-100 hover:border-slate-200'} ${!isOwner || saving ? 'opacity-60 pointer-events-none' : ''}`}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        className="h-4 w-4 text-primary rounded focus:ring-primary/30"
-                                        checked={isChecked}
-                                        disabled={!isOwner || saving}
-                                        onChange={(e) => {
-                                            if (e.target.checked) setSelectedBrands(prev => [...prev, String(b.id)]);
-                                            else setSelectedBrands(prev => prev.filter(id => id !== String(b.id)));
-                                        }}
-                                    />
-                                    <span className="text-sm font-semibold text-slate-700">{b.name}</span>
-                                </label>
-                            );
-                        })}
-                    </div>
+                    <Select
+                        isMulti
+                        isSearchable
+                        isClearable
+                        options={allBrands.map(b => ({ value: String(b.id), label: b.name }))}
+                        value={allBrands
+                            .filter(b => selectedBrands.includes(String(b.id)))
+                            .map(b => ({ value: String(b.id), label: b.name }))}
+                        onChange={(selected) => setSelectedBrands((selected || []).map(o => o.value))}
+                        isDisabled={!isOwner || saving}
+                        placeholder="Rechercher et sélectionner les marques..."
+                        noOptionsMessage={() => 'Aucune marque'}
+                        className="text-sm"
+                        classNamePrefix="react-select"
+                        styles={{
+                            control: (base) => ({
+                                ...base,
+                                backgroundColor: '#f8fafc',
+                                borderColor: '#e2e8f0',
+                                borderRadius: '0.75rem',
+                                fontSize: '0.875rem',
+                                padding: '2px 4px',
+                                minHeight: '46px',
+                            }),
+                            multiValue: (base) => ({
+                                ...base,
+                                backgroundColor: '#eff6ff',
+                                borderRadius: '8px',
+                            }),
+                            multiValueLabel: (base) => ({ ...base, color: '#1d4ed8', fontWeight: '600' }),
+                            multiValueRemove: (base) => ({ ...base, color: '#1d4ed8', ':hover': { backgroundColor: '#dbeafe', color: '#1d4ed8' } }),
+                            menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden' }),
+                            placeholder: (base) => ({ ...base, color: '#94a3b8' }),
+                        }}
+                    />
+                )}
+                {selectedBrands.length > 0 && (
+                    <p className="text-xs text-slate-500 mt-3 ml-1">
+                        <span className="font-bold text-primary">{selectedBrands.length}</span> marque(s) sélectionnée(s) pour l'affichage.
+                    </p>
                 )}
             </SectionCard>
 
