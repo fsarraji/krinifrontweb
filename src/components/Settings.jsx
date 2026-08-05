@@ -29,6 +29,8 @@ const Settings = () => {
     const [saving, setSaving] = useState(false);
     const [userRole, setUserRole] = useState('');
     const [message, setMessage] = useState({ text: '', type: '' });
+    const [allBrands, setAllBrands] = useState([]);
+    const [selectedBrands, setSelectedBrands] = useState([]);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -45,7 +47,10 @@ const Settings = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await api.get('agency/settings/');
+            const [res, brandsRes] = await Promise.all([
+                api.get('agency/settings/'),
+                api.get('brands/', { params: { all: 1 } }).catch(() => ({ data: [] })),
+            ]);
             setSettings({
                 caution_active: res.data.caution_active,
                 caution_montant: parseFloat(res.data.caution_montant),
@@ -54,6 +59,8 @@ const Settings = () => {
                 km_tarif_extra_defaut: parseFloat(res.data.km_tarif_extra_defaut),
                 cachet_signature: res.data.cachet_signature,
             });
+            setAllBrands(brandsRes.data.results || brandsRes.data || []);
+            setSelectedBrands((res.data.brands || []).map(String));
         } catch (error) {
             console.error("Error fetching settings:", error);
             setMessage({ text: 'Erreur lors du chargement des paramètres.', type: 'error' });
@@ -74,6 +81,7 @@ const Settings = () => {
                     formData.append(key, settings[key]);
                 }
             });
+            selectedBrands.forEach(id => formData.append('brands', id));
             if (cachetFile) {
                 formData.append('cachet_signature', cachetFile);
             }
@@ -235,6 +243,37 @@ const Settings = () => {
                                 <p className="text-green-600 font-bold">• Aucun dépassement — inclus dans le forfait ✓</p>
                             )}
                         </div>
+                    </div>
+                )}
+            </SectionCard>
+
+            {/* Section Marques affichées */}
+            <SectionCard icon="directions_car" title="Marques affichées" description="Sélectionnez les marques à afficher dans les formulaires de véhicule. Aucune sélection = toutes les marques.">
+                {allBrands.length === 0 ? (
+                    <p className="text-sm text-slate-400">Aucune marque disponible.</p>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {allBrands.map(b => {
+                            const isChecked = selectedBrands.includes(String(b.id));
+                            return (
+                                <label
+                                    key={b.id}
+                                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isChecked ? 'bg-blue-50 border-primary/40' : 'bg-slate-50 border-slate-100 hover:border-slate-200'} ${!isOwner || saving ? 'opacity-60 pointer-events-none' : ''}`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        className="h-4 w-4 text-primary rounded focus:ring-primary/30"
+                                        checked={isChecked}
+                                        disabled={!isOwner || saving}
+                                        onChange={(e) => {
+                                            if (e.target.checked) setSelectedBrands(prev => [...prev, String(b.id)]);
+                                            else setSelectedBrands(prev => prev.filter(id => id !== String(b.id)));
+                                        }}
+                                    />
+                                    <span className="text-sm font-semibold text-slate-700">{b.name}</span>
+                                </label>
+                            );
+                        })}
                     </div>
                 )}
             </SectionCard>
