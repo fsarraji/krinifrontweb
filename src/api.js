@@ -19,4 +19,24 @@ api.interceptors.request.use(
     }
 );
 
+// Le backend Django utilise la pagination globale (PageNumberPagination).
+// Les endpoints de liste renvoient donc { count, next, previous, results }.
+// On déroule automatiquement .results pour que les composants reçoivent bien un tableau.
+api.interceptors.response.use(
+    (response) => {
+        if (
+            response.data &&
+            typeof response.data === 'object' &&
+            !Array.isArray(response.data) &&
+            Array.isArray(response.data.results)
+        ) {
+            response.data = response.data.results;
+        }
+        return response;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
 export default api;
