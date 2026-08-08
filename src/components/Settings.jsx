@@ -32,8 +32,10 @@ const Settings = () => {
         km_extra_active: true,
         km_par_jour: 250,
         km_tarif_extra_defaut: 1.5,
+        logo: null,
         cachet_signature: null,
     });
+    const [logoFile, setLogoFile] = useState(null);
     const [cachetFile, setCachetFile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -80,6 +82,7 @@ const Settings = () => {
                 km_extra_active: res.data.km_extra_active,
                 km_par_jour: parseInt(res.data.km_par_jour),
                 km_tarif_extra_defaut: parseFloat(res.data.km_tarif_extra_defaut),
+                logo: res.data.logo,
                 cachet_signature: res.data.cachet_signature,
             });
             setAllBrands(brandsRes.data.results || brandsRes.data || []);
@@ -117,11 +120,14 @@ const Settings = () => {
         try {
             const formData = new FormData();
             Object.keys(settings).forEach(key => {
-                if (key !== 'cachet_signature' && settings[key] != null) {
+                if (key !== 'logo' && key !== 'cachet_signature' && settings[key] != null) {
                     formData.append(key, settings[key]);
                 }
             });
             selectedBrands.forEach(id => formData.append('brands', id));
+            if (logoFile) {
+                formData.append('logo', logoFile);
+            }
             if (cachetFile) {
                 formData.append('cachet_signature', cachetFile);
             }
@@ -130,10 +136,14 @@ const Settings = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            // Mettre à jour l'image si elle a été changée par le backend
+            // Mettre à jour les images si elles ont été changées par le backend
+            if (res.data.logo) {
+                setSettings(prev => ({ ...prev, logo: res.data.logo }));
+            }
             if (res.data.cachet_signature) {
                 setSettings(prev => ({ ...prev, cachet_signature: res.data.cachet_signature }));
             }
+            setLogoFile(null); // Reset the file input state
             setCachetFile(null); // Reset the file input state
 
             setMessage({ text: 'Paramètres sauvegardés avec succès.', type: 'success' });
@@ -198,8 +208,8 @@ const Settings = () => {
     const isOwner = userRole === 'OWNER' || userRole === 'SUPERADMIN';
 
     const SectionCard = ({ icon, title, description, children }) => (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/80">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
                 <h2 className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
                     <span className="material-symbols-outlined text-indigo-600">{icon}</span>
                     {title}
@@ -440,7 +450,7 @@ const Settings = () => {
                                     }),
                                     multiValueLabel: (base) => ({ ...base, color: '#1d4ed8', fontWeight: '600' }),
                                     multiValueRemove: (base) => ({ ...base, color: '#1d4ed8', ':hover': { backgroundColor: '#dbeafe', color: '#1d4ed8' } }),
-                                    menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden' }),
+                                    menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden', zIndex: 9999 }),
                                     placeholder: (base) => ({ ...base, color: '#94a3b8' }),
                                 }}
                             />
@@ -454,7 +464,55 @@ const Settings = () => {
 
                     {/* Section Branding / Cachet */}
                     <SectionCard icon="verified" title="Branding et Documents" description="Configurez les éléments visuels de vos documents officiels.">
-                        <div className="grid grid-cols-1 gap-6">
+                        <div className="grid grid-cols-1 gap-8">
+                            {/* Logo */}
+                            <div>
+                                <label className={fieldLabel}>Logo de l'Agence</label>
+                                <p className="text-xs text-slate-500 mb-4">Ce logo sera utilisé sur vos contrats de location et documents officiels.</p>
+
+                                <div className="flex items-center gap-6">
+                                    {/* Preview box */}
+                                    <div className="w-48 h-32 bg-white border border-dashed border-slate-300 rounded-xl flex items-center justify-center overflow-hidden">
+                                        {logoFile ? (
+                                            <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="max-w-full max-h-full object-contain p-2" />
+                                        ) : settings.logo ? (
+                                            <img src={settings.logo} alt="Logo actuel" className="max-w-full max-h-full object-contain p-2" />
+                                        ) : (
+                                            <div className="text-center text-slate-400">
+                                                <span className="material-symbols-outlined text-3xl">image</span>
+                                                <p className="text-[10px] mt-1 font-semibold uppercase">Aucun logo</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Upload button */}
+                                    <div className="flex-1">
+                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-indigo-600 hover:border-indigo-300'}`}>
+                                            <span className="material-symbols-outlined text-[20px]">upload_file</span>
+                                            {logoFile ? 'Changer le logo' : 'Importer un logo (PNG/JPG)'}
+                                            <input
+                                                type="file"
+                                                accept=".png,.jpg,.jpeg"
+                                                className="hidden"
+                                                disabled={!isOwner || saving}
+                                                onChange={(e) => {
+                                                    if (e.target.files && e.target.files[0]) {
+                                                        setLogoFile(e.target.files[0]);
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                        {logoFile && (
+                                            <p className="text-xs text-indigo-600 font-bold mt-2 ml-1 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                                Fichier prêt à être sauvegardé
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cachet & Signature */}
                             <div>
                                 <label className={fieldLabel}>Cachet & Signature de l'Agence</label>
                                 <p className="text-xs text-slate-500 mb-4">Cette image (idéalement au format PNG avec fond transparent) sera utilisée sur les contrats de location générés en PDF.</p>
