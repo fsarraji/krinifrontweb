@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import SearchFilterBar from './SearchFilterBar';
+import Pagination from './Pagination';
+import exportToCSV from '../utils/exportUtils';
+import { SkeletonCards, SkeletonTable } from './Skeleton';
 
 const Payments = () => {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [methodFilter, setMethodFilter] = useState('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         const fetchPayments = async () => {
@@ -20,18 +25,42 @@ const Payments = () => {
                 setLoading(false);
             }
         };
-
         fetchPayments();
     }, []);
 
-    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement des paiements...</div>;
+    // Reset to page 1 on filter/search change
+    useEffect(() => { setCurrentPage(1); }, [search, methodFilter]);
+
+    const handleExport = () => {
+        exportToCSV(
+            visiblePayments,
+            'recettes_paiements',
+            [
+                { key: 'id', label: 'ID Paiement' },
+                { key: 'payment_date', label: 'Date' },
+                { key: 'contract', label: 'ID Contrat' },
+                { key: 'payment_method', label: 'Méthode de Paiement' },
+                { key: 'reference', label: 'Référence' },
+                { key: 'amount', label: 'Montant (DH)' },
+            ]
+        );
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col gap-6">
+                <div className="h-8 w-64 bg-slate-200 animate-pulse rounded-xl"></div>
+                <SkeletonTable rows={5} cols={6} />
+            </div>
+        );
+    }
 
     const totalCollected = payments.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
 
     const methodOptions = [
-        { value: 'ALL', label: 'Toutes', dot: 'bg-primary' },
+        { value: 'ALL', label: 'Toutes', dot: 'bg-indigo-600' },
         ...[...new Set(payments.map(p => p.payment_method).filter(Boolean))].map(m => ({
-            value: m, label: m, dot: 'bg-secondary-container',
+            value: m, label: m, dot: 'bg-indigo-500',
         })),
     ];
 
@@ -44,25 +73,39 @@ const Payments = () => {
         return matchMethod && matchSearch;
     });
 
+    const paginatedPayments = visiblePayments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     return (
-        <div className="max-w-7xl mx-auto px-0 mt-0">
+        <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="flex justify-between items-end mb-8">
+            <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="font-headline text-4xl font-extrabold text-primary tracking-tight">Paiements</h1>
-                    <p className="text-sm font-medium text-slate-500 mt-2">Suivi global de toutes les transactions</p>
+                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Finances</p>
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Paiements</h2>
                 </div>
-                <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-xl border border-slate-100 shadow-sm">
-                    <span className="material-symbols-outlined text-green-500">account_balance</span>
-                    <div>
-                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Collecté</p>
-                        <p className="font-headline text-2xl font-extrabold text-[#00236f]">{totalCollected.toLocaleString()} DH</p>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={handleExport}
+                        className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all flex items-center gap-2"
+                        title="Exporter en CSV (Excel)"
+                    >
+                        <span className="material-symbols-outlined text-lg">download</span>
+                        <span>Exporter (CSV)</span>
+                    </button>
+                    <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center ring-1 ring-emerald-100">
+                            <span className="material-symbols-outlined text-xl">account_balance</span>
+                        </div>
+                        <div>
+                            <p className="text-[11px] uppercase font-bold text-slate-500 tracking-widest">Total Collecté</p>
+                            <p className="text-2xl font-extrabold text-slate-900">{totalCollected.toLocaleString()} DH</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Search & Filter */}
-            <div className="mb-6">
+            <div>
                 <SearchFilterBar
                     placeholder="Rechercher (contrat, référence, méthode)..."
                     search={search}
@@ -74,56 +117,67 @@ const Payments = () => {
             </div>
 
             {/* Content */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 {visiblePayments.length === 0 ? (
                     <div className="p-12 text-center flex flex-col items-center">
-                        <span className="material-symbols-outlined text-slate-200 text-6xl mb-4">money_off</span>
-                        <p className="text-slate-500 font-bold">Aucun paiement enregistré pour le moment.</p>
+                        <span className="material-symbols-outlined text-slate-300 text-5xl mb-3">money_off</span>
+                        <p className="text-slate-500 font-semibold text-sm">Aucun paiement enregistré pour le moment.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                                    <th className="px-6 py-4 font-extrabold">ID</th>
-                                    <th className="px-6 py-4 font-extrabold">Date</th>
-                                    <th className="px-6 py-4 font-extrabold">Contrat Associé</th>
-                                    <th className="px-6 py-4 font-extrabold">Méthode</th>
-                                    <th className="px-6 py-4 font-extrabold">Référence</th>
-                                    <th className="px-6 py-4 font-extrabold text-right">Montant</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-sm">
-                                {visiblePayments.map(payment => (
-                                    <tr key={payment.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                                        <td className="px-6 py-4 font-bold text-slate-400">#{payment.id.toString().padStart(4, '0')}</td>
-                                        <td className="px-6 py-4 font-medium text-slate-600">
-                                            {new Date(payment.payment_date || payment.created_at).toLocaleDateString('fr-FR', {
-                                                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit'
-                                            })}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <Link to={`/contracts/edit/${payment.contract}`} className="inline-flex items-center gap-1 font-bold text-primary hover:text-blue-700 hover:underline">
-                                                <span>CTR-{payment.contract.toString().padStart(5, '0')}</span>
-                                                <span className="material-symbols-outlined text-[12px] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold tracking-wider">
-                                                {payment.payment_method}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-500 text-xs truncate max-w-[150px]">
-                                            {payment.reference || '-'}
-                                        </td>
-                                        <td className="px-6 py-4 font-extrabold text-green-600 text-right text-base">
-                                            +{parseFloat(payment.amount).toLocaleString()} DH
-                                        </td>
+                    <>
+                        <div className="overflow-x-auto w-full">
+                            <table className="min-w-full divide-y divide-slate-100">
+                                <thead className="bg-slate-50/80">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">ID</th>
+                                        <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                        <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Contrat Associé</th>
+                                        <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Méthode</th>
+                                        <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Référence</th>
+                                        <th scope="col" className="px-6 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Montant</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-slate-100">
+                                    {paginatedPayments.map(payment => (
+                                        <tr key={payment.id} className="hover:bg-slate-50/80 transition-colors group">
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-400">
+                                                #{payment.id.toString().padStart(4, '0')}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
+                                                {new Date(payment.payment_date || payment.created_at).toLocaleDateString('fr-FR', {
+                                                    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                                })}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <Link to={`/contracts/edit/${payment.contract}`} className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
+                                                    <span>CTR-{payment.contract.toString().padStart(5, '0')}</span>
+                                                    <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                                                </Link>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="px-3 py-1 inline-flex text-[11px] font-bold rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-200">
+                                                    {payment.payment_method}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-slate-500 truncate max-w-[150px]">
+                                                {payment.reference || '—'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-extrabold text-emerald-600 text-right">
+                                                +{parseFloat(payment.amount).toLocaleString()} DH
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalItems={visiblePayments.length}
+                            pageSize={pageSize}
+                            onPageChange={setCurrentPage}
+                            onPageSizeChange={setPageSize}
+                        />
+                    </>
                 )}
             </div>
         </div>

@@ -30,6 +30,13 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
         setError(null);
         try {
             await api.patch(`contracts/${contract.id}/`, formData);
+            if (contract.vehicle) {
+                try {
+                    await api.patch(`vehicles/${contract.vehicle}/`, { statut: 'Rented' });
+                } catch (vErr) {
+                    console.error("Erreur lors du changement de statut du véhicule", vErr);
+                }
+            }
             onActivated();
             onClose();
         } catch (err) {

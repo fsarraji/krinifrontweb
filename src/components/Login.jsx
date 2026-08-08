@@ -29,7 +29,6 @@ const Login = () => {
             console.log("Agence :", decodedToken.agency_name);
             console.log("Rôle :", decodedToken.role);
 
-            // Redirection vers le tableau de bord
             navigate('/dashboard');
 
         } catch (err) {
@@ -44,142 +43,99 @@ const Login = () => {
     };
 
     return (
-        <div className="bg-surface font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
-            <main className="flex min-h-screen">
-                {/* Left Side: Premium Lifestyle Image */}
-                <section className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-                    <div className="absolute inset-0 z-0">
-                        <img
-                            alt="Luxury Car Interior"
-                            className="h-full w-full object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBHiJKD-7uWgOBCFPc8y6TiqTbcRJyjeOVQVEwDLMm36K3pHQxu8Q2AmAuMyxqsOsuNws5g1RL60Ano1fRJaRa91T7eHCjL-cL7_xDmTDbISjqNN4-lY3bzIJ0Jk7Yp_jErMlva5xqBxNM-I3PfJb1L51yOZYh20ltrKcq5XvocS9I0dq1wTsYKqMN28EXs95ZBHwMNF24VnRhiFR47135m3_OOmVqX2s7SU3lTooV5LUvjN2BWhFEKkkJlmSLpk41g4CAqhqCQ_8"
-                        />
-                        {/* Overlay for depth and branding integration */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/60 to-transparent mix-blend-multiply"></div>
-                    </div>
-                    <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-                        <div className="flex items-center gap-3">
-                            <span className="text-on-primary text-3xl font-headline font-extrabold tracking-tighter">KRINI</span>
+        <div className="min-h-screen bg-slate-50 flex">
+            {/* Left Side: Image Banner */}
+            <section className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-900">
+                <img
+                    alt="Luxury Car Interior"
+                    className="h-full w-full object-cover opacity-60"
+                    src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1600"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                <div className="relative z-10 flex flex-col justify-between p-12 w-full text-white">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
+                            <span className="material-symbols-outlined text-2xl">directions_car</span>
                         </div>
-                        <div className="max-w-md">
-                            <h2 className="text-on-primary font-headline text-4xl font-bold leading-tight mb-4">Le standard de précision pour la gestion de flotte.</h2>
-                            <p className="text-on-primary/80 font-body text-lg">Intelligence au service de l'entrepreneur moderne de la mobilité.</p>
-                        </div>
-                        <div className="text-on-primary/60 text-sm font-label uppercase tracking-widest">
-                            ERP de Conciergerie de Précision © 2024
-                        </div>
+                        <span className="text-2xl font-extrabold tracking-tight">KRINI</span>
                     </div>
-                </section>
-
-                {/* Right Side: Login Content */}
-                <section className="w-full lg:w-1/2 flex items-center justify-center bg-surface-container-lowest p-8 md:p-16 lg:p-24">
-                    <div className="w-full max-w-md space-y-10">
-                        {/* Header Section */}
-                        <header className="space-y-2">
-                            <div className="lg:hidden mb-8">
-                                <span className="text-primary text-2xl font-headline font-extrabold tracking-tighter">KRINI</span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-secondary font-label text-xs uppercase tracking-[0.2em] mb-1">Autorisation</span>
-                                <h1 className="text-on-surface font-headline text-4xl font-extrabold tracking-tight">Bienvenue</h1>
-                            </div>
-                            <p className="text-on-surface-variant font-body text-base">Accédez à votre tableau de bord de gestion de flotte</p>
-                        </header>
-
-                        {error && (
-                            <div className="bg-error-container text-on-error-container p-4 rounded-md text-sm font-body">
-                                {error}
-                            </div>
-                        )}
-
-                        {/* Login Form */}
-                        <form className="space-y-6" onSubmit={handleLogin}>
-                            <div className="space-y-4">
-                                {/* Username Field */}
-                                <div className="relative group">
-                                    <label className="block text-secondary font-label text-xs uppercase tracking-wider mb-2" htmlFor="username">
-                                        Nom d'utilisateur
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            className="w-full bg-surface-container-low border-none border-b-2 border-transparent focus:ring-0 focus:border-primary transition-all duration-300 py-3 px-4 text-on-surface placeholder:text-outline"
-                                            id="username"
-                                            name="username"
-                                            placeholder="Nom d'utilisateur"
-                                            type="text"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Password Field */}
-                                <div className="relative group">
-                                    <label className="block text-secondary font-label text-xs uppercase tracking-wider mb-2" htmlFor="password">
-                                        Mot de passe
-                                    </label>
-                                    <div className="relative flex items-center">
-                                        <input
-                                            className="w-full bg-surface-container-low border-none border-b-2 border-transparent focus:ring-0 focus:border-primary transition-all duration-300 py-3 px-4 text-on-surface placeholder:text-outline"
-                                            id="password"
-                                            name="password"
-                                            placeholder="••••••••"
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            required
-                                        />
-                                        <button className="absolute right-3 text-outline hover:text-primary transition-colors" type="button">
-                                            <span className="material-symbols-outlined text-[20px]">visibility</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center justify-between py-2">
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <div className="relative flex items-center">
-                                        <input className="peer h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20 bg-surface-container-low transition-all" type="checkbox" />
-                                    </div>
-                                    <span className="text-on-surface-variant font-body text-sm group-hover:text-on-surface transition-colors">Se souvenir de moi</span>
-                                </label>
-                                <a className="text-primary font-body text-sm font-semibold hover:text-primary-container transition-colors" href="#">Mot de passe oublié ?</a>
-                            </div>
-
-                            {/* Submit Button */}
-                            <button
-                                className="w-full group relative flex items-center justify-center gap-2 bg-primary text-on-primary py-4 rounded-md font-headline font-bold text-lg hover:bg-primary-container active:scale-[0.98] transition-all duration-200"
-                                type="submit"
-                            >
-                                Se connecter
-                                <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">arrow_forward</span>
-                            </button>
-                        </form>
-
-                        {/* Footer/Secondary Action */}
-                        <footer className="pt-6 border-t border-outline-variant/15 text-center">
-                            <p className="text-on-surface-variant font-body text-sm">
-                                Nouveau sur la plateforme ? 
-                                <a className="text-primary font-bold ml-1 hover:underline underline-offset-4 decoration-2 transition-all" href="#">Demander un accès</a>
-                            </p>
-                        </footer>
+                    <div className="max-w-md space-y-4">
+                        <h2 className="text-3xl font-extrabold tracking-tight leading-tight">Le standard de précision pour la gestion de flotte.</h2>
+                        <p className="text-slate-300 text-sm font-medium leading-relaxed">Plateforme intelligente dédiée aux gestionnaires modernes de parc automobile.</p>
                     </div>
-                </section>
-            </main>
-
-            {/* Support Link Footer Overlay */}
-            <div className="fixed bottom-6 right-8 hidden lg:flex items-center gap-4">
-                <a className="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full hover:bg-surface-container-high transition-colors text-secondary font-label text-xs uppercase tracking-widest" href="#">
-                    <span className="material-symbols-outlined text-sm">help_outline</span>
-                    Support
-                </a>
-                <div className="flex items-center gap-2 text-outline-variant">
-                    <span className="material-symbols-outlined text-lg">language</span>
-                    <span className="font-label text-xs uppercase">FR</span>
+                    <div className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                        KRINI Flotte © 2026
+                    </div>
                 </div>
-            </div>
+            </section>
+
+            {/* Right Side: Login Form */}
+            <section className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
+                <div className="w-full max-w-md space-y-8 bg-white border border-slate-200 p-8 rounded-2xl shadow-sm">
+                    {/* Header Section */}
+                    <header className="space-y-2">
+                        <div className="lg:hidden flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                                <span className="material-symbols-outlined text-2xl">directions_car</span>
+                            </div>
+                            <span className="text-2xl font-extrabold text-slate-900 tracking-tight">KRINI</span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Autorisation</p>
+                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Bienvenue</h1>
+                        <p className="text-xs font-medium text-slate-500">Accédez à votre espace de gestion de flotte</p>
+                    </header>
+
+                    {error && (
+                        <div className="bg-rose-50 border-l-4 border-rose-500 text-rose-700 p-4 rounded-xl text-xs font-semibold">
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Login Form */}
+                    <form className="space-y-5" onSubmit={handleLogin}>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5" htmlFor="username">
+                                Nom d'utilisateur
+                            </label>
+                            <input
+                                className="block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-semibold shadow-sm transition-all"
+                                id="username"
+                                name="username"
+                                placeholder="Nom d'utilisateur"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5" htmlFor="password">
+                                Mot de passe
+                            </label>
+                            <input
+                                className="block w-full px-4 py-3 border border-slate-200 rounded-xl bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-semibold shadow-sm transition-all"
+                                id="password"
+                                name="password"
+                                placeholder="••••••••"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {/* Submit Button */}
+                        <button
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-semibold text-sm shadow-lg shadow-indigo-200/50 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
+                            type="submit"
+                        >
+                            <span>Se connecter</span>
+                            <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
         </div>
     );
 };

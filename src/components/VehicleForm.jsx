@@ -185,38 +185,38 @@ const VehicleForm = () => {
     if (fetching) return <div className="flex items-center justify-center min-h-screen text-primary font-bold">Chargement...</div>;
 
     return (
-        <div className="p-10 max-w-7xl mx-auto animate-fade-in">
+        <div className="max-w-7xl mx-auto">
             {/* Breadcrumbs & Actions Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
                 <div>
-                    <div className="flex items-center gap-2 text-slate-400 mb-2">
-                        <Link to="/vehicles" className="text-xs font-inter uppercase tracking-widest hover:text-primary transition-colors">Flotte</Link>
-                        <span className="material-symbols-outlined text-xs">chevron_right</span>
-                        <span className="text-xs font-inter uppercase tracking-widest text-primary font-bold">
-                            {isEditMode ? `${formData.marque} ${formData.modele}` : 'Nouveau Véhicule'}
+                    <div className="flex items-center gap-2 text-slate-400 mb-2 uppercase tracking-widest text-xs font-bold">
+                        <Link to="/vehicles" className="hover:text-indigo-650 transition-colors">Flotte</Link>
+                        <span className="material-symbols-outlined text-[10px]">chevron_right</span>
+                        <span className="text-slate-900 font-bold">
+                            {isEditMode ? `${formData.marque_name} ${formData.modele_name}` : 'Nouveau Véhicule'}
                         </span>
                     </div>
-                    <h2 className="text-4xl font-extrabold font-manrope text-blue-900 tracking-tight flex items-center gap-4">
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-4">
                         {isEditMode ? 'Modifier le Véhicule' : 'Ajouter un Véhicule'}
-                        {isEditMode && <span className="text-lg font-normal text-slate-300 font-inter">ID: #{id}</span>}
+                        {isEditMode && <span className="text-sm font-normal text-slate-400">ID: #{id}</span>}
                     </h2>
                 </div>
                 {isEditMode && (
                     <button 
                         type="button"
                         onClick={handleDelete}
-                        className="group flex items-center gap-2 text-red-600 px-4 py-2 hover:bg-red-50 rounded-lg transition-colors"
+                        className="group flex items-center gap-2 text-rose-600 px-4 py-2 hover:bg-rose-50 rounded-xl transition-colors font-bold text-sm"
                     >
-                        <span className="material-symbols-outlined text-xl">delete</span>
-                        <span className="font-inter font-semibold text-sm">Supprimer</span>
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                        <span>Supprimer</span>
                     </button>
                 )}
             </div>
             
             {error && (
-                <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 animate-shake">
+                <div className="mb-8 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-700 font-semibold text-sm">
                     <span className="material-symbols-outlined">error</span>
-                    <p className="font-inter font-semibold text-sm">{error}</p>
+                    <p>{error}</p>
                 </div>
             )}
 
@@ -224,28 +224,28 @@ const VehicleForm = () => {
                 {/* Left Column: Form Sections */}
                 <div className="col-span-12 lg:col-span-8 space-y-8">
                     {/* Vehicle Identification Section */}
-                    <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
-                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-primary">fingerprint</span>
+                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-indigo-600">fingerprint</span>
                             </div>
-                            <h3 className="font-manrope font-semibold text-lg text-blue-900">Identification</h3>
+                            <h3 className="font-extrabold text-lg text-slate-900">Identification</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Matricule</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Matricule</label>
                                 <input 
                                     name="matricule"
                                     value={formData.matricule}
                                     onChange={handleChange}
-                                    className="w-full bg-slate-50 border-b-2 border-primary border-t-0 border-l-0 border-r-0 py-3 px-4 font-manrope text-lg font-semibold text-slate-900 focus:ring-0 focus:bg-white transition-all" 
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
                                     type="text" 
                                     placeholder="Ex: 12345-A-50"
                                     required
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Marque</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Marque</label>
                                 <Select 
                                     options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
                                     onChange={(opt) => {
@@ -257,20 +257,21 @@ const VehicleForm = () => {
                                     isClearable
                                     classNamePrefix="react-select"
                                     styles={{
-                                        control: (base) => ({
+                                        control: (base, state) => ({
                                             ...base,
                                             backgroundColor: '#f8fafc',
-                                            border: 'none',
-                                            borderBottom: '2px solid #e2e8f0',
-                                            borderRadius: '0',
-                                            padding: '2px 0'
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '0.75rem',
+                                            padding: '4px',
+                                            borderColor: state.isFocused ? '#4f46e5' : '#e2e8f0',
+                                            boxShadow: state.isFocused ? '0 0 0 1px #4f46e5' : 'none'
                                         }),
-                                        placeholder: (base) => ({ ...base, color: '#94a3b8' })
+                                        placeholder: (base) => ({ ...base, color: '#94a3b8', fontSize: '0.875m' })
                                     }}
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Modèle</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Modèle</label>
                                 <Select 
                                     options={models.map(model => ({ value: model.id, label: model.name }))}
                                     onChange={(opt) => {
@@ -283,25 +284,26 @@ const VehicleForm = () => {
                                     isDisabled={!formData.marque}
                                     classNamePrefix="react-select"
                                     styles={{
-                                        control: (base) => ({
+                                        control: (base, state) => ({
                                             ...base,
                                             backgroundColor: !formData.marque ? '#f1f5f9' : '#f8fafc',
-                                            border: 'none',
-                                            borderBottom: '2px solid #e2e8f0',
-                                            borderRadius: '0',
-                                            padding: '2px 0'
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '0.75rem',
+                                            padding: '4px',
+                                            borderColor: state.isFocused ? '#4f46e5' : '#e2e8f0',
+                                            boxShadow: state.isFocused ? '0 0 0 1px #4f46e5' : 'none'
                                         }),
                                         placeholder: (base) => ({ ...base, color: '#94a3b8' })
                                     }}
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Année</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Année</label>
                                 <input 
                                     name="annee"
                                     value={formData.annee}
                                     onChange={handleChange}
-                                    className="w-full bg-slate-50 border-b-2 border-slate-200 border-t-0 border-l-0 border-r-0 py-3 px-4 font-manrope text-lg font-semibold text-slate-900 focus:ring-0 focus:border-primary focus:bg-white transition-all" 
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
                                     type="number" 
                                     required
                                 />
@@ -310,30 +312,30 @@ const VehicleForm = () => {
                     </section>
 
                     {/* Technical Specs Section */}
-                    <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
-                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-primary">settings_input_component</span>
+                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-indigo-600">settings_input_component</span>
                             </div>
-                            <h3 className="font-manrope font-semibold text-lg text-blue-900">Spécifications</h3>
+                            <h3 className="font-extrabold text-lg text-slate-900">Spécifications</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Kilométrage (KM)</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Kilométrage (KM)</label>
                                 <div className="relative">
                                     <input 
                                         name="kilometrage"
                                         value={formData.kilometrage}
                                         onChange={handleChange}
-                                        className="w-full bg-slate-50 border-b-2 border-slate-200 border-t-0 border-l-0 border-r-0 py-3 px-4 font-manrope text-lg font-semibold text-slate-900 focus:ring-0 focus:border-primary focus:bg-white transition-all" 
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
                                         type="number" 
                                         required
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-inter text-xs font-bold">KM</span>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">KM</span>
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Carburant</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Carburant</label>
                                 <Dropdown
                                     name="carburant"
                                     options={[
@@ -347,23 +349,23 @@ const VehicleForm = () => {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Couleur</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Couleur</label>
                                 <input 
                                     name="couleur"
                                     value={formData.couleur}
                                     onChange={handleChange}
-                                    className="w-full bg-slate-50 border-b-2 border-slate-200 border-t-0 border-l-0 border-r-0 py-3 px-4 font-manrope text-lg font-semibold text-slate-900 focus:ring-0 focus:border-primary focus:bg-white transition-all" 
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
                                     type="text" 
                                     placeholder="Ex: Noir Métallisé"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Prochain Vidange (KM)</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Prochain Vidange (KM)</label>
                                 <input 
                                     name="prochain_vidange_km"
                                     value={formData.prochain_vidange_km}
                                     onChange={handleChange}
-                                    className="w-full bg-slate-50 border-b-2 border-slate-200 border-t-0 border-l-0 border-r-0 py-3 px-4 font-manrope text-lg font-semibold text-slate-900 focus:ring-0 focus:border-primary focus:bg-white transition-all" 
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
                                     type="number" 
                                 />
                             </div>
@@ -371,22 +373,22 @@ const VehicleForm = () => {
                     </section>
 
                     {/* Tarification Section */}
-                    <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
-                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-primary">payments</span>
+                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-indigo-600">payments</span>
                             </div>
-                            <h3 className="font-manrope font-semibold text-lg text-blue-900">Tarification</h3>
+                            <h3 className="font-extrabold text-lg text-slate-900">Tarification</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
-                            <div className="bg-slate-50 p-6 rounded-2xl space-y-2 border border-slate-100">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500">Prix Journalier</label>
+                            <div className="bg-slate-50 p-6 rounded-2xl space-y-2 border border-slate-200">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Prix Journalier</label>
                                 <div className="flex items-center gap-2">
                                     <input 
                                         name="prix_par_jour"
                                         value={formData.prix_par_jour}
                                         onChange={handleChange}
-                                        className="bg-transparent border-none p-0 font-manrope font-bold text-3xl text-primary focus:ring-0 w-32"
+                                        className="bg-transparent border-none p-0 font-extrabold text-2xl text-indigo-600 focus:ring-0 w-32 outline-none"
                                         type="number"
                                         step="0.01"
                                         required
@@ -394,8 +396,8 @@ const VehicleForm = () => {
                                     <span className="text-slate-400 font-bold">DH / jour</span>
                                 </div>
                             </div>
-                            <div className="bg-slate-50 p-6 rounded-2xl flex flex-col justify-center border border-slate-100">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500 mb-3">Service Chauffeur</label>
+                            <div className="bg-slate-50 p-6 rounded-2xl flex flex-col justify-center border border-slate-200">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Service Chauffeur</label>
                                 <label className="inline-flex items-center cursor-pointer">
                                     <input 
                                         name="chauffeur_disponible"
@@ -404,8 +406,8 @@ const VehicleForm = () => {
                                         className="sr-only peer" 
                                         type="checkbox"
                                     />
-                                    <div className="relative w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
-                                    <span className="ml-4 text-sm font-bold text-blue-900 transition-colors">
+                                    <div className="relative w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <span className="ml-4 text-sm font-bold text-slate-900 transition-colors">
                                         {formData.chauffeur_disponible ? 'Disponible' : 'Non disponible'}
                                     </span>
                                 </label>
@@ -413,9 +415,9 @@ const VehicleForm = () => {
                         </div>
 
                         {/* Tarif km extra override */}
-                        <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                            <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500 flex items-center gap-1 mb-2">
-                                <span className="material-symbols-outlined text-sm text-primary">speed</span>
+                        <div className="mt-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1 mb-2">
+                                <span className="material-symbols-outlined text-sm text-indigo-600">speed</span>
                                 Tarif km suppl. spécifique à ce véhicule (DH/km)
                             </label>
                             <div className="relative">
@@ -424,7 +426,7 @@ const VehicleForm = () => {
                                     name="tarif_km_extra"
                                     value={formData.tarif_km_extra || ''}
                                     onChange={handleChange}
-                                    className="w-full bg-white border border-blue-100 rounded-lg pl-10 pr-4 py-2.5 font-manrope font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200"
                                     type="number"
                                     step="0.5"
                                     min="0"
@@ -436,38 +438,38 @@ const VehicleForm = () => {
                     </section>
 
                     {/* Administrative Validity */}
-                    <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
-                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-primary">verified_user</span>
+                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-indigo-600">verified_user</span>
                             </div>
-                            <h3 className="font-manrope font-semibold text-lg text-blue-900">Validité</h3>
+                            <h3 className="font-extrabold text-lg text-slate-900">Validité</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-4">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-sm text-primary">policy</span>
+                            <div className="space-y-2">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-indigo-600">policy</span>
                                     Expiration Assurance
                                 </label>
                                 <input 
                                     name="date_assurance"
                                     value={formData.date_assurance}
                                     onChange={handleChange}
-                                    className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 font-manrope font-bold text-slate-700 focus:bg-white focus:border-primary transition-all shadow-sm" 
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
                                     type="date"
                                     required
                                 />
                             </div>
-                            <div className="space-y-4">
-                                <label className="font-inter uppercase tracking-wider text-[10px] font-bold text-slate-500 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-sm text-primary">engineering</span>
+                            <div className="space-y-2">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-indigo-600">engineering</span>
                                     Visite Technique
                                 </label>
-                                <input 
+                                                                <input 
                                     name="date_visite_technique"
                                     value={formData.date_visite_technique}
                                     onChange={handleChange}
-                                    className="w-full bg-slate-50 p-4 rounded-xl border border-slate-100 font-manrope font-bold text-slate-700 focus:bg-white focus:border-primary transition-all shadow-sm" 
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
                                     type="date"
                                     required
                                 />
@@ -479,8 +481,8 @@ const VehicleForm = () => {
                 {/* Right Column: Sidebar/Action Panel */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
                     {/* Status Card */}
-                    <div className="bg-slate-50 p-8 rounded-2xl border border-white shadow-sm">
-                        <h3 className="font-manrope font-bold text-blue-900 mb-6">Statut</h3>
+                    <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 className="font-extrabold text-slate-900 mb-6">Statut</h3>
                         <div className="space-y-3">
                             {['Available', 'Maintenance', 'Rented'].map((status) => (
                                 <button 
@@ -489,15 +491,15 @@ const VehicleForm = () => {
                                     onClick={() => setFormData(prev => ({ ...prev, statut: status }))}
                                     className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 group ${
                                         formData.statut === status 
-                                        ? 'bg-blue-900 text-white border-blue-900 shadow-lg shadow-blue-900/20' 
-                                        : 'bg-white text-slate-500 border-slate-100 hover:border-blue-200'
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200/50' 
+                                        : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200'
                                     }`}
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="material-symbols-outlined text-xl">
                                             {status === 'Available' ? 'check_circle' : status === 'Maintenance' ? 'build' : 'key'}
                                         </span>
-                                        <span className={`font-inter ${formData.statut === status ? 'font-bold' : 'font-semibold'}`}>
+                                        <span className={formData.statut === status ? 'font-bold' : 'font-semibold'}>
                                             {status === 'Available' ? 'Disponible' : status === 'Maintenance' ? 'Maintenance' : 'Louée'}
                                         </span>
                                     </div>
@@ -510,7 +512,7 @@ const VehicleForm = () => {
                     </div>
 
                     {/* Quick Preview Card */}
-                    <div className="relative overflow-hidden rounded-2xl bg-primary group aspect-video shadow-2xl border-4 border-white">
+                    <div className="relative overflow-hidden rounded-2xl bg-slate-950 group aspect-video shadow-lg border border-slate-200">
                         {imagePreview ? (
                             <img 
                                 src={imagePreview} 
@@ -518,15 +520,15 @@ const VehicleForm = () => {
                                 alt="Aperçu" 
                             />
                         ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-white/30 font-inter text-sm flex-col gap-2">
+                            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm flex-col gap-2">
                                 <span className="material-symbols-outlined text-4xl">image</span>
                                 <span>Aucune Image</span>
                             </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent flex flex-col justify-end p-6">
-                            <p className="text-white/60 text-[10px] font-inter uppercase tracking-[0.2em] font-bold mb-1">Aperçu Dynamique</p>
-                            <h4 className="text-white font-manrope font-bold text-2xl tracking-tight">{formData.matricule || 'XXX-XXXX'}</h4>
-                            <p className="text-white/80 text-xs font-inter font-medium">
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex flex-col justify-end p-6">
+                            <p className="text-white/60 text-[10px] uppercase tracking-wider font-bold mb-1">Aperçu Dynamique</p>
+                            <h4 className="text-white font-bold text-xl tracking-tight">{formData.matricule || 'XXX-XXXX'}</h4>
+                            <p className="text-white/80 text-xs font-medium">
                                 {isEditMode 
                                     ? `${formData.marque_name} ${formData.modele_name}`
                                     : `${brands.find(b => b.id === parseInt(formData.marque))?.name || ''} ${models.find(m => m.id === parseInt(formData.modele))?.name || ''}`
@@ -544,15 +546,15 @@ const VehicleForm = () => {
                         <button 
                             type="submit"
                             disabled={loading}
-                            className="w-full py-5 bg-gradient-to-r from-blue-900 to-blue-800 text-white rounded-2xl font-manrope font-bold text-lg shadow-xl shadow-blue-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-200/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                            <span className="material-symbols-outlined">save</span>
+                            <span className="material-symbols-outlined text-base">save</span>
                             {loading ? 'Enregistrement...' : 'Sauvegarder'}
                         </button>
                         <button 
                             type="button"
                             onClick={() => navigate('/vehicles')}
-                            className="w-full py-4 bg-white text-slate-400 rounded-2xl font-inter font-bold border border-slate-100 hover:bg-slate-50 hover:text-slate-600 transition-all text-sm"
+                            className="w-full py-3 bg-white text-slate-500 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 hover:text-slate-700 transition-all text-sm shadow-sm"
                         >
                             Abandonner
                         </button>

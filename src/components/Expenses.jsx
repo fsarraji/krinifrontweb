@@ -2,27 +2,33 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import Dropdown from './Dropdown';
 import SearchFilterBar from './SearchFilterBar';
+import Pagination from './Pagination';
+import exportToCSV from '../utils/exportUtils';
+import { SkeletonCards, SkeletonTable } from './Skeleton';
+import { toast } from './Toast';
 
 const Expenses = () => {
     const [expenses, setExpenses] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [expenseType, setExpenseType] = useState('AGENCY'); // 'AGENCY' or 'VEHICLE'
+    const [expenseType, setExpenseType] = useState('AGENCY');
     const [search, setSearch] = useState('');
     const [typeFilter, setTypeFilter] = useState('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     const TYPE_FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
-        { value: 'AGENCY', label: 'Agence', dot: 'bg-red-500' },
-        { value: 'VEHICLE', label: 'Véhicule', dot: 'bg-blue-500' },
+        { value: 'ALL', label: 'Tous', dot: 'bg-indigo-600' },
+        { value: 'AGENCY', label: 'Agence', dot: 'bg-rose-500' },
+        { value: 'VEHICLE', label: 'Véhicule', dot: 'bg-indigo-500' },
     ];
 
     const [formData, setFormData] = useState({
         title: '',
         category: 'Salaries',
         amount: '',
-        vehicle: '', // Vehicle ID
+        vehicle: '',
         expense_date: new Date().toISOString().split('T')[0],
         notes: ''
     });
@@ -72,26 +78,47 @@ const Expenses = () => {
                 expense_date: formData.expense_date,
                 notes: formData.notes,
                 vehicle: expenseType === 'VEHICLE' && formData.vehicle ? parseInt(formData.vehicle) : null,
-                // agency is automatically set by the backend from the authenticated user token
             };
 
             await api.post('expenses/', payload);
             
-            // Refresh
             const expRes = await api.get('expenses/');
             setExpenses(expRes.data.results || expRes.data);
             setShowModal(false);
+            toast.success("La dépense a été enregistrée avec succès.");
             setFormData({
                 title: '', category: 'Other', amount: '', vehicle: '', 
                 expense_date: new Date().toISOString().split('T')[0], notes: ''
             });
         } catch (error) {
             console.error("Erreur ajout dépense", error);
-            alert("Erreur lors de l'ajout de la dépense.");
+            toast.error("Erreur lors de l'ajout de la dépense.");
         }
     };
 
-    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement...</div>;
+    const handleExport = () => {
+        exportToCSV(
+            visibleExpenses,
+            'journal_depenses',
+            [
+                { key: 'expense_date', label: 'Date' },
+                { key: 'title', label: 'Titre' },
+                { key: 'category', label: 'Catégorie' },
+                { key: 'amount', label: 'Montant (DH)' },
+                { key: 'notes', label: 'Notes' },
+            ]
+        );
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col gap-6">
+                <div className="h-8 w-64 bg-slate-200 animate-pulse rounded-xl"></div>
+                <SkeletonCards count={3} />
+                <SkeletonTable rows={5} cols={4} />
+            </div>
+        );
+    }
 
     const totalAgency = expenses.filter(e => !e.vehicle).reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
     const totalVehicles = expenses.filter(e => e.vehicle).reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
@@ -106,47 +133,76 @@ const Expenses = () => {
         return matchType && matchSearch;
     });
 
+    const paginatedExpenses = visibleExpenses.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     return (
-        <div className="max-w-7xl mx-auto px-0 mt-0">
+        <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="flex justify-between items-end mb-8">
+            <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="font-headline text-4xl font-extrabold text-primary tracking-tight">Dépenses</h1>
-                    <p className="text-sm font-medium text-slate-500 mt-2">Gestion des charges de l'agence et de la flotte</p>
+                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Comptabilité</p>
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dépenses</h2>
                 </div>
-                <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/95 transition-all shadow-lg shadow-primary/20">
-                    <span className="material-symbols-outlined">add</span>
-                    Ajouter une Dépense
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleExport}
+                        className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all flex items-center gap-2"
+                        title="Exporter en CSV (Excel)"
+                    >
+                        <span className="material-symbols-outlined text-lg">download</span>
+                        <span>Exporter (CSV)</span>
+                    </button>
+                    <button 
+                        onClick={() => setShowModal(true)} 
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 flex items-center gap-2.5 hover:-translate-y-0.5"
+                    >
+                        <span className="material-symbols-outlined text-lg">add</span>
+                        Ajouter une Dépense
+                    </button>
+                </div>
             </div>
 
-            {/* Widgets */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-[#00236f] text-white p-6 rounded-2xl shadow-xl relative overflow-hidden">
-                    <span className="material-symbols-outlined absolute right-4 top-4 text-6xl opacity-10">account_balance_wallet</span>
-                    <p className="text-[10px] uppercase font-bold text-blue-200 tracking-widest mb-2">Total des Dépenses</p>
-                    <p className="font-headline text-3xl font-extrabold">{totalGlobal.toLocaleString()} DH</p>
-                </div>
-                <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm relative overflow-hidden">
-                    <div className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center absolute right-6 top-6">
-                        <span className="material-symbols-outlined">storefront</span>
+            {/* Widgets (Compact Row) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-indigo-600 text-white p-4 rounded-xl shadow-sm flex items-center justify-between h-20 relative overflow-hidden">
+                    <div className="flex items-center gap-3.5 min-w-0 relative z-10">
+                        <div className="w-11 h-11 bg-white/10 text-white rounded-xl flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest truncate">Total des Dépenses</p>
+                            <p className="text-xl font-extrabold mt-1 leading-none">{totalGlobal.toLocaleString()} DH</p>
+                        </div>
                     </div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Charges Agence</p>
-                    <p className="font-headline text-2xl font-extrabold text-slate-800">{totalAgency.toLocaleString()} DH</p>
-                    <p className="text-xs text-slate-400 font-medium mt-1">Électricité, Loyers, Salaires</p>
                 </div>
-                <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm relative overflow-hidden">
-                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center absolute right-6 top-6">
-                        <span className="material-symbols-outlined">directions_car</span>
+
+                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-11 h-11 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-xl">storefront</span>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Charges Agence</p>
+                            <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{totalAgency.toLocaleString()} DH</p>
+                        </div>
                     </div>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Charges Flotte</p>
-                    <p className="font-headline text-2xl font-extrabold text-slate-800">{totalVehicles.toLocaleString()} DH</p>
-                    <p className="text-xs text-slate-400 font-medium mt-1">Carburant, Entretiens, Assurances</p>
+                </div>
+
+                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-11 h-11 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-xl">directions_car</span>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Charges Flotte</p>
+                            <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{totalVehicles.toLocaleString()} DH</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Search & Filter */}
-            <div className="mb-6">
+            <div>
                 <SearchFilterBar
                     placeholder="Rechercher (titre, notes, catégorie)..."
                     search={search}
@@ -158,47 +214,50 @@ const Expenses = () => {
             </div>
 
             {/* List */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 {visibleExpenses.length === 0 ? (
-                    <div className="p-12 text-center text-slate-400">Aucune dépense enregistrée.</div>
+                    <div className="p-12 text-center text-slate-400 font-medium">Aucune dépense enregistrée.</div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                                    <th className="px-6 py-4 font-extrabold">Date</th>
-                                    <th className="px-6 py-4 font-extrabold">Titre / Description</th>
-                                    <th className="px-6 py-4 font-extrabold">Type & Catégorie</th>
-                                    <th className="px-6 py-4 font-extrabold text-right">Montant</th>
+                    <>
+                    <div className="overflow-x-auto w-full">
+                        <table className="min-w-full divide-y divide-slate-100">
+                            <thead className="bg-slate-50/80">
+                                <tr>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Titre / Description</th>
+                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Type & Catégorie</th>
+                                    <th scope="col" className="px-6 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Montant</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {visibleExpenses.map(e => (
-                                    <tr key={e.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-slate-600">
+                            <tbody className="bg-white divide-y divide-slate-100">
+                                {paginatedExpenses.map(e => (
+                                    <tr key={e.id} className="hover:bg-slate-50/80 transition-colors group">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
                                             {new Date(e.expense_date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="font-bold text-slate-800">{e.title}</p>
-                                            {e.notes && <p className="text-[10px] text-slate-400 line-clamp-1">{e.notes}</p>}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <p className="text-sm font-semibold text-slate-900">{e.title}</p>
+                                            {e.notes && <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">{e.notes}</p>}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex flex-col gap-1 items-start">
                                                 {e.vehicle ? (
-                                                    <span className="inline-flex gap-1 items-center px-2 py-1 bg-blue-50 text-blue-600 text-[9px] font-bold tracking-widest uppercase rounded">
-                                                        <span className="material-symbols-outlined text-[10px]">directions_car</span>
+                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20">
+                                                        <span className="material-symbols-outlined text-xs">directions_car</span>
                                                         Véhicule #{e.vehicle}
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex gap-1 items-center px-2 py-1 bg-red-50 text-red-600 text-[9px] font-bold tracking-widest uppercase rounded">
-                                                        <span className="material-symbols-outlined text-[10px]">storefront</span>
+                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
+                                                        <span className="material-symbols-outlined text-xs">storefront</span>
                                                         Agence
                                                     </span>
                                                 )}
-                                                <span className="text-xs text-slate-500 font-medium">{CATEGORIES.find(c => c.value === e.category)?.label || e.category}</span>
+                                                <span className="text-xs text-slate-500 font-medium mt-0.5">
+                                                    {CATEGORIES.find(c => c.value === e.category)?.label || e.category}
+                                                </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 font-extrabold text-red-600 text-right text-base whitespace-nowrap">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-extrabold text-rose-600 text-right">
                                             -{parseFloat(e.amount).toLocaleString()} DH
                                         </td>
                                     </tr>
@@ -206,75 +265,83 @@ const Expenses = () => {
                             </tbody>
                         </table>
                     </div>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalItems={visibleExpenses.length}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }}
+                    />
+                    </>
                 )}
             </div>
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
-                            <h3 className="font-headline text-xl font-bold text-primary flex items-center gap-2">
-                                <span className="material-symbols-outlined text-red-500">money_off</span> 
+                            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-rose-500 text-xl">money_off</span> 
                                 Enregistrer une Dépense
                             </h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-error transition-colors">
-                                <span className="material-symbols-outlined">close</span>
+                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <span className="material-symbols-outlined text-xl">close</span>
                             </button>
                         </div>
                         
-                        <div className="p-6 overflow-y-auto">
+                        <div className="p-6 overflow-y-auto space-y-4">
                             {/* Type Selector */}
-                            <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+                            <div className="flex bg-slate-100 p-1 rounded-xl">
                                 <button
                                     type="button"
                                     onClick={() => { setExpenseType('AGENCY'); setFormData(f => ({...f, category: 'Salaries', vehicle: ''})); }}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${expenseType === 'AGENCY' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${expenseType === 'AGENCY' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
                                 >
-                                    <span className="material-symbols-outlined text-lg">storefront</span> Dépense Agence
+                                    <span className="material-symbols-outlined text-base">storefront</span> Dépense Agence
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => { setExpenseType('VEHICLE'); setFormData(f => ({...f, category: 'Maintenance'})); }}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${expenseType === 'VEHICLE' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${expenseType === 'VEHICLE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
                                 >
-                                    <span className="material-symbols-outlined text-lg">directions_car</span> Dépense Véhicule
+                                    <span className="material-symbols-outlined text-base">directions_car</span> Dépense Véhicule
                                 </button>
                             </div>
 
                             <form id="expenseForm" onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Titre de la dépense <span className="text-error">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Titre de la dépense <span className="text-rose-500">*</span></label>
                                         <input 
                                             type="text" required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-bold"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                             placeholder="Ex: Facture électricité Janvier"
                                             value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Montant (DH) <span className="text-error">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Montant (DH) <span className="text-rose-500">*</span></label>
                                         <input 
                                             type="number" required min="0" step="0.01"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-bold"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                             placeholder="Ex: 500"
                                             value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date <span className="text-error">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date <span className="text-rose-500">*</span></label>
                                         <input 
                                             type="date" required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-bold"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                             value={formData.expense_date} onChange={e => setFormData({...formData, expense_date: e.target.value})}
                                         />
                                     </div>
                                     
                                     <div className={`col-span-2 ${expenseType === 'VEHICLE' ? '' : 'hidden'}`}>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Véhicule Concerné <span className="text-error">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Véhicule Concerné <span className="text-rose-500">*</span></label>
                                         <Dropdown
                                             isSearchable
                                             placeholder="-- Sélectionner un véhicule --"
@@ -288,7 +355,7 @@ const Expenses = () => {
                                     </div>
 
                                     <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Catégorie <span className="text-error">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Catégorie <span className="text-rose-500">*</span></label>
                                         <Dropdown
                                             options={CATEGORIES}
                                             value={formData.category}
@@ -297,10 +364,10 @@ const Expenses = () => {
                                     </div>
 
                                     <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Notes</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Notes</label>
                                         <textarea 
                                             rows="2"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                                             placeholder="Détails (facultatif)..."
                                             value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}
                                         ></textarea>
@@ -308,12 +375,12 @@ const Expenses = () => {
                                 </div>
                             </form>
                         </div>
-                        <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3 shrink-0">
-                            <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 rounded-lg text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 shrink-0">
+                            <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
                                 Annuler
                             </button>
-                            <button form="expenseForm" type="submit" className="flex-1 px-4 py-3 rounded-lg text-sm font-bold text-white bg-error shadow-lg shadow-error/20 hover:bg-error/95 hover:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                                <span className="material-symbols-outlined text-sm">check_circle</span> Valider la Dépense
+                            <button form="expenseForm" type="submit" className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-200/50 transition-all flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-sm">check_circle</span> Valider
                             </button>
                         </div>
                     </div>

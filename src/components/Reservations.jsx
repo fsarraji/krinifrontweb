@@ -1,9 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import CloseContractModal from './CloseContractModal';
 import ActivateReservationModal from './ActivateReservationModal';
 import SearchFilterBar from './SearchFilterBar';
+import Pagination from './Pagination';
 
 const REQUEST_STATUS_META = {
     PENDING: { label: 'En attente', className: 'bg-amber-50 text-amber-700 ring-amber-600/20' },
@@ -45,12 +46,16 @@ const Reservations = () => {
     const [search, setSearch] = useState('');
     const [requestFilter, setRequestFilter] = useState('ALL');
     const [reservationFilter, setReservationFilter] = useState('ALL');
+    const [contractPage, setContractPage] = useState(1);
+    const [contractPageSize, setContractPageSize] = useState(10);
+    const [requestPage, setRequestPage] = useState(1);
+    const [requestPageSize, setRequestPageSize] = useState(10);
 
     const fetchAll = async () => {
         try {
             const [contractsRes, requestsRes] = await Promise.all([
                 api.get('contracts/?page_size=500'),
-                api.get('reservations/?page_size=500'),
+                api.get('booking-requests/?page_size=500'),
             ]);
             const contractData = contractsRes.data?.results ?? contractsRes.data ?? [];
             const requestData = requestsRes.data?.results ?? requestsRes.data ?? [];
@@ -82,12 +87,17 @@ const Reservations = () => {
     };
 
     const handleConfirm = async (id) => {
-        if (!window.confirm('Confirmer cette demande de réservation ? Un contrat (Réservé) sera créé.')) return;
+        if (!window.confirm('Confirmer cette demande de réservation ? Le client sera créé automatiquement s\'il n\'existe pas, et un contrat (Réservé) sera généré.')) return;
         setBusyId(id);
         try {
-            await api.post(`reservations/${id}/confirm/`, {});
-            setSuccessMsg('✅ Réservation confirmée. Le contrat en statut Réservé a été créé.');
-            setTimeout(() => setSuccessMsg(''), 5000);
+            const res = await api.post(`booking-requests/${id}/confirm/`, {});
+            const isNewClient = res.data?.client_created;
+            setSuccessMsg(
+                isNewClient
+                    ? '✅ Réservation confirmée. Nouveau client créé automatiquement et contrat généré.'
+                    : '✅ Réservation confirmée. Le contrat en statut Réservé a été créé.'
+            );
+            setTimeout(() => setSuccessMsg(''), 6000);
             fetchAll();
         } catch (error) {
             console.error("Erreur lors de la confirmation", error);
@@ -101,7 +111,7 @@ const Reservations = () => {
         if (!window.confirm('Refuser cette demande de réservation ?')) return;
         setBusyId(id);
         try {
-            await api.patch(`reservations/${id}/`, { statut: 'CANCELLED' });
+            await api.patch(`booking-requests/${id}/`, { statut: 'CANCELLED' });
             fetchAll();
         } catch (error) {
             console.error("Erreur lors du refus", error);
@@ -153,6 +163,10 @@ const Reservations = () => {
         'Partial': 'bg-amber-50 text-amber-700 ring-amber-600/20',
         'Unpaid': 'bg-rose-50 text-rose-700 ring-rose-600/20',
     };
+
+    const paginatedRequests = visibleRequests.slice((requestPage - 1) * requestPageSize, requestPage * requestPageSize);
+    const paginatedReservations = visibleReservations.slice((contractPage - 1) * contractPageSize, contractPage * contractPageSize);
+
 
     const statusStyles = {
         'RESERVE': 'bg-blue-50 text-blue-700 ring-blue-600/20',
@@ -248,8 +262,8 @@ const Reservations = () => {
             </div>
 
             {/* Data Table */}
-            <div className="flex-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                <div className="overflow-x-auto flex-1">
+            <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto w-full">
                     {tab === 'demandes' ? (
                         <table className="min-w-full divide-y divide-slate-100">
                             <thead className="bg-slate-50/80">
@@ -263,7 +277,7 @@ const Reservations = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-slate-100">
-                                {visibleRequests.map((request, i) => {
+                                {paginatedRequests.map((request, i) => {
                                     const meta = REQUEST_STATUS_META[request.statut] || REQUEST_STATUS_META.PENDING;
                                     const busy = busyId === request.id;
                                     const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
@@ -334,7 +348,7 @@ const Reservations = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-slate-100">
-                                {visibleReservations.map((contract, i) => {
+                                {paginatedReservations.map((contract, i) => {
                                     const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
                                     return (
                                         <tr key={contract.id} className="hover:bg-slate-50/80 transition-colors group">
@@ -409,6 +423,16 @@ const Reservations = () => {
                         </table>
                     )}
                 </div>
+                <Pagination
+                    currentPage={tab === 'demandes' ? requestPage : contractPage}
+                    totalItems={tab === 'demandes' ? visibleRequests.length : visibleReservations.length}
+                    pageSize={tab === 'demandes' ? requestPageSize : contractPageSize}
+                    onPageChange={tab === 'demandes' ? setRequestPage : setContractPage}
+                    onPageSizeChange={tab === 'demandes'
+                        ? (s) => { setRequestPageSize(s); setRequestPage(1); }
+                        : (s) => { setContractPageSize(s); setContractPage(1); }
+                    }
+                />
             </div>
 
             <ActivateReservationModal

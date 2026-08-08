@@ -61,16 +61,16 @@ export default {
         "full": "9999px"
       },
       fontFamily: {
-        "headline": ["Manrope", "sans-serif"],
+        "headline": ["Inter", "sans-serif"],
         "body": ["Inter", "sans-serif"],
         "label": ["Inter", "sans-serif"],
-        "body-lg": ["Hanken Grotesk", "sans-serif"],
-        "headline-lg": ["Hanken Grotesk", "sans-serif"],
-        "label-caps": ["Hanken Grotesk", "sans-serif"],
-        "body-md": ["Hanken Grotesk", "sans-serif"],
-        "headline-md": ["Hanken Grotesk", "sans-serif"],
-        "label-sm": ["Hanken Grotesk", "sans-serif"],
-        "headline-lg-mobile": ["Hanken Grotesk", "sans-serif"]
+        "body-lg": ["Inter", "sans-serif"],
+        "headline-lg": ["Inter", "sans-serif"],
+        "label-caps": ["Inter", "sans-serif"],
+        "body-md": ["Inter", "sans-serif"],
+        "headline-md": ["Inter", "sans-serif"],
+        "label-sm": ["Inter", "sans-serif"],
+        "headline-lg-mobile": ["Inter", "sans-serif"]
       },
       fontSize: {
         "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
