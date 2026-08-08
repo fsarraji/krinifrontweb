@@ -12,11 +12,11 @@ const ToggleSwitch = ({ checked, onChange, disabled }) => (
             onChange={onChange}
             disabled={disabled}
         />
-        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"></div>
+        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"></div>
     </label>
 );
 
-const inputClass = "w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:bg-slate-50 disabled:text-slate-500";
+const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500";
 
 const fieldLabel = "block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2";
 
@@ -199,9 +199,9 @@ const Settings = () => {
 
     const SectionCard = ({ icon, title, description, children }) => (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                <h2 className="text-xl font-bold font-headline text-[#00236f] flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">{icon}</span>
+            <div className="p-6 border-b border-slate-100 bg-slate-50/80">
+                <h2 className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-indigo-600">{icon}</span>
                     {title}
                 </h2>
                 <p className="text-slate-500 text-sm mt-1">
@@ -217,10 +217,10 @@ const Settings = () => {
         <button
             type="button"
             onClick={() => setActiveTab(tabKey)}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
+            className={`px-5 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2.5 ${
                 activeTab === tabKey
-                    ? 'bg-white text-[#00236f] shadow-sm border border-slate-200'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'text-slate-900 bg-white rounded-lg shadow-sm ring-1 ring-slate-200/50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             }`}
         >
             <span className="material-symbols-outlined text-lg">{icon}</span>
@@ -238,19 +238,16 @@ const Settings = () => {
 
     return (
         <div className="max-w-3xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-2">
-                <div className="w-12 h-12 bg-[#00236f] rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <span className="material-symbols-outlined text-[24px]">tune</span>
-                </div>
+            {/* Editorial Header Section */}
+            <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-bold font-headline text-[#00236f] tracking-tight">Paramètres</h1>
-                    <p className="text-slate-500 text-sm font-semibold mt-1">Configurez les paramètres de l'agence et de votre compte</p>
+                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Configuration</p>
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Paramètres</h2>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 p-1.5 bg-slate-100 rounded-xl border border-slate-200 w-full max-w-md">
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
                 <TabButton tabKey="agency" icon="storefront" label="Agence" />
                 <TabButton tabKey="account" icon="person" label="Compte" />
             </div>
@@ -389,12 +386,12 @@ const Settings = () => {
 
                         {/* Preview calculation */}
                         {settings.km_extra_active && (
-                            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                <p className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">info</span>
                                     Exemple de calcul (3 jours, 900 km parcourus)
                                 </p>
-                                <div className="space-y-1 text-xs text-blue-600">
+                                <div className="space-y-1 text-xs text-indigo-600">
                                     <p>• Km inclus : {settings.km_par_jour} km/j × 3 jours = <strong>{settings.km_par_jour * 3} km</strong></p>
                                     <p>• Km parcourus : 900 km</p>
                                     {900 > settings.km_par_jour * 3 ? (
@@ -450,7 +447,7 @@ const Settings = () => {
                         )}
                         {selectedBrands.length > 0 && (
                             <p className="text-xs text-slate-500 mt-3 ml-1">
-                                <span className="font-bold text-primary">{selectedBrands.length}</span> marque(s) sélectionnée(s) pour l'affichage.
+                                <span className="font-bold text-indigo-600">{selectedBrands.length}</span> marque(s) sélectionnée(s) pour l'affichage.
                             </p>
                         )}
                     </SectionCard>
@@ -479,7 +476,7 @@ const Settings = () => {
 
                                     {/* Upload button */}
                                     <div className="flex-1">
-                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-primary hover:border-primary/30'}`}>
+                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-indigo-600 hover:border-indigo-300'}`}>
                                             <span className="material-symbols-outlined text-[20px]">upload_file</span>
                                             {cachetFile ? 'Changer l\'image' : 'Importer un cachet (PNG/JPG)'}
                                             <input
@@ -495,7 +492,7 @@ const Settings = () => {
                                             />
                                         </label>
                                         {cachetFile && (
-                                            <p className="text-xs text-primary font-bold mt-2 ml-1 flex items-center gap-1">
+                                            <p className="text-xs text-indigo-600 font-bold mt-2 ml-1 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
                                                 Fichier prêt à être sauvegardé
                                             </p>
@@ -512,7 +509,7 @@ const Settings = () => {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="flex items-center gap-2 px-8 py-3 bg-[#00236f] text-white rounded-xl font-semibold hover:bg-[#00236f]/90 transition-all shadow-lg shadow-[#00236f]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {saving ? (
                                     <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> Sauvegarde en cours...</>
@@ -604,7 +601,7 @@ const Settings = () => {
                         <button
                             type="submit"
                             disabled={accountSaving}
-                            className="flex items-center gap-2 px-8 py-3 bg-[#00236f] text-white rounded-xl font-semibold hover:bg-[#00236f]/90 transition-all shadow-lg shadow-[#00236f]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {accountSaving ? (
                                 <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> Sauvegarde en cours...</>
