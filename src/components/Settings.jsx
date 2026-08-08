@@ -237,7 +237,7 @@ const Settings = () => {
         ) : null;
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex flex-col gap-6">
             {/* Editorial Header Section */}
             <div className="flex justify-between items-end">
                 <div>
