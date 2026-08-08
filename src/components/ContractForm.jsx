@@ -150,14 +150,15 @@ const ContractForm = () => {
                 }
             }
             navigate('/contracts');
+            toast.success('Contrat créé avec succès.');
             } catch (error) {
                 console.error("Erreur lors de la création du contrat", error);
                 if (error.response?.data?.non_field_errors) {
-                    alert(error.response.data.non_field_errors[0]);
+                    toast.error(error.response.data.non_field_errors[0]);
                 } else if (error.response?.data?.detail) {
-                    alert(error.response.data.detail);
+                    toast.error(error.response.data.detail);
                 } else {
-                    alert("Erreur lors de la création du contrat. Vérifiez les champs et la disponibilité du véhicule.");
+                    toast.error("Erreur lors de la création du contrat. Vérifiez les champs et la disponibilité du véhicule.");
                 }
             }
         };

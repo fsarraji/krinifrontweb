@@ -23,7 +23,6 @@ const Contracts = () => {
     const [loading, setLoading] = useState(true);
     const [closeContract, setCloseContract] = useState(null);
     const [printContractId, setPrintContractId] = useState(null);
-    const [successMsg, setSuccessMsg] = useState('');
     const [activeFilter, setActiveFilter] = useState('ALL');
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -87,7 +86,7 @@ const Contracts = () => {
             link.remove();
         } catch (error) {
             console.error("Erreur lors du téléchargement du PDF", error);
-            alert("Erreur lors de la génération du PDF.");
+            toast.error("Erreur lors de la génération du PDF.");
         }
     };
 
@@ -176,14 +175,6 @@ const Contracts = () => {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Success Toast */}
-            {successMsg && (
-                <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl text-sm font-semibold">
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                    {successMsg}
                 </div>
             )}
 

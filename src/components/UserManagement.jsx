@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import Dropdown from './Dropdown';
+import { toast } from './Toast';
+import { messageBox } from './MessageBox';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -49,10 +51,11 @@ const UserManagement = () => {
             }
             setShowModal(false);
             fetchUsers();
+            toast.success(isEditing ? 'Utilisateur mis à jour avec succès.' : 'Utilisateur créé avec succès.');
             resetForm();
         } catch (error) {
             console.error("Erreur lors de l'enregistrement", error);
-            alert("Erreur lors de l'enregistrement. Vérifiez les données (le nom d'utilisateur doit être unique).");
+            toast.error("Erreur lors de l'enregistrement. Vérifiez les données (le nom d'utilisateur doit être unique).");
         }
     };
 
@@ -67,15 +70,19 @@ const UserManagement = () => {
         setShowModal(true);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Supprimer cet utilisateur ?")) {
-            try {
-                await api.delete(`users/${id}/`);
-                fetchUsers();
-            } catch (error) {
-                console.error("Erreur suppression", error);
+    const handleDelete = (id) => {
+        messageBox.danger("Supprimer cet utilisateur ?", "Supprimer l'utilisateur", {
+            onConfirm: async () => {
+                try {
+                    await api.delete(`users/${id}/`);
+                    fetchUsers();
+                    toast.success('Utilisateur supprimé avec succès.');
+                } catch (error) {
+                    console.error("Erreur suppression", error);
+                    toast.error("Erreur lors de la suppression.");
+                }
             }
-        }
+        });
     };
 
     if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement...</div>;

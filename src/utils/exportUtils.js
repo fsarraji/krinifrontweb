@@ -5,9 +5,11 @@
  * @param {string} filename - Output filename (without extension)
  * @param {Array<{key: string, label: string}>} columns - Optional column mapping
  */
+import { toast } from '../components/Toast';
+
 export const exportToCSV = (data, filename = 'export', columns = null) => {
     if (!data || !data.length) {
-        alert("Aucune donnée disponible à exporter.");
+        toast.warning("Aucune donnée disponible à exporter.", 'Export CSV');
         return;
     }
 

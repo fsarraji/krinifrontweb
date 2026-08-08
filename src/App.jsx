@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Vehicles from './components/Vehicles';
 import VehicleForm from './components/VehicleForm';
+import GpsTracking from './components/GpsTracking';
 import Clients from './components/Clients';
 import Contracts from './components/Contracts';
 import Reservations from './components/Reservations';
@@ -21,10 +22,14 @@ import Payments from './components/Payments';
 import Expenses from './components/Expenses';
 import Marketplace from './components/Marketplace';
 import Settings from './components/Settings';
+import ToastContainer from './components/Toast';
+import MessageBoxContainer from './components/MessageBox';
 
 function App() {
   return (
     <Router>
+      <ToastContainer />
+      <MessageBoxContainer />
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/marketplace" element={<Marketplace />} />
@@ -37,6 +42,11 @@ function App() {
         <Route path="/vehicles" element={
           <Layout>
             <Vehicles />
+          </Layout>
+        } />
+        <Route path="/gps" element={
+          <Layout>
+            <GpsTracking />
           </Layout>
         } />
         <Route path="/vehicles/new" element={

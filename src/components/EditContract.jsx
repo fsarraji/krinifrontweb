@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api from '../api';
+import { toast } from './Toast';
 
 const EditContract = () => {
   const { id } = useParams();
@@ -67,9 +68,10 @@ const EditContract = () => {
       setPaymentsHistory(paymentsRes.data.results || paymentsRes.data);
       setShowPaymentModal(false);
       setPaymentFormData({ amount: '', payment_method: 'Espèce', reference: '', notes: '' });
+      toast.success('Paiement ajouté avec succès.');
     } catch (err) {
       console.error('Add payment error', err);
-      alert('Erreur lors de l\'ajout du paiement');
+      toast.error('Erreur lors de l\'ajout du paiement');
     }
   };
 

@@ -4,6 +4,7 @@ import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api from '../api';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from './Toast';
 
 const ReservationForm = () => {
     const navigate = useNavigate();
@@ -99,7 +100,7 @@ const ReservationForm = () => {
             setStep(2);
         } catch (error) {
             console.error("Dispo erreur", error);
-            alert(error.response?.data?.detail || "Erreur de disponibilité");
+            toast.error(error.response?.data?.detail || "Erreur de disponibilité");
         } finally {
             setLoading(false);
         }
@@ -118,15 +119,16 @@ const ReservationForm = () => {
                 date_retour_prevue: `${formData.date_retour_prevue}T09:00:00Z`,
             };
             await api.post('contracts/', dataToSubmit);
+            toast.success('Réservation créée avec succès.');
             navigate('/reservations');
         } catch (error) {
             console.error("Erreur lors de la création", error);
             if (error.response?.data?.non_field_errors) {
-                alert(error.response.data.non_field_errors[0]);
+                toast.error(error.response.data.non_field_errors[0]);
             } else if (error.response?.data?.detail) {
-                alert(error.response.data.detail);
+                toast.error(error.response.data.detail);
             } else {
-                alert("Erreur lors de la création de la réservation. Vérifiez les champs.");
+                toast.error("Erreur lors de la création de la réservation. Vérifiez les champs.");
             }
         }
     };

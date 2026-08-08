@@ -5,6 +5,8 @@ import CloseContractModal from './CloseContractModal';
 import ActivateReservationModal from './ActivateReservationModal';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
+import { toast } from './Toast';
+import { messageBox } from './MessageBox';
 
 const REQUEST_STATUS_META = {
     PENDING: { label: 'En attente', className: 'bg-amber-50 text-amber-700 ring-amber-600/20' },
@@ -40,8 +42,8 @@ const Reservations = () => {
     const [tab, setTab] = useState('demandes');
     const [contracts, setContracts] = useState([]);
     const [requests, setRequests] = useState([]);
+    const [clientReservations, setClientReservations] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [successMsg, setSuccessMsg] = useState('');
     const [busyId, setBusyId] = useState(null);
     const [search, setSearch] = useState('');
     const [requestFilter, setRequestFilter] = useState('ALL');
@@ -53,14 +55,17 @@ const Reservations = () => {
 
     const fetchAll = async () => {
         try {
-            const [contractsRes, requestsRes] = await Promise.all([
+            const [contractsRes, requestsRes, reservationsRes] = await Promise.all([
                 api.get('contracts/?page_size=500'),
                 api.get('booking-requests/?page_size=500'),
+                api.get('reservations/?page_size=500'),
             ]);
             const contractData = contractsRes.data?.results ?? contractsRes.data ?? [];
             const requestData = requestsRes.data?.results ?? requestsRes.data ?? [];
+            const reservationData = reservationsRes.data?.results ?? reservationsRes.data ?? [];
             setContracts(Array.isArray(contractData) ? contractData : []);
             setRequests(Array.isArray(requestData) ? requestData : []);
+            setClientReservations(Array.isArray(reservationData) ? reservationData : []);
             setLoading(false);
         } catch (error) {
             console.error('Erreur lors de la récupération des réservations', error);
@@ -81,44 +86,59 @@ const Reservations = () => {
     };
 
     const handleActivated = () => {
-        setSuccessMsg('🚀 La réservation a été activée ! Le véhicule est maintenant loué.');
-        setTimeout(() => setSuccessMsg(''), 5000);
+        toast.success('La réservation a été activée ! Le véhicule est maintenant loué.');
         fetchAll();
     };
 
-    const handleConfirm = async (id) => {
-        if (!window.confirm('Confirmer cette demande de réservation ? Le client sera créé automatiquement s\'il n\'existe pas, et un contrat (Réservé) sera généré.')) return;
-        setBusyId(id);
-        try {
-            const res = await api.post(`booking-requests/${id}/confirm/`, {});
-            const isNewClient = res.data?.client_created;
-            setSuccessMsg(
-                isNewClient
-                    ? '✅ Réservation confirmée. Nouveau client créé automatiquement et contrat généré.'
-                    : '✅ Réservation confirmée. Le contrat en statut Réservé a été créé.'
-            );
-            setTimeout(() => setSuccessMsg(''), 6000);
-            fetchAll();
-        } catch (error) {
-            console.error("Erreur lors de la confirmation", error);
-            alert(error.response?.data?.detail || "Erreur lors de la confirmation de la réservation.");
-        } finally {
-            setBusyId(null);
-        }
+    const handleConfirm = (request) => {
+        messageBox.confirm('Confirmer cette demande de réservation ? Un contrat (Réservé) sera généré.', 'Confirmation', {
+            confirmText: 'Confirmer',
+            onConfirm: async () => {
+                setBusyId(`${request.kind}-${request.id}`);
+                try {
+                    const isReservation = request.kind === 'reservation';
+                    const res = await api.post(
+                        isReservation ? `reservations/${request.id}/confirm/` : `booking-requests/${request.id}/confirm/`,
+                        {}
+                    );
+                    const isNewClient = res.data?.client_created;
+                    toast.success(
+                        isNewClient
+                            ? 'Réservation confirmée. Nouveau client créé automatiquement et contrat généré.'
+                            : 'Réservation confirmée. Le contrat en statut Réservé a été créé.'
+                    );
+                    fetchAll();
+                } catch (error) {
+                    console.error("Erreur lors de la confirmation", error);
+                    toast.error(error.response?.data?.detail || "Erreur lors de la confirmation de la réservation.");
+                } finally {
+                    setBusyId(null);
+                }
+            }
+        });
     };
 
-    const handleRefuse = async (id) => {
-        if (!window.confirm('Refuser cette demande de réservation ?')) return;
-        setBusyId(id);
-        try {
-            await api.patch(`booking-requests/${id}/`, { statut: 'CANCELLED' });
-            fetchAll();
-        } catch (error) {
-            console.error("Erreur lors du refus", error);
-            alert(error.response?.data?.detail || "Erreur lors du refus de la réservation.");
-        } finally {
-            setBusyId(null);
-        }
+    const handleRefuse = (request) => {
+        messageBox.confirm('Refuser cette demande de réservation ?', 'Refuser', {
+            confirmText: 'Refuser',
+            destructive: true,
+            onConfirm: async () => {
+                setBusyId(`${request.kind}-${request.id}`);
+                try {
+                    await api.patch(
+                        request.kind === 'reservation' ? `reservations/${request.id}/` : `booking-requests/${request.id}/`,
+                        { statut: 'CANCELLED' }
+                    );
+                    toast.success('Demande de réservation refusée.');
+                    fetchAll();
+                } catch (error) {
+                    console.error("Erreur lors du refus", error);
+                    toast.error(error.response?.data?.detail || "Erreur lors du refus de la réservation.");
+                } finally {
+                    setBusyId(null);
+                }
+            }
+        });
     };
 
     const handleDownloadPDF = async (id) => {
@@ -135,13 +155,17 @@ const Reservations = () => {
             link.remove();
         } catch (error) {
             console.error("Erreur lors du téléchargement du PDF", error);
-            alert("Erreur lors de la génération du PDF.");
+            toast.error("Erreur lors de la génération du PDF.");
         }
     };
 
     const RESERVATION_STATUSES = ['RESERVE', 'EN_COURS', 'TERMINE'];
     const reservations = contracts.filter(c => RESERVATION_STATUSES.includes(c.statut));
-    const pendingRequests = requests.filter(r => r.statut === 'PENDING');
+    const allRequests = [
+        ...requests.map(r => ({ ...r, kind: 'booking' })),
+        ...clientReservations.map(r => ({ ...r, kind: 'reservation' })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const pendingRequests = allRequests.filter(r => r.statut === 'PENDING');
 
     const matchesSearch = (obj, fields) => {
         const q = search.trim().toLowerCase();
@@ -149,7 +173,7 @@ const Reservations = () => {
         return fields.filter(Boolean).some(f => String(f).toLowerCase().includes(q));
     };
 
-    const visibleRequests = requests.filter(r =>
+    const visibleRequests = allRequests.filter(r =>
         (requestFilter === 'ALL' || r.statut === requestFilter) &&
         matchesSearch(r, [r.client_name, r.vehicle_name])
     );
@@ -194,13 +218,6 @@ const Reservations = () => {
 
     return (
         <div className="flex flex-col h-full gap-6">
-            {successMsg && (
-                <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl text-sm font-semibold">
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                    {successMsg}
-                </div>
-            )}
-
             {/* Editorial Header */}
             <header className="flex items-end justify-between">
                 <div>
@@ -279,10 +296,10 @@ const Reservations = () => {
                             <tbody className="bg-white divide-y divide-slate-100">
                                 {paginatedRequests.map((request, i) => {
                                     const meta = REQUEST_STATUS_META[request.statut] || REQUEST_STATUS_META.PENDING;
-                                    const busy = busyId === request.id;
+                                    const busy = busyId === `${request.kind}-${request.id}`;
                                     const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
                                     return (
-                                        <tr key={request.id} className="hover:bg-slate-50/80 transition-colors group">
+                                        <tr key={`${request.kind}-${request.id}`} className="hover:bg-slate-50/80 transition-colors group">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3.5">
                                                     <div className={`flex-shrink-0 h-10 w-10 rounded-xl ${avatarClass} flex items-center justify-center font-bold text-sm ring-1`}>
@@ -290,7 +307,12 @@ const Reservations = () => {
                                                     </div>
                                                     <div>
                                                         <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{request.client_name}</div>
-                                                        <div className="text-xs text-slate-500 font-medium mt-0.5">#RES-{request.id.toString().padStart(5, '0')}</div>
+                                                        <div className="text-xs text-slate-500 font-medium mt-0.5 flex items-center gap-1.5">
+                                                            <span>#RES-{request.id.toString().padStart(5, '0')}</span>
+                                                            {request.kind === 'reservation' && (
+                                                                <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 text-[10px] font-bold">Compte client</span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -308,14 +330,14 @@ const Reservations = () => {
                                                 {request.statut === 'PENDING' && (
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
-                                                            onClick={() => handleRefuse(request.id)}
+                                                            onClick={() => handleRefuse(request)}
                                                             disabled={busy}
                                                             className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors disabled:opacity-50"
                                                         >
                                                             Refuser
                                                         </button>
                                                         <button
-                                                            onClick={() => handleConfirm(request.id)}
+                                                            onClick={() => handleConfirm(request)}
                                                             disabled={busy}
                                                             className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50"
                                                         >

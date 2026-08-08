@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import { toast } from './Toast';
 
 const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => {
     const navigate = useNavigate();
@@ -13,15 +14,19 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const [dashRes, requestsRes] = await Promise.all([
+            const [dashRes, requestsRes, reservationsRes] = await Promise.all([
                 api.get('dashboard/'),
                 api.get('booking-requests/?statut=PENDING'),
+                api.get('reservations/?statut=PENDING'),
             ]);
 
             const alerts = dashRes.data?.alerts || { insurance_expiring: [], visite_expiring: [] };
             const pendingRequests = Array.isArray(requestsRes.data)
                 ? requestsRes.data
                 : (requestsRes.data?.results || []);
+            const pendingReservations = Array.isArray(reservationsRes.data)
+                ? reservationsRes.data
+                : (reservationsRes.data?.results || []);
 
             const items = [];
 
@@ -33,6 +38,21 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                     category: 'Demande Client',
                     title: `Nouvelle demande de réservation #${req.id}`,
                     subtitle: `${req.client_name || req.nom} — ${req.vehicle_name || 'Véhicule'}`,
+                    date: req.created_at || req.date_sortie,
+                    icon: 'event_note',
+                    color: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
+                    link: '/reservations',
+                });
+            });
+
+            // 2. Pending Client Reservations (créées depuis le compte client)
+            pendingReservations.forEach(req => {
+                items.push({
+                    id: `res-${req.id}`,
+                    type: 'REQUEST',
+                    category: 'Réservation Client',
+                    title: `Nouvelle réservation client #${req.id}`,
+                    subtitle: `${req.client_name || 'Client'} — ${req.vehicle_name || 'Véhicule'}`,
                     date: req.created_at || req.date_sortie,
                     icon: 'event_note',
                     color: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
@@ -88,7 +108,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
 
     const requestWebPush = async () => {
         if (!('Notification' in window)) {
-            alert("Votre navigateur ne supporte pas les notifications Web.");
+            toast.warning("Votre navigateur ne supporte pas les notifications Web.");
             return;
         }
         const perm = await Notification.requestPermission();

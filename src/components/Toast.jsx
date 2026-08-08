@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 // Simple event-bus for Toasts
 const LISTENERS = new Set();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const toast = {
     success: (message, title = 'Succès') => notify('success', title, message),
     error: (message, title = 'Erreur') => notify('error', title, message),

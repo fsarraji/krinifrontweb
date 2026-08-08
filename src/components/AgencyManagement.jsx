@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import Dropdown from './Dropdown';
+import { toast } from './Toast';
+import { messageBox } from './MessageBox';
 
 const AgencyManagement = () => {
     const [agencies, setAgencies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [currentAgency, setCurrentAgency] = useState({ nom_agence: '', adresse: '', ville: '', pays: '', telephone: '', email: '', rc: '', ice: '', is_active: true });
+    const [currentAgency, setCurrentAgency] = useState({ nom_agence: '', adresse: '', ville: '', telephone: '', email: '', rc: '', ice: '', is_active: true });
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
@@ -34,10 +36,11 @@ const AgencyManagement = () => {
             }
             setShowModal(false);
             fetchAgencies();
-            setCurrentAgency({ nom_agence: '', adresse: '', ville: '', pays: '', telephone: '', email: '', rc: '', ice: '', is_active: true });
+            toast.success(isEditing ? 'Agence mise à jour avec succès.' : 'Agence créée avec succès.');
+            setCurrentAgency({ nom_agence: '', adresse: '', ville: '', telephone: '', email: '', rc: '', ice: '', is_active: true });
         } catch (error) {
             console.error("Erreur lors de l'enregistrement de l'agence", error);
-            alert("Erreur lors de l'enregistrement. Vérifiez les données.");
+            toast.error("Erreur lors de l'enregistrement. Vérifiez les données.");
         }
     };
 
@@ -47,15 +50,19 @@ const AgencyManagement = () => {
         setShowModal(true);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette agence ?")) {
-            try {
-                await api.delete(`agencies/${id}/`);
-                fetchAgencies();
-            } catch (error) {
-                console.error("Erreur lors de la suppression", error);
+    const handleDelete = (id) => {
+        messageBox.danger("Êtes-vous sûr de vouloir supprimer cette agence ?", "Supprimer l'agence", {
+            onConfirm: async () => {
+                try {
+                    await api.delete(`agencies/${id}/`);
+                    fetchAgencies();
+                    toast.success('Agence supprimée avec succès.');
+                } catch (error) {
+                    console.error("Erreur lors de la suppression", error);
+                    toast.error("Erreur lors de la suppression.");
+                }
             }
-        }
+        });
     };
 
     if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement des agences...</div>;
@@ -68,7 +75,7 @@ const AgencyManagement = () => {
                     <h2 className="text-3xl font-extrabold font-headline text-on-surface tracking-tight">Gestion des Agences</h2>
                 </div>
                 <button 
-                    onClick={() => { setIsEditing(false); setCurrentAgency({ nom_agence: '', adresse: '', ville: '', pays: '', telephone: '', email: '', rc: '', ice: '', is_active: true }); setShowModal(true); }}
+                    onClick={() => { setIsEditing(false); setCurrentAgency({ nom_agence: '', adresse: '', ville: '', telephone: '', email: '', rc: '', ice: '', is_active: true }); setShowModal(true); }}
                     className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-headline font-bold text-sm editorial-shadow hover:scale-[0.98] transition-all"
                 >
                     <span className="material-symbols-outlined text-lg">add</span>
@@ -98,7 +105,7 @@ const AgencyManagement = () => {
                                             <div>
                                                 <p className="text-sm font-bold text-on-surface">{agency.nom_agence}</p>
                                                 <p className="text-[10px] text-slate-500 uppercase font-semibold">ICE: {agency.ice || '-'}</p>
-                                                        {agency.ville && <p className="text-[10px] text-slate-400 font-medium">{agency.ville}{agency.pays ? `, ${agency.pays}` : ''}</p>}
+                                                        {agency.ville && <p className="text-[10px] text-slate-400 font-medium">{agency.ville}</p>}
                                             </div>
                                         </div>
                                     </td>
@@ -198,22 +205,13 @@ const AgencyManagement = () => {
                                         onChange={e => setCurrentAgency({...currentAgency, ice: e.target.value})} 
                                     />
                                 </div>
-                                <div className="space-y-2 md:col-span-1">
+                                <div className="space-y-2 md:col-span-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Ville</label>
                                     <input 
                                         className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"	
                                         type="text" 
                                         value={currentAgency.ville || ''} 
                                         onChange={e => setCurrentAgency({...currentAgency, ville: e.target.value})} 
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-1">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Pays</label>
-                                    <input 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"	
-                                        type="text" 
-                                        value={currentAgency.pays || ''} 
-                                        onChange={e => setCurrentAgency({...currentAgency, pays: e.target.value})} 
                                     />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">

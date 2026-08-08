@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
+import { toast } from './Toast';
+import { messageBox } from './MessageBox';
 
 const EditClient = () => {
     const { id } = useParams();
@@ -85,6 +87,7 @@ const EditClient = () => {
             await api.patch(`clients/${id}/`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
+            toast.success('Client mis à jour avec succès.');
             navigate('/clients');
         } catch (err) {
             console.error("Error updating client:", err);
@@ -93,16 +96,19 @@ const EditClient = () => {
         }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.")) {
-            try {
-                await api.delete(`clients/${id}/`);
-                navigate('/clients');
-            } catch (err) {
-                console.error("Error deleting client:", err);
-                alert("Erreur lors de la suppression.");
+    const handleDelete = () => {
+        messageBox.danger("Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.", "Supprimer le client", {
+            onConfirm: async () => {
+                try {
+                    await api.delete(`clients/${id}/`);
+                    toast.success('Client supprimé avec succès.');
+                    navigate('/clients');
+                } catch (err) {
+                    console.error("Error deleting client:", err);
+                    toast.error("Erreur lors de la suppression.");
+                }
             }
-        }
+        });
     };
 
     if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement du profil client...</div>;

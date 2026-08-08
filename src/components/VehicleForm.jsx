@@ -4,6 +4,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api from '../api';
+import { toast } from './Toast';
+import { messageBox } from './MessageBox';
 
 const VehicleForm = () => {
     const { id } = useParams();
@@ -171,15 +173,19 @@ const VehicleForm = () => {
         }
     };
 
-    const handleDelete = async () => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer ce véhicule ?")) {
-            try {
-                await api.delete(`vehicles/${id}/`);
-                navigate('/vehicles');
-            } catch (error) {
-                console.error("Erreur lors de la suppression du véhicule", error);
+    const handleDelete = () => {
+        messageBox.danger("Êtes-vous sûr de vouloir supprimer ce véhicule ?", "Supprimer le véhicule", {
+            onConfirm: async () => {
+                try {
+                    await api.delete(`vehicles/${id}/`);
+                    toast.success('Véhicule supprimé avec succès.');
+                    navigate('/vehicles');
+                } catch (error) {
+                    console.error("Erreur lors de la suppression du véhicule", error);
+                    toast.error("Erreur lors de la suppression du véhicule.");
+                }
             }
-        }
+        });
     };
 
     if (fetching) return <div className="flex items-center justify-center min-h-screen text-primary font-bold">Chargement...</div>;

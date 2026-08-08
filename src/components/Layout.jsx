@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { ToastContainer } from './Toast';
 import NotificationCenter from './NotificationCenter';
 
 const Layout = ({ children }) => {
@@ -41,6 +40,7 @@ const Layout = ({ children }) => {
     const navItems = [
         { path: '/dashboard', label: 'Tableau de bord', icon: 'dashboard', roles: ['ALL'] },
         { path: '/vehicles', label: 'Véhicules', icon: 'directions_car', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
+        { path: '/gps', label: 'Suivi GPS', icon: 'satellite_alt', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
         { path: '/clients', label: 'Clients', icon: 'group', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
         { path: '/contracts', label: 'Contrats', icon: 'description', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
         { path: '/reservations', label: 'Réservations', icon: 'event_note', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
@@ -220,7 +220,6 @@ const Layout = ({ children }) => {
 
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0" data-purpose="main-content">
-                <ToastContainer />
                 <NotificationCenter
                     isCollapsed={isCollapsed}
                     isOpen={isNotificationOpen}
