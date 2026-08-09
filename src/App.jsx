@@ -18,6 +18,7 @@ import ContractForm from './components/ContractForm';
 import ReservationForm from './components/ReservationForm';
 import AgencyManagement from './components/AgencyManagement';
 import UserManagement from './components/UserManagement';
+import Subscriptions from './components/Subscriptions';
 import Payments from './components/Payments';
 import Expenses from './components/Expenses';
 import Marketplace from './components/Marketplace';
@@ -122,6 +123,11 @@ function App() {
         <Route path="/admin/users" element={
           <Layout>
             <UserManagement />
+          </Layout>
+        } />
+        <Route path="/admin/subscriptions" element={
+          <Layout>
+            <Subscriptions />
           </Layout>
         } />
         <Route path="/settings" element={

@@ -48,6 +48,7 @@ const Layout = ({ children }) => {
         { path: '/payments', label: 'Paiements', icon: 'payments', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
         { path: '/expenses', label: 'Dépenses', icon: 'receipt_long', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
         { path: '/admin/agencies', label: 'Gestion Agences', icon: 'admin_panel_settings', roles: ['SUPERADMIN'] },
+        { path: '/admin/subscriptions', label: 'Abonnements', icon: 'workspace_premium', roles: ['SUPERADMIN'] },
         { path: '/admin/users', label: 'Gestion Utilisateurs', icon: 'manage_accounts', roles: ['SUPERADMIN'] },
     ];
 

@@ -34,6 +34,10 @@ const Login = () => {
         } catch (err) {
             if (!err.response) {
                 setError("Erreur de connexion : Vérifiez que le serveur Django est bien lancé sur le port 8000.");
+            } else if (err.response.data && err.response.data.detail) {
+                setError(err.response.data.detail);
+            } else if (err.response.data && err.response.data.non_field_errors && err.response.data.non_field_errors.length) {
+                setError(err.response.data.non_field_errors[0]);
             } else if (err.response.status === 401) {
                 setError("Nom d'utilisateur ou mot de passe incorrect !");
             } else {
