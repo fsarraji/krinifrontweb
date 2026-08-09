@@ -194,8 +194,8 @@ const GpsTracking = () => {
                 @keyframes gpsPing { 0% { transform: scale(.5); opacity: .7; } 80%, 100% { transform: scale(2.4); opacity: 0; } }
             `}</style>
 
-            {/* Vraie carte */}
-            <div className="absolute inset-0" ref={mapRef} data-location="map-traccar" />
+            {/* Vraie carte (z-0 confine les calques Leaflet sous les panneaux) */}
+            <div className="absolute inset-0 z-0" ref={mapRef} data-location="map-traccar" />
 
             {!tracking && !loading && (
                 <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg">

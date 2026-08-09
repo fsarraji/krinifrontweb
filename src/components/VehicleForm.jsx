@@ -44,6 +44,7 @@ const VehicleForm = () => {
     const [error, setError] = useState(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [syncingDevice, setSyncingDevice] = useState(false);
 
     const steps = [
         { num: 1, label: 'Identification', icon: 'fingerprint' },
@@ -181,6 +182,31 @@ const VehicleForm = () => {
         if (file) {
             setImage(file);
             setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleAddTraccarDevice = async () => {
+        const imei = (formData.gps_imei || '').trim();
+        if (!imei) {
+            toast.error('Renseignez d\'abord l\'ID/IMEI du dispositif.');
+            return;
+        }
+        setSyncingDevice(true);
+        try {
+            const res = await api.post('gps/devices/', {
+                name: formData.matricule || `Dispositif ${imei}`,
+                uniqueId: imei,
+            });
+            const dev = res.data;
+            setFormData((prev) => ({ ...prev, traccar_device_id: String(dev.id) }));
+            setTraccarDevices((prev) =>
+                prev.some((d) => String(d.id) === String(dev.id)) ? prev : [...prev, dev]
+            );
+            toast.success('Dispositif ajouté au serveur Traccar.');
+        } catch (err) {
+            toast.error(err.response?.data?.detail || 'Impossible d\'ajouter le dispositif sur Traccar.');
+        } finally {
+            setSyncingDevice(false);
         }
     };
 
@@ -641,6 +667,17 @@ const VehicleForm = () => {
                                     className={inputClass('gps_imei')}
                                     placeholder="Ex: 862345048765432"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={handleAddTraccarDevice}
+                                    disabled={syncingDevice}
+                                    className="mt-1 inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                >
+                                    <span className={`material-symbols-outlined text-base ${syncingDevice ? 'animate-spin' : ''}`}>
+                                        {syncingDevice ? 'progress_activity' : 'sensors'}
+                                    </span>
+                                    {syncingDevice ? 'Ajout en cours…' : 'Ajouter au serveur Traccar'}
+                                </button>
                             </div>
                             <div className="space-y-1">
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Numéro carte SIM</label>
