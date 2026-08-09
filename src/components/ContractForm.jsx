@@ -23,6 +23,16 @@ const ContractForm = () => {
     const [agencySettings, setAgencySettings] = useState({ caution_active: true, caution_montant: 1500 });
     const [isCautionActive, setIsCautionActive] = useState(true);
     const [currentStep, setCurrentStep] = useState(1);
+    const [fieldErrors, setFieldErrors] = useState({});
+
+    const steps = [
+        { num: 1, label: 'Véhicule', icon: 'directions_car' },
+        { num: 2, label: 'Client', icon: 'person' },
+        { num: 3, label: 'Période & Tarification', icon: 'payments' },
+        { num: 4, label: 'Inspection & Validation', icon: 'fact_check' },
+    ];
+
+    const hasError = (name) => Boolean(fieldErrors[name]);
 
     
     const [formData, setFormData] = useState({
@@ -107,6 +117,7 @@ const ContractForm = () => {
 
     const handleVehicleSelect = (vehicle) => {
         setSelectedVehicle(vehicle);
+            setFieldErrors((prev) => ({ ...prev, vehicle: false }));
             setFormData({
                 ...formData,
                 vehicle: vehicle.id,
@@ -130,8 +141,21 @@ const ContractForm = () => {
             return base + chauffeur;
         };
     
+        const handleNext = () => {
+            if (currentStep === 1) {
+                if (!formData.vehicle) { setFieldErrors((prev) => ({ ...prev, vehicle: true })); toast.error('Veuillez sélectionner un véhicule'); return; }
+            }
+            if (currentStep === 2) {
+                if (!formData.client) { setFieldErrors((prev) => ({ ...prev, client: true })); toast.error('Veuillez sélectionner un client'); return; }
+            }
+            setCurrentStep((prev) => Math.min(prev + 1, 4));
+        };
+        const handlePrev = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
+    
         const handleSubmit = async (e) => {
             e.preventDefault();
+            if (!formData.vehicle) { setFieldErrors((prev) => ({ ...prev, vehicle: true })); setCurrentStep(1); toast.error('Veuillez sélectionner un véhicule'); return; }
+            if (!formData.client) { setFieldErrors((prev) => ({ ...prev, client: true })); setCurrentStep(2); toast.error('Veuillez sélectionner un client'); return; }
             try {
                 const dataToSubmit = {
                     ...formData,
@@ -183,19 +207,12 @@ const ContractForm = () => {
                         <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Nouveau Contrat de Location</h2>
                         <p className="text-slate-500 mt-2 max-w-md text-sm">Remplissez les détails ci-dessous pour créer un nouveau contrat.</p>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <button 
                             onClick={() => navigate('/contracts')}
                             className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
                         >
                             Annuler
-                        </button>
-                        <button 
-                            onClick={handleSubmit}
-                            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-200/50 flex items-center gap-2 transition-all text-sm"
-                        >
-                            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'opsz' 20" }}>check_circle</span>
-                            Valider le Contrat
                         </button>
                     </div>
                 </header>
@@ -203,36 +220,25 @@ const ContractForm = () => {
                 {/* Stepper Header */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3 flex-1">
-                        <button
-                            type="button"
-                            onClick={() => setCurrentStep(1)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${currentStep === 1 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                        >
-                            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">1</span>
-                            Véhicule & Client
-                        </button>
-
-                        <div className="h-0.5 flex-1 bg-slate-200"></div>
-
-                        <button
-                            type="button"
-                            onClick={() => setCurrentStep(2)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${currentStep === 2 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                        >
-                            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">2</span>
-                            Période & Tarification
-                        </button>
-
-                        <div className="h-0.5 flex-1 bg-slate-200"></div>
-
-                        <button
-                            type="button"
-                            onClick={() => setCurrentStep(3)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${currentStep === 3 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                        >
-                            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">3</span>
-                            Inspection & Validation
-                        </button>
+                        {steps.map((s, i) => {
+                            const active = currentStep === s.num;
+                            const done = currentStep > s.num;
+                            return (
+                                <React.Fragment key={s.num}>
+                                    {i > 0 && <div className={`h-0.5 flex-1 rounded-full ${currentStep >= s.num ? 'bg-indigo-600' : 'bg-slate-200'}`}></div>}
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentStep(s.num)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${active ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                    >
+                                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${active ? 'bg-white/20' : done ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                                            {done ? '✓' : s.num}
+                                        </span>
+                                        {s.label}
+                                    </button>
+                                </React.Fragment>
+                            );
+                        })}
                     </div>
                 </div>
     
@@ -240,9 +246,8 @@ const ContractForm = () => {
                 <div className="grid grid-cols-12 gap-6 pb-20">
                     {/* Left Column: Form Sections */}
                     <div className="col-span-12 lg:col-span-8 space-y-6">
-                        
-                        {/* Vehicle Selection */}
-                        <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        {currentStep === 1 && (
+                        <section className={`bg-white p-8 rounded-2xl border shadow-sm transition-colors ${hasError('vehicle') ? 'border-rose-400 ring-1 ring-rose-300' : 'border-slate-200'}`}>
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
                                     <span className="material-symbols-outlined text-indigo-600">directions_car</span>
@@ -291,9 +296,10 @@ const ContractForm = () => {
                             )}
                         </div>
                     </section>
+                        )}
 
-                    {/* Client Selection */}
-                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        {currentStep === 2 && (
+                    <section className={`bg-white p-8 rounded-2xl border shadow-sm transition-colors ${hasError('client') ? 'border-rose-400 ring-1 ring-rose-300' : 'border-slate-200'}`}>
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
                                 <span className="material-symbols-outlined text-indigo-600">person</span>
@@ -315,7 +321,10 @@ const ContractForm = () => {
                                     label: `${c.nom} ${c.prenom} (${c.cin_passport})`,
                                     clientData: c
                                 }))}
-                                onChange={(opt) => setFormData({...formData, client: opt ? opt.value : ''})}
+                                onChange={(opt) => {
+                                    setFormData({...formData, client: opt ? opt.value : ''});
+                                    setFieldErrors((prev) => ({ ...prev, client: false }));
+                                }}
                                 value={formData.client ? {
                                     value: formData.client,
                                     label: clients.find(c => c.id == formData.client) ? `${clients.find(c => c.id == formData.client).nom} ${clients.find(c => c.id == formData.client).prenom} (${clients.find(c => c.id == formData.client).cin_passport})` : ''
@@ -381,9 +390,10 @@ const ContractForm = () => {
                             />
                         </div>
                     </section>
+                        )}
 
-                    {/* Vehicle Accessories & Status */}
-                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        {currentStep === 4 && (
+                        <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-6">
                             <span className="material-symbols-outlined text-indigo-600">checklist</span>
                             <h3 className="text-xl font-extrabold text-slate-900">Accessoires & État du Véhicule</h3>
@@ -455,7 +465,10 @@ const ContractForm = () => {
                             </div>
                         </div>
                     </section>
+                        )}
 
+                        {currentStep === 3 && (
+                        <>
                     {/* Rental Dates & Options */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
@@ -585,8 +598,10 @@ const ContractForm = () => {
                             </div>
                         </section>
                     </div>
+                        </>
+                        )}
 
-                    {/* Contract Notes */}
+                        {currentStep === 4 && (
                     <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="material-symbols-outlined text-indigo-600">notes</span>
@@ -600,6 +615,41 @@ const ContractForm = () => {
                             onChange={(e) => setFormData({...formData, notes: e.target.value})}
                         ></textarea>
                     </section>
+                        )}
+                </div>
+
+                {/* Bottom Navigation */}
+                <div className="col-span-12 lg:col-span-8 mt-6 flex items-center justify-between gap-4">
+                    {currentStep > 1 ? (
+                        <button
+                            type="button"
+                            onClick={handlePrev}
+                            className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-base">arrow_back</span>
+                            Précédent
+                        </button>
+                    ) : (
+                        <span></span>
+                    )}
+                    {currentStep < 4 ? (
+                        <button
+                            type="button"
+                            onClick={handleNext}
+                            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-200/50 flex items-center gap-2 transition-all text-sm"
+                        >
+                            Suivant
+                            <span className="material-symbols-outlined text-base">arrow_forward</span>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSubmit}
+                            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-200/50 flex items-center gap-2 transition-all text-sm"
+                        >
+                            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'opsz' 20" }}>check_circle</span>
+                            Valider le Contrat
+                        </button>
+                    )}
                 </div>
 
                 {/* Right Column: Pricing Summary */}
@@ -662,13 +712,14 @@ const ContractForm = () => {
                     </div>
                 </div>
             </div>
-            
+
             <AddClientModal 
                 isOpen={showClientModal} 
                 onClose={() => setShowClientModal(false)} 
                 onClientCreated={(newClient) => {
                     setClients(prev => [...prev, newClient]);
                     setFormData(prev => ({ ...prev, client: newClient.id }));
+                    setFieldErrors(prev => ({ ...prev, client: false }));
                 }}
             />
         </div>

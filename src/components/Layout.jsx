@@ -60,9 +60,8 @@ const Layout = ({ children }) => {
         <div className="flex min-h-screen text-slate-800 bg-slate-50">
             {/* Sidebar Sticky & Collapsible */}
             <aside
-                className={`sticky top-0 h-screen ${
-                    isCollapsed ? 'w-20' : 'w-72'
-                } bg-white border-r border-slate-200 flex flex-col justify-between shadow-sm flex-shrink-0 transition-all duration-300 z-30`}
+                className={`sticky top-0 h-screen ${isCollapsed ? 'w-20' : 'w-72'
+                    } bg-white border-r border-slate-200 flex flex-col justify-between shadow-sm flex-shrink-0 transition-all duration-300 z-30`}
                 data-purpose="sidebar"
             >
                 {/* Floating Toggle Collapse Button */}

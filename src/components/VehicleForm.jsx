@@ -27,16 +27,91 @@ const VehicleForm = () => {
         date_visite_technique: '',
         prochain_vidange_km: 0,
         tarif_km_extra: '',
+        traccar_device_id: '',
+        gps_imei: '',
+        sim_number: '',
+        sim_operator: '',
     });
 
     const [brands, setBrands] = useState([]);
     const [models, setModels] = useState([]);
+    const [traccarDevices, setTraccarDevices] = useState([]);
     const [fetching, setFetching] = useState(isEditMode);
 
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [currentStep, setCurrentStep] = useState(1);
+    const [fieldErrors, setFieldErrors] = useState({});
+
+    const steps = [
+        { num: 1, label: 'Identification', icon: 'fingerprint' },
+        { num: 2, label: 'Spécifications', icon: 'settings_input_component' },
+        { num: 3, label: 'Tarification', icon: 'payments' },
+        { num: 4, label: 'Validité & Statut', icon: 'verified_user' },
+    ];
+
+    const requiredFields = {
+        1: [
+            { key: 'matricule', label: 'Matricule', check: () => !formData.matricule },
+            { key: 'marque', label: 'Marque', check: () => !formData.marque },
+            { key: 'modele', label: 'Modèle', check: () => !formData.modele },
+            { key: 'annee', label: 'Année', check: () => !formData.annee },
+        ],
+        2: [
+            { key: 'kilometrage', label: 'Kilométrage', check: () => formData.kilometrage === '' || formData.kilometrage === null || formData.kilometrage === undefined },
+        ],
+        3: [
+            { key: 'prix_par_jour', label: 'Prix journalier', check: () => formData.prix_par_jour === '' || formData.prix_par_jour === null || formData.prix_par_jour === undefined },
+        ],
+        4: [
+            { key: 'date_assurance', label: 'Expiration assurance', check: () => !formData.date_assurance },
+            { key: 'date_visite_technique', label: 'Visite technique', check: () => !formData.date_visite_technique },
+        ],
+    };
+
+    const validateStep = (step) => (requiredFields[step] || []).filter((f) => f.check());
+
+    const markErrors = (fields) => {
+        const keys = fields.map((f) => f.key);
+        setFieldErrors((prev) => {
+            const next = { ...prev };
+            keys.forEach((k) => { next[k] = true; });
+            return next;
+        });
+    };
+
+    const handleNext = () => {
+        const missing = validateStep(currentStep);
+        if (missing.length > 0) {
+            markErrors(missing);
+            toast.error(`Champs requis manquants : ${missing.map((m) => m.label).join(', ')}`);
+            return;
+        }
+        setCurrentStep((prev) => Math.min(prev + 1, 4));
+    };
+
+    const hasError = (name) => Boolean(fieldErrors[name]);
+
+    const inputClass = (name) => `w-full px-4 py-3 rounded-xl border text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:bg-white focus:ring-1 outline-none transition-all duration-200 ${
+        hasError(name)
+            ? 'border-rose-400 bg-rose-50/40 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500'
+            : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-600'
+    }`;
+
+    const selectStyles = (name) => ({
+        control: (base, state) => ({
+            ...base,
+            backgroundColor: state.isDisabled ? '#f1f5f9' : '#f8fafc',
+            border: '1px solid',
+            borderRadius: '0.75rem',
+            padding: '4px',
+            borderColor: hasError(name) ? '#fb7185' : (state.isFocused ? '#4f46e5' : '#e2e8f0'),
+            boxShadow: hasError(name) ? '0 0 0 1px #fb7185' : (state.isFocused ? '0 0 0 1px #4f46e5' : 'none'),
+        }),
+        placeholder: (base) => ({ ...base, color: '#94a3b8' }),
+    });
     useEffect(() => {
         const fetchBrands = async () => {
             try {
@@ -47,6 +122,7 @@ const VehicleForm = () => {
             }
         };
         fetchBrands();
+        api.get('gps/devices/').then((r) => setTraccarDevices(r.data.devices || [])).catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -96,6 +172,9 @@ const VehicleForm = () => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
         }));
+        if (fieldErrors[name]) {
+            setFieldErrors((prev) => ({ ...prev, [name]: false }));
+        }
     };
 
     const handleImageChange = (e) => {
@@ -108,9 +187,18 @@ const VehicleForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
 
+        const stepsWithErrors = [1, 2, 3, 4].filter((s) => validateStep(s).length > 0);
+        if (stepsWithErrors.length > 0) {
+            const missingAll = stepsWithErrors.flatMap((s) => validateStep(s));
+            markErrors(missingAll);
+            toast.error(`Champs requis manquants : ${missingAll.map((m) => m.label).join(', ')}`);
+            setCurrentStep(Math.min(...stepsWithErrors));
+            return;
+        }
+
+        setLoading(true);
         const data = new FormData();
         const readOnlyFields = ['id', 'agency', 'marque_name', 'modele_name', 'agency_details', 'image'];
         
@@ -120,6 +208,9 @@ const VehicleForm = () => {
                 
                 // Ensure foreign keys are not empty strings
                 if ((key === 'marque' || key === 'modele') && value === '') {
+                    value = null;
+                }
+                if (key === 'traccar_device_id' && (value === '' || value === null || value === undefined)) {
                     value = null;
                 }
 
@@ -226,10 +317,35 @@ const VehicleForm = () => {
                 </div>
             )}
 
+            {/* Stepper Indicator */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8">
+                <div className="flex items-center gap-3">
+                    {steps.map((s, i) => {
+                        const active = currentStep === s.num;
+                        const done = currentStep > s.num;
+                        return (
+                            <React.Fragment key={s.num}>
+                                {i > 0 && <div className={`h-0.5 flex-1 rounded-full ${currentStep >= s.num ? 'bg-indigo-600' : 'bg-slate-200'}`}></div>}
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentStep(s.num)}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${active ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                >
+                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${active ? 'bg-white/20' : done ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                                        {done ? '✓' : s.num}
+                                    </span>
+                                    {s.label}
+                                </button>
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-8">
                 {/* Left Column: Form Sections */}
                 <div className="col-span-12 lg:col-span-8 space-y-8">
-                    {/* Vehicle Identification Section */}
+                    {currentStep === 1 && (
                     <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
                             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
@@ -244,10 +360,9 @@ const VehicleForm = () => {
                                     name="matricule"
                                     value={formData.matricule}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
+                                    className={inputClass('matricule')}
                                     type="text" 
                                     placeholder="Ex: 12345-A-50"
-                                    required
                                 />
                             </div>
                             <div className="space-y-1">
@@ -256,24 +371,14 @@ const VehicleForm = () => {
                                     options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
                                     onChange={(opt) => {
                                         setFormData(prev => ({ ...prev, marque: opt ? opt.value : '', modele: '' }));
+                                        setFieldErrors(prev => ({ ...prev, marque: false, modele: false }));
                                     }}
                                     value={formData.marque ? { value: formData.marque, label: brands.find(b => b.id == formData.marque)?.name || '' } : null}
                                     placeholder="Sélectionner une marque"
                                     isSearchable
                                     isClearable
                                     classNamePrefix="react-select"
-                                    styles={{
-                                        control: (base, state) => ({
-                                            ...base,
-                                            backgroundColor: '#f8fafc',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: '0.75rem',
-                                            padding: '4px',
-                                            borderColor: state.isFocused ? '#4f46e5' : '#e2e8f0',
-                                            boxShadow: state.isFocused ? '0 0 0 1px #4f46e5' : 'none'
-                                        }),
-                                        placeholder: (base) => ({ ...base, color: '#94a3b8', fontSize: '0.875m' })
-                                    }}
+                                    styles={selectStyles('marque')}
                                 />
                             </div>
                             <div className="space-y-1">
@@ -282,6 +387,7 @@ const VehicleForm = () => {
                                     options={models.map(model => ({ value: model.id, label: model.name }))}
                                     onChange={(opt) => {
                                         setFormData(prev => ({ ...prev, modele: opt ? opt.value : '' }));
+                                        setFieldErrors(prev => ({ ...prev, modele: false }));
                                     }}
                                     value={formData.modele ? { value: formData.modele, label: models.find(m => m.id == formData.modele)?.name || '' } : null}
                                     placeholder="Sélectionner un modèle"
@@ -289,18 +395,7 @@ const VehicleForm = () => {
                                     isClearable
                                     isDisabled={!formData.marque}
                                     classNamePrefix="react-select"
-                                    styles={{
-                                        control: (base, state) => ({
-                                            ...base,
-                                            backgroundColor: !formData.marque ? '#f1f5f9' : '#f8fafc',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: '0.75rem',
-                                            padding: '4px',
-                                            borderColor: state.isFocused ? '#4f46e5' : '#e2e8f0',
-                                            boxShadow: state.isFocused ? '0 0 0 1px #4f46e5' : 'none'
-                                        }),
-                                        placeholder: (base) => ({ ...base, color: '#94a3b8' })
-                                    }}
+                                    styles={selectStyles('modele')}
                                 />
                             </div>
                             <div className="space-y-1">
@@ -309,15 +404,15 @@ const VehicleForm = () => {
                                     name="annee"
                                     value={formData.annee}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="number" 
-                                    required
+                                    className={inputClass('annee')}
+                                    type="number"
                                 />
                             </div>
                         </div>
                     </section>
+                    )}
 
-                    {/* Technical Specs Section */}
+                    {currentStep === 2 && (
                     <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
                             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
@@ -333,9 +428,8 @@ const VehicleForm = () => {
                                         name="kilometrage"
                                         value={formData.kilometrage}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                        type="number" 
-                                        required
+                                        className={inputClass('kilometrage')}
+                                        type="number"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">KM</span>
                                 </div>
@@ -377,8 +471,9 @@ const VehicleForm = () => {
                             </div>
                         </div>
                     </section>
+                    )}
 
-                    {/* Tarification Section */}
+                    {currentStep === 3 && (
                     <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
                             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
@@ -387,17 +482,16 @@ const VehicleForm = () => {
                             <h3 className="font-extrabold text-lg text-slate-900">Tarification</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
-                            <div className="bg-slate-50 p-6 rounded-2xl space-y-2 border border-slate-200">
+                            <div className={`bg-slate-50 p-6 rounded-2xl space-y-2 border transition-colors ${hasError('prix_par_jour') ? 'border-rose-400 bg-rose-50/40' : 'border-slate-200'}`}>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Prix Journalier</label>
                                 <div className="flex items-center gap-2">
                                     <input 
                                         name="prix_par_jour"
                                         value={formData.prix_par_jour}
                                         onChange={handleChange}
-                                        className="bg-transparent border-none p-0 font-extrabold text-2xl text-indigo-600 focus:ring-0 w-32 outline-none"
+                                        className={`bg-transparent border-none p-0 font-extrabold text-2xl focus:ring-0 w-32 outline-none ${hasError('prix_par_jour') ? 'text-rose-600' : 'text-indigo-600'}`}
                                         type="number"
                                         step="0.01"
-                                        required
                                     />
                                     <span className="text-slate-400 font-bold">DH / jour</span>
                                 </div>
@@ -442,8 +536,9 @@ const VehicleForm = () => {
                             <p className="text-[10px] text-slate-400 mt-1.5">Si non renseigné, le tarif par défaut des Paramètres sera appliqué.</p>
                         </div>
                     </section>
+                    )}
 
-                    {/* Administrative Validity */}
+                    {currentStep === 4 && (
                     <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
                             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
@@ -461,9 +556,8 @@ const VehicleForm = () => {
                                     name="date_assurance"
                                     value={formData.date_assurance}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
+                                    className={inputClass('date_assurance')}
                                     type="date"
-                                    required
                                 />
                             </div>
                             <div className="space-y-2">
@@ -475,18 +569,19 @@ const VehicleForm = () => {
                                     name="date_visite_technique"
                                     value={formData.date_visite_technique}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
+                                    className={inputClass('date_visite_technique')}
                                     type="date"
-                                    required
                                 />
                             </div>
                         </div>
                     </section>
+                    )}
                 </div>
 
                 {/* Right Column: Sidebar/Action Panel */}
                 <div className="col-span-12 lg:col-span-4 space-y-6">
                     {/* Status Card */}
+                    {currentStep === 4 && (
                     <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <h3 className="font-extrabold text-slate-900 mb-6">Statut</h3>
                         <div className="space-y-3">
@@ -516,6 +611,61 @@ const VehicleForm = () => {
                             ))}
                         </div>
                     </div>
+                    )}
+
+                    {/* Traccar Device Card */}
+                    {currentStep === 4 && (
+                    <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 className="font-extrabold text-slate-900 mb-1">Suivi GPS</h3>
+                        <p className="text-xs text-slate-500 mb-4">Associez ce véhicule à un dispositif Traccar et renseignez les informations du périphérique GPS installé.</p>
+                        <div className="space-y-1 mb-4">
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Dispositif Traccar</label>
+                            <Select
+                                value={traccarDevices.find((d) => String(d.id) === String(formData.traccar_device_id)) || (formData.traccar_device_id === '' ? null : { id: formData.traccar_device_id, name: `Dispositif ${formData.traccar_device_id}` })}
+                                onChange={(opt) => setFormData((prev) => ({ ...prev, traccar_device_id: opt ? String(opt.id) : '' }))}
+                                options={traccarDevices.map((d) => ({ id: d.id, name: `${d.name} (${d.uniqueId || d.id})`, value: d.id }))}
+                                isClearable
+                                isDisabled={!traccarDevices.length}
+                                placeholder={traccarDevices.length ? 'Sélectionner un dispositif…' : 'Traccar non configuré'}
+                                styles={selectStyles('traccar_device_id')}
+                                getOptionLabel={(o) => o.name}
+                                getOptionValue={(o) => String(o.value)}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">ID / IMEI du dispositif</label>
+                                <input
+                                    name="gps_imei"
+                                    value={formData.gps_imei || ''}
+                                    onChange={handleChange}
+                                    className={inputClass('gps_imei')}
+                                    placeholder="Ex: 862345048765432"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Numéro carte SIM</label>
+                                <input
+                                    name="sim_number"
+                                    value={formData.sim_number || ''}
+                                    onChange={handleChange}
+                                    className={inputClass('sim_number')}
+                                    placeholder="Ex: 0671234567"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Opérateur télécom</label>
+                                <input
+                                    name="sim_operator"
+                                    value={formData.sim_operator || ''}
+                                    onChange={handleChange}
+                                    className={inputClass('sim_operator')}
+                                    placeholder="Ex: Maroc Telecom, Orange, Inwi"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    )}
 
                     {/* Quick Preview Card */}
                     <div className="relative overflow-hidden rounded-2xl bg-slate-950 group aspect-video shadow-lg border border-slate-200">
@@ -547,23 +697,58 @@ const VehicleForm = () => {
                         </label>
                     </div>
 
-                    {/* CTA Actions */}
-                    <div className="space-y-4 pt-6">
-                        <button 
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-200/50 hover:scale-[1.01] transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            <span className="material-symbols-outlined text-base">save</span>
-                            {loading ? 'Enregistrement...' : 'Sauvegarder'}
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={() => navigate('/vehicles')}
-                            className="w-full py-3 bg-white text-slate-500 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 hover:text-slate-700 transition-all text-sm shadow-sm"
-                        >
-                            Abandonner
-                        </button>
+                    {/* Step Summary */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Étape {currentStep}/4</p>
+                        <p className="text-sm font-bold text-slate-900">{steps[currentStep - 1]?.label}</p>
+                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                            {currentStep === 1 && "Identifiez le véhicule : matricule, marque, modèle et année."}
+                            {currentStep === 2 && "Renseignez les spécifications techniques : kilométrage, carburant, couleur et vidange."}
+                            {currentStep === 3 && "Définissez le prix journalier, le service chauffeur et le tarif km supplémentaire."}
+                            {currentStep === 4 && "Validez les dates de validité, le statut puis enregistrez."}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Bottom Navigation */}
+                <div className="col-span-12 mt-2 flex items-center justify-between gap-4 pt-6 border-t border-slate-100">
+                    <button 
+                        type="button"
+                        onClick={() => navigate('/vehicles')}
+                        className="px-6 py-3 bg-white text-slate-500 rounded-xl font-bold border border-slate-200 hover:bg-slate-50 hover:text-slate-700 transition-all text-sm shadow-sm"
+                    >
+                        Abandonner
+                    </button>
+                    <div className="flex items-center gap-4">
+                        {currentStep > 1 && (
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 1))}
+                                className="px-6 py-3 bg-white text-slate-700 rounded-xl font-bold border border-slate-200 hover:bg-slate-100 transition-all text-sm shadow-sm flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-base">arrow_back</span>
+                                Précédent
+                            </button>
+                        )}
+                        {currentStep < 4 ? (
+                            <button 
+                                type="button"
+                                onClick={handleNext}
+                                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-200/50 transition-all flex items-center gap-2"
+                            >
+                                Suivant
+                                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                            </button>
+                        ) : (
+                            <button 
+                                type="submit"
+                                disabled={loading}
+                                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-200/50 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                <span className="material-symbols-outlined text-base">save</span>
+                                {loading ? 'Enregistrement...' : 'Sauvegarder'}
+                            </button>
+                        )}
                     </div>
                 </div>
             </form>

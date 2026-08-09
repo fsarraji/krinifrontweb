@@ -34,7 +34,13 @@ const Settings = () => {
         km_tarif_extra_defaut: 1.5,
         logo: null,
         cachet_signature: null,
+        traccar_url: '',
+        traccar_username: '',
     });
+    const [traccarPassword, setTraccarPassword] = useState('');
+    const [traccarPasswordSet, setTraccarPasswordSet] = useState(false);
+    const [traccarConfigured, setTraccarConfigured] = useState(false);
+    const [clearTraccarPassword, setClearTraccarPassword] = useState(false);
     const [logoFile, setLogoFile] = useState(null);
     const [cachetFile, setCachetFile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -84,7 +90,11 @@ const Settings = () => {
                 km_tarif_extra_defaut: parseFloat(res.data.km_tarif_extra_defaut),
                 logo: res.data.logo,
                 cachet_signature: res.data.cachet_signature,
+                traccar_url: res.data.traccar_url || '',
+                traccar_username: res.data.traccar_username || '',
             });
+            setTraccarPasswordSet(!!res.data.traccar_password_set);
+            setTraccarConfigured(!!res.data.traccar_configured);
             setAllBrands(brandsRes.data.results || brandsRes.data || []);
             setSelectedBrands((res.data.brands || []).map(String));
         } catch (error) {
@@ -124,6 +134,8 @@ const Settings = () => {
                     formData.append(key, settings[key]);
                 }
             });
+            if (traccarPassword.trim()) formData.append('traccar_password', traccarPassword.trim());
+            if (clearTraccarPassword) formData.append('traccar_clear_password', 'true');
             selectedBrands.forEach(id => formData.append('brands', id));
             if (logoFile) {
                 formData.append('logo', logoFile);
@@ -145,6 +157,10 @@ const Settings = () => {
             }
             setLogoFile(null); // Reset the file input state
             setCachetFile(null); // Reset the file input state
+            setTraccarPasswordSet(!!res.data.traccar_password_set);
+            setTraccarConfigured(!!res.data.traccar_configured);
+            setTraccarPassword('');
+            setClearTraccarPassword(false);
 
             setMessage({ text: 'Paramètres sauvegardés avec succès.', type: 'success' });
             setTimeout(() => setMessage({ text: '', type: '' }), 3000);
@@ -412,6 +428,63 @@ const Settings = () => {
                                 </div>
                             </div>
                         )}
+                    </SectionCard>
+
+                    {/* Section Suivi GPS / Traccar */}
+                    <SectionCard icon="satellite_alt" title="Suivi GPS (Traccar)" description="Connectez le compte serveur Traccar de votre agence pour suivre vos véhicules en temps réel.">
+                        <div className={`flex items-center gap-2 mb-4 text-sm font-bold ${traccarConfigured ? 'text-green-600' : 'text-red-500'}`}>
+                            <span className="material-symbols-outlined text-base">{traccarConfigured ? 'check_circle' : 'cancel'}</span>
+                            {traccarConfigured ? 'Compte Traccar connecté' : 'Compte Traccar non configuré'}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                            <div>
+                                <label className={fieldLabel}>URL du serveur</label>
+                                <input
+                                    type="url"
+                                    value={settings.traccar_url}
+                                    onChange={(e) => setSettings(prev => ({ ...prev, traccar_url: e.target.value }))}
+                                    placeholder="http://serveur-traccar:8082"
+                                    disabled={!isOwner || saving}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className={fieldLabel}>Utilisateur</label>
+                                <input
+                                    type="text"
+                                    value={settings.traccar_username}
+                                    onChange={(e) => setSettings(prev => ({ ...prev, traccar_username: e.target.value }))}
+                                    placeholder="Utilisateur Traccar"
+                                    disabled={!isOwner || saving}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className={fieldLabel}>Mot de passe</label>
+                                <input
+                                    type="password"
+                                    value={traccarPassword}
+                                    onChange={(e) => setTraccarPassword(e.target.value)}
+                                    placeholder={traccarPasswordSet ? '•••••••• (laisser vide pour conserver)' : 'Mot de passe Traccar'}
+                                    disabled={!isOwner || saving}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all"
+                                />
+                            </div>
+                            {traccarPasswordSet && (
+                                <div className="flex items-end pb-1">
+                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-600 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={clearTraccarPassword}
+                                            onChange={(e) => setClearTraccarPassword(e.target.checked)}
+                                            disabled={!isOwner || saving}
+                                            className="w-4 h-4 accent-red-600"
+                                        />
+                                        Effacer le mot de passe enregistré
+                                    </label>
+                                </div>
+                            )}
+                        </div>
                     </SectionCard>
 
                     {/* Section Marques affichées */}
