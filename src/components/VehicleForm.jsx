@@ -126,19 +126,18 @@ const VehicleForm = () => {
     }, []);
 
     useEffect(() => {
-        if (formData.marque) {
-            const fetchModels = async () => {
-                try {
-                    const response = await api.get(`modelcars/?brand=${formData.marque}`);
-                    setModels(response.data);
-                } catch (error) {
-                    console.error("Erreur lors de la récupération des modèles", error);
-                }
-            };
-            fetchModels();
-        } else {
-            setModels([]);
-        }
+        if (!formData.marque) return;
+        let cancelled = false;
+        const fetchModels = async () => {
+            try {
+                const response = await api.get(`modelcars/?brand=${formData.marque}`);
+                if (!cancelled) setModels(response.data);
+            } catch (error) {
+                console.error("Erreur lors de la récupération des modèles", error);
+            }
+        };
+        fetchModels();
+        return () => { cancelled = true; };
     }, [formData.marque]);
 
     useEffect(() => {
@@ -384,12 +383,12 @@ const VehicleForm = () => {
                             <div className="space-y-1">
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Modèle</label>
                                 <Select 
-                                    options={models.map(model => ({ value: model.id, label: model.name }))}
+                                    options={(formData.marque ? models : []).map(model => ({ value: model.id, label: model.name }))}
                                     onChange={(opt) => {
                                         setFormData(prev => ({ ...prev, modele: opt ? opt.value : '' }));
                                         setFieldErrors(prev => ({ ...prev, modele: false }));
                                     }}
-                                    value={formData.modele ? { value: formData.modele, label: models.find(m => m.id == formData.modele)?.name || '' } : null}
+                                    value={formData.modele ? { value: formData.modele, label: (formData.marque ? models : []).find(m => m.id == formData.modele)?.name || '' } : null}
                                     placeholder="Sélectionner un modèle"
                                     isSearchable
                                     isClearable
@@ -617,7 +616,7 @@ const VehicleForm = () => {
                     {currentStep === 4 && (
                     <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm">
                         <h3 className="font-extrabold text-slate-900 mb-1">Suivi GPS</h3>
-                        <p className="text-xs text-slate-500 mb-4">Associez ce véhicule à un dispositif Traccar et renseignez les informations du périphérique GPS installé.</p>
+                        <p className="text-xs text-slate-500 mb-4">Associez ce véhicule à un dispositif Traccar et renseignez les informations du périphérique GPS installé. Si vous renseignez l'ID/IMEI sans choisir de dispositif existant, il sera créé automatiquement sur le serveur Traccar.</p>
                         <div className="space-y-1 mb-4">
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Dispositif Traccar</label>
                             <Select

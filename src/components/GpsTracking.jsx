@@ -52,6 +52,15 @@ const GpsTracking = () => {
                 setVehicles(data.vehicles || []);
             } catch (error) {
                 console.error("Erreur lors de la récupération des positions GPS", error);
+                // Repli : si l'endpoint GPS échoue, on affiche quand même la flotte
+                // (sans positions) pour ne pas laisser la liste vide.
+                try {
+                    const res = await api.get('vehicles/', { params: { page_size: 500 } });
+                    setVehicles(Array.isArray(res.data) ? res.data : res.data.results || []);
+                    setTracking(false);
+                } catch (e2) {
+                    console.error("Erreur lors du repli sur la liste des véhicules", e2);
+                }
             } finally {
                 setLoading(false);
             }
