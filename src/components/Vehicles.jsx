@@ -1,16 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchAllPages } from '../api';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import api, { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
 import { resolveImage } from '../imageUrl';
 import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
+import DropdownMenu from './ui/DropdownMenu';
+import VehicleInfoModal from './ui/VehicleInfoModal';
+import ArchiveVehicleModal from './ui/ArchiveVehicleModal';
+import { messageBox } from './MessageBox';
+import { toast } from './Toast';
 
 const PAGE_SIZE_DEFAULT = 10;
 
+const getRole = () => {
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return '';
+        return JSON.parse(atob(token.split('.')[1]))?.role || '';
+    } catch {
+        return '';
+    }
+};
+
 const Vehicles = () => {
+    const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -19,26 +35,38 @@ const Vehicles = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
 
+    const [menuId, setMenuId] = useState(null);
+    const [infoVehicle, setInfoVehicle] = useState(null);
+    const [archiveVehicle, setArchiveVehicle] = useState(null);
+
+    const isSuperAdmin = getRole() === 'SUPERADMIN';
+
     const FILTER_OPTIONS = [
         { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
         { value: 'Available', label: 'Disponible', dot: 'bg-success' },
         { value: 'Rented', label: 'Louée', dot: 'bg-info' },
         { value: 'Maintenance', label: 'Maintenance', dot: 'bg-warning' },
+        { value: 'archived', label: 'Archivés', dot: 'bg-secondary' },
+        ...(isSuperAdmin ? [{ value: 'deleted', label: 'Supprimés', dot: 'bg-danger' }] : []),
     ];
 
+    const load = useCallback(async () => {
+        try {
+            const params = {};
+            if (statusFilter === 'archived') params.include_archived = '1';
+            if (statusFilter === 'deleted') params.include_deleted = '1';
+            const data = await fetchAllPages('vehicles/', params);
+            setVehicles(data);
+            setLoading(false);
+        } catch (error) {
+            console.error("Erreur lors de la récupération des véhicules", error);
+            setLoading(false);
+        }
+    }, [statusFilter]);
+
     useEffect(() => {
-        const fetchVehicles = async () => {
-            try {
-                const vehicles = await fetchAllPages('vehicles/');
-                setVehicles(vehicles);
-                setLoading(false);
-            } catch (error) {
-                console.error("Erreur lors de la récupération des véhicules", error);
-                setLoading(false);
-            }
-        };
-        fetchVehicles();
-    }, []);
+        load();
+    }, [load]);
 
     // Reset to page 1 on filter/search change
     useEffect(() => { setCurrentPage(1); }, [search, statusFilter]);
@@ -52,11 +80,14 @@ const Vehicles = () => {
 
     const filteredVehicles = vehicles.filter(v => {
         const q = search.trim().toLowerCase();
-        const matchStatus = statusFilter === 'ALL' || v.statut === statusFilter;
         const matchSearch = !q || [v.matricule, v.marque_name, v.modele_name, v.carburant]
             .filter(Boolean)
             .some(x => x.toLowerCase().includes(q));
-        return matchStatus && matchSearch;
+        if (statusFilter === 'archived') return matchSearch && v.is_archived;
+        if (statusFilter === 'deleted') return matchSearch && v.is_deleted;
+        if (statusFilter !== 'ALL' && v.statut !== statusFilter) return false;
+        if (statusFilter !== 'archived' && statusFilter !== 'deleted' && (v.is_archived || v.is_deleted)) return false;
+        return matchSearch;
     });
 
     const paginatedVehicles = filteredVehicles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -75,6 +106,89 @@ const Vehicles = () => {
                 { key: 'statut', label: 'Statut' },
                 { key: 'prix_par_jour', label: 'Prix/Jour (DH)' },
             ]
+        );
+    };
+
+    const handleDelete = (v) => {
+        messageBox.danger(
+            `Le véhicule ${v.matricule} sera retiré de la flotte et ne sera plus visible. Il pourra être restauré par le super admin.`,
+            'Confirmer la suppression',
+            {
+                confirmText: 'Supprimer',
+                onConfirm: async () => {
+                    try {
+                        await api.patch(`vehicles/${v.id}/`, { is_deleted: true });
+                        toast.success('Véhicule supprimé.');
+                        load();
+                    } catch (err) {
+                        toast.error(err.response?.data?.detail || 'Impossible de supprimer le véhicule.');
+                    }
+                },
+            }
+        );
+    };
+
+    const handleRestore = (v) => {
+        const isDeleted = !!v.is_deleted;
+        messageBox.confirm(
+            isDeleted
+                ? `Restaurer le véhicule ${v.matricule} ? Il réapparaîtra dans la flotte.`
+                : `Restaurer le véhicule ${v.matricule} dans la flotte active ?`,
+            'Restaurer le véhicule',
+            {
+                confirmText: 'Restaurer',
+                onConfirm: async () => {
+                    try {
+                        await api.patch(`vehicles/${v.id}/`, isDeleted
+                            ? { is_deleted: false }
+                            : { is_archived: false, date_fin_travail: null });
+                        toast.success('Véhicule restauré.');
+                        load();
+                    } catch (err) {
+                        toast.error(err.response?.data?.detail || 'Impossible de restaurer le véhicule.');
+                    }
+                },
+            }
+        );
+    };
+
+    const buildMenuItems = (v) => {
+        const items = [];
+        if (!v.is_deleted && !v.is_archived && v.statut === 'Available') {
+            items.push({ key: 'louer', icon: 'directions_car', label: 'Louer', color: 'var(--success)', onClick: () => navigate('/contracts/new') });
+            items.push({ key: 'reserver', icon: 'event', label: 'Réserver', color: 'var(--info)', onClick: () => navigate('/reservations/new') });
+        }
+        items.push({ key: 'info', icon: 'info', label: 'Informations', onClick: () => setInfoVehicle(v) });
+        if (v.is_deleted || v.is_archived) {
+            items.push({ key: 'restaurer', icon: 'unarchive', label: 'Restaurer', color: 'var(--success)', onClick: () => handleRestore(v) });
+        } else {
+            items.push({ key: 'editer', icon: 'edit', label: 'Éditer', onClick: () => navigate(`/vehicles/edit/${v.id}`) });
+            items.push({ key: 'archiver', icon: 'archive', label: 'Archiver', onClick: () => setArchiveVehicle(v) });
+            items.push({ key: 'supprimer', icon: 'delete', label: 'Supprimer', color: 'var(--danger)', destructive: true, onClick: () => handleDelete(v) });
+        }
+        return items;
+    };
+
+    const MenuButton = ({ vehicle }) => {
+        const btnRef = useRef(null);
+        return (
+            <div className="inline-block">
+                <button
+                    ref={btnRef}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === vehicle.id ? null : vehicle.id); }}
+                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                    style={{ color: 'var(--on-surface-variant)' }}
+                    title="Options"
+                >
+                    <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                </button>
+                <DropdownMenu
+                    open={menuId === vehicle.id}
+                    onClose={() => setMenuId(null)}
+                    items={buildMenuItems(vehicle)}
+                    anchor={btnRef.current}
+                />
+            </div>
         );
     };
 
@@ -259,21 +373,30 @@ const Vehicles = () => {
                                             {vehicle.kilometrage ? parseInt(vehicle.kilometrage).toLocaleString() : 0} km
                                         </td>
                                         <td className="px-6">
-                                            <StatusBadge status={vehicle.statut} />
+                                            {vehicle.is_deleted ? (
+                                                <StatusBadge variant="danger" label="Supprimé" />
+                                            ) : vehicle.is_archived ? (
+                                                <StatusBadge variant="neutral" label="Archivé" />
+                                            ) : (
+                                                <StatusBadge status={vehicle.statut} />
+                                            )}
                                         </td>
                                         <td className="px-6 text-right font-semibold">
                                             {vehicle.prix_par_jour} DH
                                         </td>
                                         <td className="px-6 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Link
-                                                    to={`/vehicles/edit/${vehicle.id}`}
-                                                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                                                    style={{ color: 'var(--on-surface-variant)' }}
-                                                    title="Modifier"
-                                                >
-                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                                                </Link>
+                                            <div className="flex items-center justify-end gap-1">
+                                                {!vehicle.is_deleted && !vehicle.is_archived && (
+                                                    <Link
+                                                        to={`/vehicles/edit/${vehicle.id}`}
+                                                        className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                                                        style={{ color: 'var(--on-surface-variant)' }}
+                                                        title="Modifier"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                    </Link>
+                                                )}
+                                                <MenuButton vehicle={vehicle} />
                                             </div>
                                         </td>
                                     </tr>
@@ -300,7 +423,7 @@ const Vehicles = () => {
                             {paginatedVehicles.map((vehicle) => (
                                 <div
                                     key={vehicle.id}
-                                    className="bg-card-white rounded-lg p-5 border border-stroke hover:shadow-l2 transition-all flex flex-col justify-between group"
+                                    className="bg-card-white rounded-lg p-5 border border-stroke hover:shadow-l2 transition-all flex flex-col justify-between group relative"
                                 >
                                     <div>
                                         <div className="flex items-start justify-between gap-3 mb-4">
@@ -324,7 +447,13 @@ const Vehicles = () => {
                                                     <p className="text-body-sm text-on-surface-variant font-medium">{vehicle.matricule}</p>
                                                 </div>
                                             </div>
-                                            <StatusBadge status={vehicle.statut} />
+                                            {vehicle.is_deleted ? (
+                                                <StatusBadge variant="danger" label="Supprimé" />
+                                            ) : vehicle.is_archived ? (
+                                                <StatusBadge variant="neutral" label="Archivé" />
+                                            ) : (
+                                                <StatusBadge status={vehicle.statut} />
+                                            )}
                                         </div>
 
                                         <div className="space-y-2 text-body-sm text-on-surface-variant border-t border-stroke pt-3">
@@ -355,13 +484,16 @@ const Vehicles = () => {
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 pt-3 border-t border-stroke flex items-center justify-end">
-                                        <Link
-                                            to={`/vehicles/edit/${vehicle.id}`}
-                                            className="text-label-sm font-bold text-primary hover:underline flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
-                                        >
-                                            Gérer le véhicule <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                                        </Link>
+                                    <div className="mt-4 pt-3 border-t border-stroke flex items-center justify-between">
+                                        {!vehicle.is_deleted && !vehicle.is_archived ? (
+                                            <Link
+                                                to={`/vehicles/edit/${vehicle.id}`}
+                                                className="text-label-sm font-bold text-primary hover:underline flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                                            >
+                                                Gérer le véhicule <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                            </Link>
+                                        ) : <span />}
+                                        <MenuButton vehicle={vehicle} />
                                     </div>
                                 </div>
                             ))}
@@ -376,6 +508,9 @@ const Vehicles = () => {
                     onPageSizeChange={(newSize) => { setPageSize(newSize); setCurrentPage(1); }}
                 />
             </div>
+
+            <VehicleInfoModal isOpen={!!infoVehicle} vehicle={infoVehicle} onClose={() => setInfoVehicle(null)} />
+            <ArchiveVehicleModal isOpen={!!archiveVehicle} vehicle={archiveVehicle} onClose={() => setArchiveVehicle(null)} onArchived={load} />
         </div>
     );
 };

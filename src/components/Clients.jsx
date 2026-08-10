@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
 import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
+import DropdownMenu from './ui/DropdownMenu';
+import ClientInfoModal from './ui/ClientInfoModal';
+import { messageBox } from './MessageBox';
+import { toast } from './Toast';
 
 const PAGE_SIZE_DEFAULT = 10;
 
@@ -23,13 +27,18 @@ const getInitials = (prenom, nom) => {
     return (first + second).toUpperCase() || '?';
 };
 
-const FILTER_OPTIONS = [
-    { value: 'ALL', label: 'Tous les clients', dot: 'bg-primary' },
-    { value: 'REGULAR', label: 'Clients réguliers', dot: 'bg-success' },
-    { value: 'BLACKLIST', label: 'Liste noire', dot: 'bg-danger' },
-];
+const getRole = () => {
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return '';
+        return JSON.parse(atob(token.split('.')[1]))?.role || '';
+    } catch {
+        return '';
+    }
+};
 
 const Clients = () => {
+    const navigate = useNavigate();
     const [clients, setClients] = useState([]);
     const [allClients, setAllClients] = useState([]); // for stats calculation
     const [loading, setLoading] = useState(true);
@@ -40,6 +49,18 @@ const Clients = () => {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
     const [count, setCount] = useState(0);
+
+    const [menuId, setMenuId] = useState(null);
+    const [infoClient, setInfoClient] = useState(null);
+
+    const isSuperAdmin = getRole() === 'SUPERADMIN';
+
+    const FILTER_OPTIONS = [
+        { value: 'ALL', label: 'Tous les clients', dot: 'bg-primary' },
+        { value: 'REGULAR', label: 'Clients réguliers', dot: 'bg-success' },
+        { value: 'BLACKLIST', label: 'Liste noire', dot: 'bg-danger' },
+        ...(isSuperAdmin ? [{ value: 'DELETED', label: 'Supprimés', dot: 'bg-secondary' }] : []),
+    ];
 
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(search), 350);
@@ -69,6 +90,10 @@ const Clients = () => {
             if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim());
             if (filterMode === 'BLACKLIST') params.set('liste_noire', 'true');
             if (filterMode === 'REGULAR') params.set('liste_noire', 'false');
+            if (filterMode === 'DELETED') {
+                params.set('include_deleted', '1');
+                params.set('is_deleted', 'true');
+            }
 
             const response = await api.get(`clients/?${params.toString()}`);
             const data = response.data;
@@ -118,6 +143,92 @@ const Clients = () => {
             ]
         );
     };
+
+    const handleDelete = (c) => {
+        messageBox.danger(
+            `Le client ${c.prenom} ${c.nom} sera retiré de l'annuaire et ne sera plus visible. Il pourra être restauré par le super admin.`,
+            'Confirmer la suppression',
+            {
+                confirmText: 'Supprimer',
+                onConfirm: async () => {
+                    try {
+                        await api.patch(`clients/${c.id}/`, { is_deleted: true });
+                        toast.success('Client supprimé.');
+                        fetchClients(page);
+                        fetchAllClientsStats();
+                    } catch (err) {
+                        toast.error(err.response?.data?.detail || 'Impossible de supprimer le client.');
+                    }
+                },
+            }
+        );
+    };
+
+    const handleRestore = (c) => {
+        messageBox.confirm(
+            `Restaurer le client ${c.prenom} ${c.nom} ? Il réapparaîtra dans l'annuaire.`,
+            'Restaurer le client',
+            {
+                confirmText: 'Restaurer',
+                onConfirm: async () => {
+                    try {
+                        await api.patch(`clients/${c.id}/`, { is_deleted: false });
+                        toast.success('Client restauré.');
+                        fetchClients(page);
+                        fetchAllClientsStats();
+                    } catch (err) {
+                        toast.error(err.response?.data?.detail || 'Impossible de restaurer le client.');
+                    }
+                },
+            }
+        );
+    };
+
+    const buildMenuItems = (c) => {
+        const items = [
+            { key: 'info', icon: 'info', label: 'Informations', onClick: () => setInfoClient(c) },
+        ];
+        if (c.is_deleted) {
+            items.push({ key: 'restaurer', icon: 'unarchive', label: 'Restaurer', color: 'var(--success)', onClick: () => handleRestore(c) });
+        } else {
+            items.push({ key: 'editer', icon: 'edit', label: 'Éditer', onClick: () => navigate(`/clients/edit/${c.id}`) });
+            items.push({ key: 'supprimer', icon: 'delete', label: 'Supprimer', color: 'var(--danger)', destructive: true, onClick: () => handleDelete(c) });
+        }
+        return items;
+    };
+
+    const MenuButton = ({ client }) => {
+        const btnRef = useRef(null);
+        return (
+            <div className="inline-block">
+                <button
+                    ref={btnRef}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === client.id ? null : client.id); }}
+                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                    style={{ color: 'var(--on-surface-variant)' }}
+                    title="Options"
+                >
+                    <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                </button>
+                <DropdownMenu
+                    open={menuId === client.id}
+                    onClose={() => setMenuId(null)}
+                    items={buildMenuItems(client)}
+                    anchor={btnRef.current}
+                />
+            </div>
+        );
+    };
+
+    const ClientStatus = ({ client }) => (
+        client.is_deleted ? (
+            <StatusBadge variant="danger" label="Supprimé" />
+        ) : client.liste_noire ? (
+            <StatusBadge variant="danger" label="LISTE NOIRE" />
+        ) : (
+            <StatusBadge variant="success" label="ACTIF" />
+        )
+    );
 
     return (
         <div>
@@ -262,7 +373,7 @@ const Clients = () => {
                                         <tr key={client.id} className="row hover:bg-slate-50/50 transition-colors group">
                                             <td className="px-6 font-semibold">
                                                 <div className="flex items-center gap-3.5">
-                                                    <div className={`avatar ${avatarClass}`}>
+                                                    <div className={`avatar ${client.is_deleted ? 'bg-slate-100 text-slate-500 ring-slate-100' : avatarClass}`}>
                                                         {getInitials(client.prenom, client.nom)}
                                                     </div>
                                                     <div>
@@ -294,20 +405,22 @@ const Clients = () => {
                                                 <span className="font-mono text-[12px]">{client.permis_conduite || '—'}</span>
                                             </td>
                                             <td className="px-6">
-                                                <StatusBadge
-                                                    variant={client.liste_noire ? 'danger' : 'success'}
-                                                    label={client.liste_noire ? 'LISTE NOIRE' : 'ACTIF'}
-                                                />
+                                                <ClientStatus client={client} />
                                             </td>
                                             <td className="px-6 text-right">
-                                                <Link
-                                                    to={`/clients/edit/${client.id}`}
-                                                    className="inline-flex items-center p-2 rounded-token hover:bg-slate-100 transition-colors"
-                                                    style={{ color: 'var(--on-surface-variant)' }}
-                                                    title="Modifier"
-                                                >
-                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                                                </Link>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {!client.is_deleted && (
+                                                        <Link
+                                                            to={`/clients/edit/${client.id}`}
+                                                            className="inline-flex items-center p-2 rounded-token hover:bg-slate-100 transition-colors"
+                                                            style={{ color: 'var(--on-surface-variant)' }}
+                                                            title="Modifier"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                        </Link>
+                                                    )}
+                                                    <MenuButton client={client} />
+                                                </div>
                                             </td>
                                         </tr>
                                     );
@@ -328,7 +441,7 @@ const Clients = () => {
                                     <div>
                                         <div className="flex items-start justify-between gap-3 mb-4">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-12 h-12 rounded-lg ${avatarClass} flex items-center justify-center font-bold text-sm shrink-0`}>
+                                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${client.is_deleted ? 'bg-slate-100 text-slate-500 ring-slate-100' : avatarClass}`}>
                                                     {getInitials(client.prenom, client.nom)}
                                                 </div>
                                                 <div>
@@ -338,10 +451,7 @@ const Clients = () => {
                                                     <p className="text-body-sm text-on-surface-variant font-medium">#{client.cin_passport}</p>
                                                 </div>
                                             </div>
-                                            <StatusBadge
-                                                variant={client.liste_noire ? 'danger' : 'success'}
-                                                label={client.liste_noire ? 'NOIRE' : 'ACTIF'}
-                                            />
+                                            <ClientStatus client={client} />
                                         </div>
 
                                         <div className="space-y-2 text-body-sm text-on-surface-variant border-t border-stroke pt-3">
@@ -368,13 +478,16 @@ const Clients = () => {
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 pt-3 border-t border-stroke flex items-center justify-end">
-                                        <Link
-                                            to={`/clients/edit/${client.id}`}
-                                            className="text-label-sm font-bold text-primary hover:underline flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
-                                        >
-                                            Gérer la fiche <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                                        </Link>
+                                    <div className="mt-4 pt-3 border-t border-stroke flex items-center justify-between">
+                                        {!client.is_deleted ? (
+                                            <Link
+                                                to={`/clients/edit/${client.id}`}
+                                                className="text-label-sm font-bold text-primary hover:underline flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                                            >
+                                                Gérer la fiche <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                            </Link>
+                                        ) : <span />}
+                                        <MenuButton client={client} />
                                     </div>
                                 </div>
                             );
@@ -393,9 +506,10 @@ const Clients = () => {
                     />
                 )}
             </div>
+
+            <ClientInfoModal isOpen={!!infoClient} client={infoClient} onClose={() => setInfoClient(null)} />
         </div>
     );
 };
 
 export default Clients;
-
