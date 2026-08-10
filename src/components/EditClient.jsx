@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
+import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstants';
 
 const EditClient = () => {
     const { id } = useParams();
@@ -28,6 +29,52 @@ const EditClient = () => {
     const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
     const [files, setFiles] = useState({ scan_cin: null, scan_permis: null });
+    const [uniqueErrors, setUniqueErrors] = useState({});
+    const [fieldErrors, setFieldErrors] = useState({});
+
+    const REQUIRED_FIELDS = [
+        { key: 'prenom', label: 'Prénom', check: () => !formData.prenom },
+        { key: 'nom', label: 'Nom', check: () => !formData.nom },
+        { key: 'cin_passport', label: 'CIN / Passeport', check: () => !formData.cin_passport },
+        { key: 'telephone', label: 'Téléphone', check: () => !formData.telephone },
+        { key: 'adresse', label: 'Adresse', check: () => !formData.adresse },
+        { key: 'permis_conduite', label: 'N° de permis', check: () => !formData.permis_conduite },
+    ];
+
+    const hasError = (name) => Boolean(fieldErrors[name]) || Boolean(uniqueErrors[name]);
+
+    const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? 'Champ requis' : '');
+
+    const UNIQUE_FIELDS = {
+        cin_passport: 'CIN/passeport',
+        email: 'email',
+        telephone: 'téléphone',
+        permis_conduite: 'permis de conduire',
+    };
+
+    const checkUnique = async (field, value) => {
+        if (!value || !value.trim()) {
+            setUniqueErrors(prev => ({ ...prev, [field]: false }));
+            return;
+        }
+        try {
+            const res = await api.get('clients/check-unique/', {
+                params: { field, value: value.trim(), exclude_id: id }
+            });
+            setUniqueErrors(prev => ({
+                ...prev,
+                [field]: res.data.available === false
+                    ? `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`
+                    : false
+            }));
+        } catch (err) {
+            setUniqueErrors(prev => ({ ...prev, [field]: false }));
+        }
+    };
+
+    const handleBlurUnique = (field) => (e) => {
+        checkUnique(field, e.target.value);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -59,6 +106,12 @@ const EditClient = () => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+        if (uniqueErrors[name]) {
+            setUniqueErrors(prev => ({ ...prev, [name]: false }));
+        }
+        if (fieldErrors[name]) {
+            setFieldErrors(prev => ({ ...prev, [name]: false }));
+        }
     };
 
     const handleFileChange = (e) => {
@@ -70,6 +123,35 @@ const EditClient = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const missing = REQUIRED_FIELDS.filter((f) => f.check());
+        if (missing.length > 0) {
+            setFieldErrors((prev) => {
+                const next = { ...prev };
+                missing.forEach((f) => { next[f.key] = true; });
+                return next;
+            });
+            toast.error(`Champs requis manquants : ${missing.map((m) => m.label).join(', ')}`);
+            return;
+        }
+
+        // Vérifier une dernière fois les champs uniques avant enregistrement
+        for (const field of Object.keys(UNIQUE_FIELDS)) {
+            const val = formData[field];
+            if (val && val.trim()) {
+                try {
+                    const res = await api.get('clients/check-unique/', { params: { field, value: val.trim(), exclude_id: id } });
+                    if (res.data.available === false) {
+                        setUniqueErrors(prev => ({ ...prev, [field]: `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.` }));
+                        toast.error(`Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`);
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Erreur vérification unicité", err);
+                }
+            }
+        }
+
         setSaving(true);
         try {
             const data = new FormData();
@@ -111,261 +193,272 @@ const EditClient = () => {
         });
     };
 
-    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement du profil client...</div>;
+    if (loading) return <div className="p-8 text-center font-bold" style={{ color: 'var(--primary-container)' }}>Chargement du profil client...</div>;
 
     const totalSpent = contracts.reduce((sum, c) => sum + parseFloat(c.montant_total || 0), 0);
     const rentalCount = contracts.length;
 
+    const fieldClass = (name) => `field transition-all duration-200 ${
+        hasError(name)
+            ? 'border-rose-400 bg-rose-50/40 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500'
+            : 'focus:bg-white'
+    }`;
+
     return (
-        <div className="max-w-6xl mx-auto">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+        <div className="w-full px-4 py-6">
+            {/* Breadcrumb + header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
-                    <nav className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">
-                        <Link to="/clients" className="hover:text-indigo-650 transition-colors">Clients</Link>
-                        <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                        <span className="text-slate-900">Modifier le Client</span>
-                    </nav>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-                        Modifier le Client <span className="text-indigo-600/60 font-light">— {formData.prenom} {formData.nom}</span>
+                    <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                        <Link to="/clients" className="hover:underline">Clients</Link> / Modifier
+                    </p>
+                    <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
+                        Modifier le client
                     </h1>
+                    <p className="text-[13px] font-medium mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
+                        {formData.prenom} {formData.nom} — {formData.cin_passport || `${cinLabelFor(formData.nationalite)} non renseigné`}
+                    </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                        Supprimer
+                    </button>
+                    <button
+                        type="button"
                         onClick={() => navigate('/clients')}
-                        className="px-6 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                        className="px-5 py-2.5 rounded-lg text-[13px] font-semibold card shadow-l1"
+                        style={{ color: 'var(--on-surface-variant)' }}
                     >
                         Annuler
                     </button>
-                    <button 
-                        onClick={handleSubmit}
+                    <button
+                        type="submit"
+                        form="client-form"
                         disabled={saving}
-                        className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200/50 disabled:opacity-50"
+                        className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2 disabled:opacity-60"
+                        style={{ background: 'var(--primary-container)' }}
                     >
+                        <span className="material-symbols-outlined text-[16px]">save</span>
                         {saving ? 'Enregistrement...' : 'Sauvegarder'}
                     </button>
                 </div>
             </div>
 
             {error && (
-                <div className="mb-6 p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700 text-sm rounded-r-xl">
-                    {error}
+                <div className="mb-6 p-4 rounded-lg flex items-center gap-3 font-semibold text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
+                    <span className="material-symbols-outlined">error</span>
+                    <p>{error}</p>
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-3 gap-6 items-start">
                 {/* Left Column: Form Sections */}
-                <div className="lg:col-span-8 space-y-8">
+                <form id="client-form" onSubmit={handleSubmit} className="col-span-2 space-y-6">
                     {/* Section 1: Personal Information */}
-                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
-                            <span className="material-symbols-outlined text-indigo-655 font-bold">person</span>
-                            <h2 className="text-lg font-extrabold text-slate-900">Informations Personnelles</h2>
+                    <div className="card shadow-l1 p-8">
+                        <div className="section-title">
+                            <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
+                            <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Informations personnelles</h2>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Prénom</label>
-                                <input 
-                                    name="prenom"
-                                    value={formData.prenom}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="text" 
-                                />
+                        <div className="grid grid-cols-2 gap-5">
+                            <div>
+                                <label className="label">Prénom</label>
+                                <input name="prenom" value={formData.prenom || ''} onChange={handleChange} className={fieldClass('prenom')} type="text" />
+                                {fieldErrorMsg('prenom') && (
+                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <span className="material-symbols-outlined text-[13px]">error</span>
+                                        {fieldErrorMsg('prenom')}
+                                    </p>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Nom</label>
-                                <input 
-                                    name="nom"
-                                    value={formData.nom}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="text" 
-                                />
+                            <div>
+                                <label className="label">Nom</label>
+                                <input name="nom" value={formData.nom || ''} onChange={handleChange} className={fieldClass('nom')} type="text" />
+                                {fieldErrorMsg('nom') && (
+                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <span className="material-symbols-outlined text-[13px]">error</span>
+                                        {fieldErrorMsg('nom')}
+                                    </p>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Adresse Email</label>
-                                <input 
-                                    name="email"
-                                    value={formData.email || ''}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="email" 
-                                />
+                            <div>
+                                <label className="label">{cinLabelFor(formData.nationalite)}</label>
+                                <input name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} onBlur={handleBlurUnique('cin_passport')} className={fieldClass('cin_passport')} type="text" />
+                                {fieldErrorMsg('cin_passport') && (
+                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <span className="material-symbols-outlined text-[13px]">error</span>
+                                        {fieldErrorMsg('cin_passport')}
+                                    </p>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Numéro de Téléphone</label>
-                                <input 
-                                    name="telephone"
-                                    value={formData.telephone}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="tel" 
-                                />
+                            <div>
+                                <label className="label">Adresse Email</label>
+                                <input name="email" value={formData.email || ''} onChange={handleChange} onBlur={handleBlurUnique('email')} className={fieldClass('email')} type="email" />
+                                {fieldErrorMsg('email') && (
+                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <span className="material-symbols-outlined text-[13px]">error</span>
+                                        {fieldErrorMsg('email')}
+                                    </p>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Sexe</label>
-                                <select 
-                                    name="sexe"
-                                    value={formData.sexe || ''}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200"
-                                >
+                            <div>
+                                <label className="label">Numéro de Téléphone</label>
+                                <input name="telephone" value={formData.telephone || ''} onChange={handleChange} onBlur={handleBlurUnique('telephone')} className={fieldClass('telephone')} type="tel" />
+                                {fieldErrorMsg('telephone') && (
+                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <span className="material-symbols-outlined text-[13px]">error</span>
+                                        {fieldErrorMsg('telephone')}
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <label className="label">Sexe</label>
+                                <div className="flex gap-3">
+                                    {SEXE_OPTIONS.map(opt => (
+                                        <label
+                                            key={opt.value}
+                                            className="flex-1 flex items-center gap-2.5 px-4 py-2.5 rounded-lg border cursor-pointer transition-all duration-200"
+                                            style={{
+                                                borderColor: formData.sexe === opt.value ? 'var(--primary-container)' : 'var(--stroke)',
+                                                background: formData.sexe === opt.value ? 'var(--info-bg)' : 'var(--slate-bg)'
+                                            }}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="sexe"
+                                                value={opt.value}
+                                                checked={formData.sexe === opt.value}
+                                                onChange={handleChange}
+                                                className="accent-[var(--primary-container)]"
+                                            />
+                                            <span className="text-sm font-semibold" style={{ color: 'var(--on-surface)' }}>{opt.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="label">Nationalité</label>
+                                <select name="nationalite" value={formData.nationalite || ''} onChange={handleChange} className={fieldClass('nationalite')}>
                                     <option value="">-- Sélectionner --</option>
-                                    <option value="HOMME">Homme</option>
-                                    <option value="FEMME">Femme</option>
+                                    {NATIONALITES.map(n => (
+                                        <option key={n} value={n}>{n}</option>
+                                    ))}
                                 </select>
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Nationalité</label>
-                                <input 
-                                    name="nationalite"
-                                    value={formData.nationalite || ''}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="text" 
-                                />
+                            <div>
+                                <label className="label">Ville</label>
+                                <input name="ville" value={formData.ville || ''} onChange={handleChange} className={fieldClass('ville')} type="text" />
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Ville</label>
-                                <input 
-                                    name="ville"
-                                    value={formData.ville || ''}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="text" 
-                                />
+                            <div>
+                                <label className="label">Pays</label>
+                                <input name="pays" value={formData.pays || ''} onChange={handleChange} className={fieldClass('pays')} type="text" />
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Pays</label>
-                                <input 
-                                    name="pays"
-                                    value={formData.pays || ''}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="text" 
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1.5 md:col-span-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Adresse</label>
-                                <input 
-                                    name="adresse"
-                                    value={formData.adresse}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                    type="text" 
-                                />
+                            <div className="col-span-2">
+                                <label className="label">Adresse</label>
+                                <input name="adresse" value={formData.adresse || ''} onChange={handleChange} className={fieldClass('adresse')} type="text" />
+                                {fieldErrorMsg('adresse') && (
+                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <span className="material-symbols-outlined text-[13px]">error</span>
+                                        {fieldErrorMsg('adresse')}
+                                    </p>
+                                )}
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     {/* Section 2: Identity Documents */}
-                    <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-4">
-                            <span className="material-symbols-outlined text-indigo-650 font-bold">badge</span>
-                            <h2 className="text-lg font-extrabold text-slate-900">Documents d'Identité</h2>
+                    <div className="card shadow-l1 p-8">
+                        <div className="section-title">
+                            <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
+                            <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Documents d'identité</h2>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-2 gap-5">
                             {/* Drivers License */}
-                            <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-200 hover:border-slate-350 transition-all group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 shadow-sm">
-                                            <span className="material-symbols-outlined text-indigo-600">card_membership</span>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-900">Permis de Conduire</p>
-                                            <p className="text-[10px] text-slate-400">Expire: {formData.date_delivrance_permis || 'Non renseigné'}</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 ring-1 ring-emerald-250 font-bold">VÉRIFIÉ</span>
+                            <div>
+                                <div className="flex items-center gap-2 mb-5">
+                                    <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>card_membership</span>
+                                    <p className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>Permis de Conduire</p>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">N° Permis</label>
-                                        <input 
-                                            name="permis_conduite"
-                                            value={formData.permis_conduite}
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-900 bg-white focus:border-indigo-650 focus:ring-1 focus:ring-indigo-650 outline-none transition-all duration-200" 
-                                            type="text" 
-                                        />
+                                    <div>
+                                        <label className="label">N° de permis</label>
+                                        <input name="permis_conduite" value={formData.permis_conduite || ''} onChange={handleChange} onBlur={handleBlurUnique('permis_conduite')} className={fieldClass('permis_conduite')} type="text" />
+                                        {fieldErrorMsg('permis_conduite') && (
+                                            <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                                <span className="material-symbols-outlined text-[13px]">error</span>
+                                                {fieldErrorMsg('permis_conduite')}
+                                            </p>
+                                        )}
                                     </div>
-                                    <div className="flex flex-col border-t border-slate-200 pt-3">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Scan du permis</label>
+                                    <div>
+                                        <label className="label">Date de délivrance</label>
+                                        <input name="date_delivrance_permis" value={formData.date_delivrance_permis || ''} onChange={handleChange} className={fieldClass('date_delivrance_permis')} type="date" />
+                                    </div>
+                                    <div>
+                                        <label className="label">Scan du permis</label>
                                         {formData.scan_permis && !files.scan_permis && (
-                                            <a href={formData.scan_permis} target="_blank" rel="noreferrer" className="text-xs text-indigo-650 font-bold hover:underline mb-2 inline-flex items-center gap-1">
+                                            <a href={formData.scan_permis} target="_blank" rel="noreferrer" className="text-xs font-bold mb-2 inline-flex items-center gap-1" style={{ color: 'var(--primary-container)' }}>
                                                 <span className="material-symbols-outlined text-[14px]">visibility</span>
                                                 Voir le scan actuel
                                             </a>
                                         )}
-                                        <label className="border border-dashed border-slate-200 bg-white rounded-xl p-3 text-center cursor-pointer hover:bg-slate-50 transition-colors">
-                                            <span className="text-xs font-semibold text-indigo-650">
+                                        <label className="dropzone p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
+                                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>upload_file</span>
+                                            <p className="text-[11px] font-semibold text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
                                                 {files.scan_permis ? files.scan_permis.name : "Télécharger un nouveau document"}
-                                            </span>
+                                            </p>
                                             <input type="file" name="scan_permis" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
                                         </label>
                                     </div>
                                 </div>
                             </div>
                             {/* Passport / CIN */}
-                            <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-200 hover:border-slate-350 transition-all group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 shadow-sm">
-                                            <span className="material-symbols-outlined text-indigo-600">public</span>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-900">CIN / Passeport</p>
-                                            <p className="text-[10px] text-slate-400">Vérification standard</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 ring-1 ring-emerald-250 font-bold">VÉRIFIÉ</span>
+                            <div>
+                                <div className="flex items-center gap-2 mb-5">
+                                    <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>public</span>
+                                    <p className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>{cinLabelFor(formData.nationalite)}</p>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">N° Document</label>
-                                        <input 
-                                            name="cin_passport"
-                                            value={formData.cin_passport}
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium text-slate-900 bg-white focus:border-indigo-655 focus:ring-1 focus:ring-indigo-655 outline-none transition-all duration-200" 
-                                            type="text" 
-                                        />
+                                    <div>
+                                        <label className="label">N° de document</label>
+                                        <input name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} className={fieldClass('cin_passport')} type="text" />
                                     </div>
-                                    <div className="flex flex-col border-t border-slate-200 pt-3">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Scan d'identité</label>
+                                    <div>
+                                        <label className="label">Scan d'identité</label>
                                         {formData.scan_cin && !files.scan_cin && (
-                                            <a href={formData.scan_cin} target="_blank" rel="noreferrer" className="text-xs text-indigo-650 font-bold hover:underline mb-2 inline-flex items-center gap-1">
+                                            <a href={formData.scan_cin} target="_blank" rel="noreferrer" className="text-xs font-bold mb-2 inline-flex items-center gap-1" style={{ color: 'var(--primary-container)' }}>
                                                 <span className="material-symbols-outlined text-[14px]">visibility</span>
                                                 Voir le scan actuel
                                             </a>
                                         )}
-                                        <label className="border border-dashed border-slate-200 bg-white rounded-xl p-3 text-center cursor-pointer hover:bg-slate-50 transition-colors">
-                                            <span className="text-xs font-semibold text-indigo-650">
+                                        <label className="dropzone p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
+                                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>upload_file</span>
+                                            <p className="text-[11px] font-semibold text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
                                                 {files.scan_cin ? files.scan_cin.name : "Télécharger un nouveau document"}
-                                            </span>
+                                            </p>
                                             <input type="file" name="scan_cin" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
                                         </label>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     {/* Section 3: Rental History */}
-                    <section className="bg-white p-8 rounded-xl ring-1 ring-slate-200 shadow-sm">
-                        <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-4">
-                            <div className="flex items-center gap-3">
-                                <span className="material-symbols-outlined text-primary">history</span>
-                                <h2 className="text-xl font-bold font-headline text-slate-900">Historique des locations</h2>
-                            </div>
-                            <Link to="/contracts" className="text-xs font-bold text-primary hover:underline">Voir tous les contrats</Link>
+                    <div className="card shadow-l1 p-8">
+                        <div className="section-title">
+                            <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
+                            <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Historique des locations</h2>
                         </div>
-                        <div className="overflow-hidden">
+                        <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                                    <tr className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
                                         <th className="pb-4 px-2">Véhicule</th>
                                         <th className="pb-4 px-2">Période</th>
                                         <th className="pb-4 px-2 text-right">Revenu</th>
@@ -374,24 +467,25 @@ const EditClient = () => {
                                 </thead>
                                 <tbody className="text-sm">
                                     {contracts.slice(0, 5).map(contract => (
-                                        <tr key={contract.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="py-4 px-2 border-t border-slate-100">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="font-semibold text-slate-900">{contract.vehicle_name}</span>
-                                                </div>
+                                        <tr key={contract.id} className="hover:bg-white transition-colors" style={{ borderTop: '1px solid var(--stroke)' }}>
+                                            <td className="py-4 px-2">
+                                                <span className="font-semibold" style={{ color: 'var(--on-surface)' }}>{contract.vehicle_name}</span>
                                             </td>
-                                            <td className="py-4 px-2 border-t border-slate-100">
-                                                <p className="text-xs text-slate-900">
+                                            <td className="py-4 px-2">
+                                                <p className="text-xs" style={{ color: 'var(--on-surface)' }}>
                                                     {contract.formatted_dates?.range || `${new Date(contract.date_sortie).toLocaleDateString()} - ${new Date(contract.date_retour_prevue).toLocaleDateString()}`}
                                                 </p>
-                                                <p className="text-[10px] text-slate-500">{contract.jours} Jours</p>
+                                                <p className="text-[10px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{contract.jours} Jours</p>
                                             </td>
-                                            <td className="py-4 px-2 border-t border-slate-100 text-right font-bold text-primary">{contract.montant_total} MAD</td>
-                                            <td className="py-4 px-2 border-t border-slate-100 text-right">
-                                                <span className={`text-[10px] px-2 py-1 rounded font-bold ${
-                                                    contract.statut === 'TERMINE' ? 'bg-slate-100 text-slate-600' : 
-                                                    contract.statut === 'EN_COURS' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                                                }`}>
+                                            <td className="py-4 px-2 text-right font-bold" style={{ color: 'var(--primary-container)' }}>{contract.montant_total} MAD</td>
+                                            <td className="py-4 px-2 text-right">
+                                                <span className="text-[10px] px-2 py-1 rounded font-bold" style={
+                                                    contract.statut === 'TERMINE'
+                                                        ? { background: 'var(--slate-bg)', color: 'var(--secondary)' }
+                                                        : contract.statut === 'EN_COURS'
+                                                            ? { background: 'var(--success-bg)', color: 'var(--success)' }
+                                                            : { background: 'var(--info-bg)', color: 'var(--primary-container)' }
+                                                }>
                                                     {contract.statut}
                                                 </span>
                                             </td>
@@ -399,50 +493,53 @@ const EditClient = () => {
                                     ))}
                                     {contracts.length === 0 && (
                                         <tr>
-                                            <td colSpan="4" className="py-8 text-center text-slate-400 italic">Aucun contrat trouvé pour ce client.</td>
+                                            <td colSpan="4" className="py-8 text-center italic" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                                                Aucun contrat trouvé pour ce client.
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                    </section>
-                </div>
+                    </div>
+                </form>
 
-                <div className="lg:col-span-4 space-y-8">
+                {/* Right Column: Sidebar */}
+                <div className="space-y-6">
                     {/* Client Profile Summary */}
-                    <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex flex-col items-center text-center">
-                        <div className="relative mb-6">
-                            <div className="w-28 h-28 rounded-full ring-4 ring-indigo-50 p-1 bg-slate-100 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-4xl text-indigo-600">person</span>
+                    <div className="card shadow-l1 p-6 flex flex-col items-center text-center">
+                        <div className="relative mb-5">
+                            <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'var(--primary-container)', color: '#fff' }}>
+                                <span className="material-symbols-outlined text-4xl">person</span>
                             </div>
-                            <div className="absolute bottom-1 right-1 w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center border-4 border-white">
-                                <span className="material-symbols-outlined text-[16px] font-bold">verified</span>
+                            <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-white" style={{ background: 'var(--success)', color: '#fff' }}>
+                                <span className="material-symbols-outlined text-[14px]">verified</span>
                             </div>
                         </div>
-                        <h3 className="text-xl font-extrabold text-slate-900 mb-1">{formData.prenom} {formData.nom}</h3>
-                        <p className="text-xs text-slate-400 mb-6">Inscrit le {new Date().getFullYear() - 1}</p>
-                        
-                        <div className="flex gap-2 mb-8">
-                            <span className="text-[10px] px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 font-bold tracking-wider uppercase">VÉRIFIÉ</span>
-                            <span className="text-[10px] px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100 font-bold tracking-wider uppercase">PREMIUM</span>
+                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--on-surface)' }}>{formData.prenom} {formData.nom}</h3>
+                        <p className="text-xs mb-5" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
+                            {formData.email || 'Aucun email renseigné'}
+                        </p>
+                        <div className="flex gap-2 mb-6">
+                            <span className="text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>Vérifié</span>
+                            <span className="text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider" style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}>Client</span>
                         </div>
-
-                        <div className="w-full grid grid-cols-2 gap-4 text-left border-t border-slate-100 pt-8">
+                        <div className="w-full grid grid-cols-2 gap-4 text-left border-t pt-6" style={{ borderColor: 'var(--stroke)' }}>
                             <div>
-                                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Total Dépensé</p>
-                                <p className="text-lg font-extrabold text-indigo-600">{totalSpent.toLocaleString()} MAD</p>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Total Dépensé</p>
+                                <p className="text-lg font-extrabold" style={{ color: 'var(--primary-container)' }}>{totalSpent.toLocaleString()} MAD</p>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Locations</p>
-                                <p className="text-lg font-extrabold text-slate-900">{rentalCount}</p>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Locations</p>
+                                <p className="text-lg font-extrabold" style={{ color: 'var(--on-surface)' }}>{rentalCount}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Points Fidélité</p>
-                                <p className="text-lg font-extrabold text-slate-900">{Math.floor(totalSpent / 100)}</p>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Points Fidélité</p>
+                                <p className="text-lg font-extrabold" style={{ color: 'var(--on-surface)' }}>{Math.floor(totalSpent / 100)}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Profil Risque</p>
-                                <p className={`text-lg font-extrabold ${formData.liste_noire ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Profil Risque</p>
+                                <p className="text-lg font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--success)' }}>
                                     {formData.liste_noire ? 'Bloqué' : 'Faible'}
                                 </p>
                             </div>
@@ -450,48 +547,53 @@ const EditClient = () => {
                     </div>
 
                     {/* Internal Notes */}
-                    <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
-                        <h3 className="text-sm font-extrabold text-slate-900 mb-4">Notes de gestion interne</h3>
-                        <textarea 
+                    <div className="card shadow-l1 p-6">
+                        <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>Notes de gestion interne</h3>
+                        <textarea
                             name="remarques"
                             value={formData.remarques || ''}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-650 focus:bg-white focus:ring-1 focus:ring-indigo-650 outline-none transition-all duration-200 resize-none" 
-                            placeholder="Ajoutez des notes confidentielles sur l'interaction avec le client..." 
+                            className="field resize-none"
+                            placeholder="Ajoutez des notes confidentielles sur l'interaction avec le client..."
                             rows="4"
                         ></textarea>
                     </div>
 
                     {/* Blacklist Toggle */}
-                    <div className={`rounded-2xl p-8 border transition-all ${formData.liste_noire ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-200 shadow-sm'}`}>
+                    <div className="card shadow-l1 p-6" style={formData.liste_noire ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}}>
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className={`text-sm font-extrabold ${formData.liste_noire ? 'text-rose-700' : 'text-slate-900'}`}>Liste Noire</h3>
-                                <p className="text-xs text-slate-500 mt-1">Bloquer les futures locations</p>
+                                <h3 className="text-sm font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--on-surface)' }}>Liste Noire</h3>
+                                <p className="text-xs mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Bloquer les futures locations</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     name="liste_noire"
                                     checked={formData.liste_noire}
                                     onChange={handleChange}
-                                    className="sr-only peer" 
+                                    className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                                <div className="w-11 h-6 rounded-full peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ background: formData.liste_noire ? 'var(--danger)' : 'var(--stroke)', borderColor: 'var(--stroke)' }}></div>
                             </label>
                         </div>
                     </div>
 
                     {/* Danger Zone */}
-                    <div className="bg-rose-50/50 rounded-2xl p-8 border border-rose-200">
-                        <div className="flex items-center gap-2 mb-4 text-rose-700">
+                    <div className="rounded-lg p-6 border" style={{ background: 'var(--danger-bg)', borderColor: 'var(--danger)' }}>
+                        <div className="flex items-center gap-2 mb-4" style={{ color: 'var(--danger)' }}>
                             <span className="material-symbols-outlined text-[20px]">warning</span>
                             <h3 className="text-sm font-bold uppercase tracking-wider">Zone de Danger</h3>
                         </div>
-                        <p className="text-xs text-rose-600/70 mb-6">La suppression d'un client archivera ses données. Il ne pourra plus louer de véhicules.</p>
-                        <button 
+                        <p className="text-xs mb-6" style={{ color: 'var(--danger)', opacity: 0.7 }}>
+                            La suppression d'un client archivera ses données. Il ne pourra plus louer de véhicules.
+                        </p>
+                        <button
                             onClick={handleDelete}
-                            className="w-full py-3 bg-white text-rose-600 font-bold text-xs rounded-xl border border-rose-200 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                            className="w-full py-3 font-bold text-xs rounded-lg transition-all"
+                            style={{ background: '#fff', color: 'var(--danger)', border: '1px solid var(--danger)', fontWeight: 700 }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = 'var(--danger)'; e.currentTarget.style.color = '#fff'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = 'var(--danger)'; }}
                         >
                             SUPPRIMER LE PROFIL CLIENT
                         </button>

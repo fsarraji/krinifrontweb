@@ -46,13 +46,62 @@ function resolveBox(id, value) {
     }
 }
 
+// Styles aligned with the Vantage Fleet design system (index.css tokens)
 const STYLES = {
-    info: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'info', iconBg: 'bg-indigo-600', btn: 'bg-indigo-600 hover:bg-indigo-700' },
-    success: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'check_circle', iconBg: 'bg-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700' },
-    error: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: 'error', iconBg: 'bg-rose-600', btn: 'bg-rose-600 hover:bg-rose-700' },
-    warning: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'warning', iconBg: 'bg-amber-600', btn: 'bg-amber-600 hover:bg-amber-700' },
-    confirm: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'help', iconBg: 'bg-indigo-600', btn: 'bg-indigo-600 hover:bg-indigo-700' },
-    danger: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: 'warning', iconBg: 'bg-rose-600', btn: 'bg-rose-600 hover:bg-rose-700' },
+    info: {
+        bg: 'var(--info-bg)',
+        border: '#bfd7fb',
+        text: 'var(--primary-container)',
+        icon: 'info',
+        iconBg: 'var(--primary-container)',
+        btn: 'var(--primary-container)',
+        btnHover: '#1d4ed8',
+    },
+    success: {
+        bg: 'var(--success-bg)',
+        border: '#bbf0cf',
+        text: 'var(--success)',
+        icon: 'check_circle',
+        iconBg: 'var(--success)',
+        btn: 'var(--success)',
+        btnHover: '#15803d',
+    },
+    error: {
+        bg: 'var(--error-bg)',
+        border: 'var(--danger)',
+        text: 'var(--danger)',
+        icon: 'error',
+        iconBg: 'var(--danger)',
+        btn: 'var(--danger)',
+        btnHover: '#b91c1c',
+    },
+    warning: {
+        bg: 'var(--warning-bg)',
+        border: '#fde68a',
+        text: 'var(--warning)',
+        icon: 'warning',
+        iconBg: 'var(--warning)',
+        btn: 'var(--warning)',
+        btnHover: '#b45309',
+    },
+    confirm: {
+        bg: 'var(--info-bg)',
+        border: '#bfd7fb',
+        text: 'var(--primary-container)',
+        icon: 'help',
+        iconBg: 'var(--primary-container)',
+        btn: 'var(--primary-container)',
+        btnHover: '#1d4ed8',
+    },
+    danger: {
+        bg: 'var(--error-bg)',
+        border: 'var(--danger)',
+        text: 'var(--danger)',
+        icon: 'warning',
+        iconBg: 'var(--danger)',
+        btn: 'var(--danger)',
+        btnHover: '#b91c1c',
+    },
 };
 
 export const MessageBoxContainer = () => {
@@ -64,11 +113,16 @@ export const MessageBoxContainer = () => {
         return () => LISTENERS.delete(handle);
     }, []);
 
-    const close = useCallback(() => setState(null), []);
+    const close = useCallback((value) => {
+        setState(null);
+        if (state && state.id) {
+            resolveBox(state.id, value === undefined ? 'ok' : value);
+        }
+    }, [state]);
 
     useEffect(() => {
         if (state && state.type !== 'confirm' && state.type !== 'danger') {
-            const timer = setTimeout(() => close(), 8000);
+            const timer = setTimeout(() => close('ok'), 8000);
             return () => clearTimeout(timer);
         }
     }, [state, close]);
@@ -76,58 +130,63 @@ export const MessageBoxContainer = () => {
     if (!state) return null;
 
     const s = STYLES[state.type] || STYLES.info;
+    const isAction = state.type === 'confirm' || state.type === 'danger';
     const onKeyDown = (e) => {
-        if (e.key === 'Escape') close();
+        if (e.key === 'Escape') close(isAction ? false : 'ok');
     };
 
     return (
         <div
-            className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 z-[250] flex items-center justify-center p-4"
+            style={{ background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(4px)' }}
             onKeyDown={onKeyDown}
         >
             <div
-                onClick={close}
+                onClick={() => close(isAction ? false : 'ok')}
                 className="absolute inset-0"
                 aria-hidden="true"
             />
             <div
                 role="dialog"
                 aria-modal="true"
-                className={`relative w-full max-w-md ${s.bg} border ${s.border} rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200`}
+                className="relative w-full max-w-md rounded-lg shadow-l1 overflow-hidden"
+                style={{ background: 'var(--card-white)', border: '1px solid var(--stroke)' }}
             >
                 <div className="p-6">
                     <div className="flex items-start gap-4">
-                        <div className={`w-11 h-11 rounded-full ${s.iconBg} flex items-center justify-center shrink-0`}>
-                            <span className="material-symbols-outlined text-white text-2xl">{s.icon}</span>
+                        <div className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0" style={{ background: s.iconBg, color: '#fff' }}>
+                            <span className="material-symbols-outlined text-2xl">{s.icon}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h3 className={`font-extrabold text-lg tracking-tight ${s.text}`}>{state.title}</h3>
-                            <p className="text-sm text-slate-600 font-medium mt-1.5 leading-relaxed break-words whitespace-pre-wrap">{state.message}</p>
+                            <h3 className="font-bold text-lg tracking-tight" style={{ color: s.text }}>{state.title}</h3>
+                            <p className="text-sm font-medium mt-1.5 leading-relaxed break-words whitespace-pre-wrap" style={{ color: 'var(--on-surface-variant)', opacity: 0.8 }}>
+                                {state.message}
+                            </p>
                         </div>
-                        <button onClick={close} className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-lg hover:bg-slate-100 shrink-0">
+                        <button onClick={() => close(isAction ? false : 'ok')} className="p-1 rounded-lg hover:bg-white transition-colors shrink-0" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
                             <span className="material-symbols-outlined text-lg">close</span>
                         </button>
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 px-6 pb-5">
-                    {(state.type === 'confirm' || state.type === 'danger') && (
+                    {isAction && (
                         <button
-                            onClick={() => { resolveBox(state.id, false); close(); }}
-                            className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                            onClick={() => close(false)}
+                            className="px-4 py-2.5 rounded-lg text-sm font-bold card shadow-l1 transition-colors"
+                            style={{ color: 'var(--on-surface-variant)' }}
                         >
                             {state.cancelText}
                         </button>
                     )}
                     <button
-                        onClick={() => {
-                            const isAction = state.type === 'confirm' || state.type === 'danger';
-                            resolveBox(state.id, isAction ? true : 'ok');
-                            close();
-                        }}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm transition-colors ${s.btn}`}
+                        onClick={() => close(isAction ? true : 'ok')}
+                        className={`px-4 py-2.5 rounded-lg text-sm font-bold text-white shadow-l1 transition-colors ${isAction ? '' : 'shadow-none'}`}
+                        style={{ background: s.btn }}
                         autoFocus
+                        onMouseOver={(e) => { if (s.btnHover) e.currentTarget.style.background = s.btnHover; }}
+                        onMouseOut={(e) => { if (s.btnHover) e.currentTarget.style.background = s.btn; }}
                     >
-                        {state.type === 'confirm' || state.type === 'danger' ? state.confirmText : 'OK'}
+                        {isAction ? state.confirmText : 'OK'}
                     </button>
                 </div>
             </div>

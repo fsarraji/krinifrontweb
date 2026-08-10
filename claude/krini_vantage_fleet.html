@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KRINI — Vantage Fleet Design System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL@24,500,0" rel="stylesheet">
+<style>
+  :root{
+    --surface:#faf8ff;
+    --surface-dim:#d2d9f4;
+    --surface-bright:#faf8ff;
+    --surface-container-lowest:#ffffff;
+    --surface-container-low:#f2f3ff;
+    --surface-container:#eaedff;
+    --surface-container-high:#e2e7ff;
+    --surface-container-highest:#dae2fd;
+    --on-surface:#131b2e;
+    --on-surface-variant:#434655;
+    --inverse-surface:#283044;
+    --inverse-on-surface:#eef0ff;
+    --outline:#737686;
+    --outline-variant:#c3c6d7;
+    --primary:#004ac6;
+    --on-primary:#ffffff;
+    --primary-container:#2563eb;
+    --on-primary-container:#eeefff;
+    --secondary:#505f76;
+    --secondary-container:#d0e1fb;
+    --on-secondary-container:#54647a;
+    --error:#ba1a1a;
+    --error-container:#ffdad6;
+    --on-error-container:#93000a;
+    --background:#faf8ff;
+    --on-background:#131b2e;
+
+    /* App-level aliases from the DESIGN.md prose (Electric Blue system) */
+    --slate-bg:#F8FAFC;
+    --card-white:#FFFFFF;
+    --stroke:#E2E8F0;
+    --success:#16A34A;
+    --success-bg:#DCFCE7;
+    --warning:#D97706;
+    --warning-bg:#FEF3C7;
+    --info:#2563EB;
+    --info-bg:#DBEAFE;
+    --error-c:#DC2626;
+    --error-bg:#FEE2E2;
+  }
+  body{ font-family:'Manrope',sans-serif; background:var(--slate-bg); color:var(--on-background); }
+  .material-symbols-outlined{ font-variation-settings:'FILL' 0,'wght' 500,'opsz' 24; }
+
+  .shadow-l1{ box-shadow:0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02); }
+  .card{ background:var(--card-white); border:1px solid var(--stroke); border-radius:8px; }
+  .rounded-token{ border-radius:8px; }
+
+  .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 10px 4px 8px; border-radius:9999px; font-size:12px; font-weight:600; }
+  .badge-dot{ width:6px; height:6px; border-radius:9999px; flex-shrink:0; }
+
+  .sidebar-link{ display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; font-size:14px; font-weight:600; color:var(--on-surface-variant); }
+  .sidebar-link.active{ background:var(--info-bg); color:var(--primary-container); }
+  .sidebar-link:not(.active):hover{ background:var(--slate-bg); }
+
+  th{ text-transform:uppercase; font-weight:700; font-size:12px; color:var(--secondary); letter-spacing:0.04em; }
+  tr.row{ height:72px; }
+  tr.row:not(:last-child) td{ border-bottom:1px solid var(--stroke); }
+
+  .avatar{ width:40px; height:40px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; }
+
+  .input{ border:1px solid var(--stroke); border-radius:8px; padding:10px 12px; font-size:14px; }
+  .input:focus{ outline:none; box-shadow:0 0 0 2px var(--info); border-color:var(--info); }
+</style>
+</head>
+<body class="antialiased">
+
+<div class="flex min-h-screen">
+
+  <!-- SIDEBAR : 280px fixe, fond slate-gray, items 12px padding horizontal -->
+  <aside class="w-[280px] flex-shrink-0 min-h-screen flex flex-col justify-between" style="background:var(--slate-bg); border-right:1px solid var(--stroke);">
+    <div>
+      <div class="h-[72px] flex items-center gap-3 px-6" style="border-bottom:1px solid var(--stroke);">
+        <div class="w-9 h-9 rounded-token flex items-center justify-center" style="background:var(--primary-container);">
+          <span class="material-symbols-outlined text-[20px]" style="color:#fff;">directions_car</span>
+        </div>
+        <div>
+          <h1 class="font-bold text-[15px] tracking-tight leading-none" style="color:var(--on-surface);">KRINI</h1>
+          <p class="text-[10.5px] font-semibold uppercase tracking-wide mt-1" style="color:var(--on-surface-variant); opacity:0.7;">Frères Cherifi Car</p>
+        </div>
+      </div>
+
+      <nav class="px-3 py-5 space-y-1">
+        <p class="text-[11px] font-bold uppercase tracking-wide px-3 mb-2" style="color:var(--on-surface-variant); opacity:0.6;">Opérations</p>
+        <a class="sidebar-link active" href="#">
+          <span class="material-symbols-outlined text-[20px]">dashboard</span>
+          Tableau de bord
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined text-[20px]">directions_car</span>
+          Véhicules
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined text-[20px]">satellite_alt</span>
+          Suivi GPS
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined text-[20px]">event_note</span>
+          Réservations
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined text-[20px]">description</span>
+          Contrats
+        </a>
+
+        <p class="text-[11px] font-bold uppercase tracking-wide px-3 mb-2 mt-5" style="color:var(--on-surface-variant); opacity:0.6;">Gestion</p>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined text-[20px]">group</span>
+          Clients
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined text-[20px]">payments</span>
+          Paiements
+        </a>
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+          Dépenses
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4" style="border-top:1px solid var(--stroke);">
+      <div class="flex items-center gap-3 px-2 py-2 rounded-token card">
+        <div class="avatar" style="background:var(--primary-container); color:#fff;">FC</div>
+        <div class="min-w-0">
+          <p class="text-[13px] font-semibold truncate" style="color:var(--on-surface);">Fouad C.</p>
+          <p class="text-[11px] font-medium" style="color:var(--on-surface-variant); opacity:0.6;">Admin</p>
+        </div>
+        <span class="material-symbols-outlined text-[18px] ml-auto" style="color:var(--on-surface-variant);">logout</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN : marge 32px desktop -->
+  <main class="flex-1 px-8 py-8 max-w-[1400px]">
+
+    <!-- Header -->
+    <div class="flex items-end justify-between mb-8">
+      <div>
+        <p class="text-[13px] font-semibold mb-1" style="color:var(--on-surface-variant); opacity:0.6;">Lundi 10 Août — Aperçu temps réel</p>
+        <h2 class="font-bold text-[32px] tracking-tight" style="letter-spacing:-0.02em; color:var(--on-surface);">Tableau de bord</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="w-10 h-10 rounded-token card flex items-center justify-center relative shadow-l1">
+          <span class="material-symbols-outlined text-[20px]" style="color:var(--on-surface-variant);">notifications</span>
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white" style="background:var(--error-c);">3</span>
+        </button>
+        <button class="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white" style="background:var(--primary-container);">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          Nouveau contrat
+        </button>
+      </div>
+    </div>
+
+    <!-- Metric cards : icone circulaire + valeur Headline-LG + label Body-SM + trend -->
+    <div class="grid grid-cols-4 gap-6 mb-8">
+
+      <div class="card rounded-token p-6 shadow-l1">
+        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-4" style="background:var(--info-bg);">
+          <span class="material-symbols-outlined text-[20px]" style="color:var(--info);">payments</span>
+        </div>
+        <p class="font-bold text-[24px] leading-8" style="color:var(--on-surface);">128 400 <span class="text-[14px] font-medium" style="color:var(--on-surface-variant); opacity:0.6;">DH</span></p>
+        <p class="text-[12px] mt-1" style="color:var(--on-surface-variant); opacity:0.6;">Revenu du mois</p>
+        <div class="flex items-center gap-1 mt-3">
+          <span class="material-symbols-outlined text-[14px]" style="color:var(--success);">trending_up</span>
+          <span class="text-[12px] font-semibold" style="color:var(--success);">+8,2%</span>
+          <span class="text-[12px]" style="color:var(--on-surface-variant); opacity:0.5;">vs mois dernier</span>
+        </div>
+      </div>
+
+      <div class="card rounded-token p-6 shadow-l1">
+        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-4" style="background:var(--success-bg);">
+          <span class="material-symbols-outlined text-[20px]" style="color:var(--success);">check_circle</span>
+        </div>
+        <p class="font-bold text-[24px] leading-8" style="color:var(--on-surface);">18 <span class="text-[14px] font-medium" style="color:var(--on-surface-variant); opacity:0.6;">/ 26</span></p>
+        <p class="text-[12px] mt-1" style="color:var(--on-surface-variant); opacity:0.6;">Véhicules disponibles</p>
+        <div class="mt-3 h-1.5 rounded-full overflow-hidden" style="background:var(--stroke);">
+          <div class="h-full rounded-full" style="width:69%; background:var(--success);"></div>
+        </div>
+      </div>
+
+      <div class="card rounded-token p-6 shadow-l1">
+        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-4" style="background:var(--secondary-container);">
+          <span class="material-symbols-outlined text-[20px]" style="color:var(--secondary);">description</span>
+        </div>
+        <p class="font-bold text-[24px] leading-8" style="color:var(--on-surface);">14</p>
+        <p class="text-[12px] mt-1" style="color:var(--on-surface-variant); opacity:0.6;">Contrats actifs</p>
+        <div class="flex items-center gap-1 mt-3">
+          <span class="text-[12px] font-semibold" style="color:var(--warning);">3</span>
+          <span class="text-[12px]" style="color:var(--on-surface-variant); opacity:0.5;">se terminent sous 48h</span>
+        </div>
+      </div>
+
+      <div class="card rounded-token p-6 shadow-l1" style="background:var(--error-bg); border-color:#f3c9c4;">
+        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-4" style="background:#ffffff;">
+          <span class="material-symbols-outlined text-[20px]" style="color:var(--error-c);">warning</span>
+        </div>
+        <p class="font-bold text-[24px] leading-8" style="color:var(--on-error-container);">5</p>
+        <p class="text-[12px] mt-1" style="color:var(--error-c); opacity:0.8;">Alertes échéance</p>
+        <p class="text-[12px] mt-3" style="color:var(--error-c); opacity:0.7;">Assurance · visite technique</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+
+      <!-- Fleet table -->
+      <div class="col-span-2 card rounded-token overflow-hidden shadow-l1">
+        <div class="flex items-center justify-between px-6 py-5" style="border-bottom:1px solid var(--stroke);">
+          <h3 class="font-bold text-[16px]" style="color:var(--on-surface);">État de la flotte</h3>
+          <div class="flex items-center gap-2">
+            <span class="badge" style="background:var(--success-bg); color:#166534;"><span class="badge-dot" style="background:var(--success);"></span>Disponible</span>
+            <span class="badge" style="background:var(--info-bg); color:#1e40af;"><span class="badge-dot" style="background:var(--info);"></span>Louée</span>
+            <span class="badge" style="background:var(--warning-bg); color:#92400e;"><span class="badge-dot" style="background:var(--warning);"></span>Maintenance</span>
+          </div>
+        </div>
+        <table class="w-full text-left">
+          <thead>
+            <tr style="background:var(--slate-bg);">
+              <th class="px-6 py-3">Véhicule</th>
+              <th class="px-6 py-3">Matricule</th>
+              <th class="px-6 py-3">Km</th>
+              <th class="px-6 py-3">Statut</th>
+              <th class="px-6 py-3 text-right">Tarif / jour</th>
+            </tr>
+          </thead>
+          <tbody class="text-[14px]" style="color:var(--on-surface);">
+            <tr class="row">
+              <td class="px-6 font-semibold">Dacia Duster <span class="font-normal" style="color:var(--on-surface-variant); opacity:0.6;">2023</span></td>
+              <td class="px-6" style="color:var(--on-surface-variant);">45478-أ-12</td>
+              <td class="px-6" style="color:var(--on-surface-variant);">32 140</td>
+              <td class="px-6"><span class="badge" style="background:var(--success-bg); color:#166534;"><span class="badge-dot" style="background:var(--success);"></span>Disponible</span></td>
+              <td class="px-6 text-right font-semibold">420 DH</td>
+            </tr>
+            <tr class="row">
+              <td class="px-6 font-semibold">Renault Clio <span class="font-normal" style="color:var(--on-surface-variant); opacity:0.6;">2022</span></td>
+              <td class="px-6" style="color:var(--on-surface-variant);">10983-ب-6</td>
+              <td class="px-6" style="color:var(--on-surface-variant);">58 900</td>
+              <td class="px-6"><span class="badge" style="background:var(--info-bg); color:#1e40af;"><span class="badge-dot" style="background:var(--info);"></span>Louée</span></td>
+              <td class="px-6 text-right font-semibold">280 DH</td>
+            </tr>
+            <tr class="row">
+              <td class="px-6 font-semibold">Hyundai Accent <span class="font-normal" style="color:var(--on-surface-variant); opacity:0.6;">2021</span></td>
+              <td class="px-6" style="color:var(--on-surface-variant);">77201-د-12</td>
+              <td class="px-6" style="color:var(--on-surface-variant);">81 400</td>
+              <td class="px-6"><span class="badge" style="background:var(--warning-bg); color:#92400e;"><span class="badge-dot" style="background:var(--warning);"></span>Maintenance</span></td>
+              <td class="px-6 text-right font-semibold">310 DH</td>
+            </tr>
+            <tr class="row">
+              <td class="px-6 font-semibold">Peugeot 208 <span class="font-normal" style="color:var(--on-surface-variant); opacity:0.6;">2023</span></td>
+              <td class="px-6" style="color:var(--on-surface-variant);">33012-ه-1</td>
+              <td class="px-6" style="color:var(--on-surface-variant);">21 760</td>
+              <td class="px-6"><span class="badge" style="background:var(--success-bg); color:#166534;"><span class="badge-dot" style="background:var(--success);"></span>Disponible</span></td>
+              <td class="px-6 text-right font-semibold">260 DH</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Alerts -->
+      <div class="card rounded-token overflow-hidden flex flex-col shadow-l1">
+        <div class="px-6 py-5 flex items-center justify-between" style="border-bottom:1px solid var(--stroke);">
+          <h3 class="font-bold text-[16px]" style="color:var(--on-surface);">Échéances proches</h3>
+          <span class="material-symbols-outlined text-[18px]" style="color:var(--on-surface-variant);">event</span>
+        </div>
+        <div class="p-4 space-y-3 flex-1">
+          <div class="flex items-start gap-3 p-3 rounded-token" style="background:var(--error-bg);">
+            <span class="material-symbols-outlined text-[18px] mt-0.5" style="color:var(--error-c);">verified_user</span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-semibold" style="color:var(--on-surface);">Assurance expire le 14 Août</p>
+              <p class="text-[12px] mt-1" style="color:var(--on-surface-variant); opacity:0.7;">77201-د-12</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-token" style="background:var(--warning-bg);">
+            <span class="material-symbols-outlined text-[18px] mt-0.5" style="color:var(--warning);">build</span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-semibold" style="color:var(--on-surface);">Visite technique le 18 Août</p>
+              <p class="text-[12px] mt-1" style="color:var(--on-surface-variant); opacity:0.7;">10983-ب-6</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-token" style="background:var(--info-bg);">
+            <span class="material-symbols-outlined text-[18px] mt-0.5" style="color:var(--info);">event_note</span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-semibold" style="color:var(--on-surface);">Retour client prévu demain</p>
+              <p class="text-[12px] mt-1" style="color:var(--on-surface-variant); opacity:0.7;">45478-أ-12</p>
+            </div>
+          </div>
+        </div>
+        <button class="mx-4 mb-4 py-2.5 rounded-token text-[13px] font-semibold" style="background:var(--slate-bg); border:1px solid var(--stroke); color:var(--secondary);">
+          Voir toutes les alertes
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

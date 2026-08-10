@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import api, { fetchAllPages } from '../api';
 import CloseContractModal from './CloseContractModal';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
 import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import { toast } from './Toast';
+import StatusBadge from './ui/StatusBadge';
 
 const AVATAR_COLORS = [
-    'bg-indigo-50 text-indigo-700 ring-indigo-100',
+    'bg-info-bg text-primary ring-info-bg',
     'bg-purple-50 text-purple-700 ring-purple-100',
-    'bg-amber-50 text-amber-700 ring-amber-100',
-    'bg-pink-50 text-pink-700 ring-pink-100',
-    'bg-cyan-50 text-cyan-700 ring-cyan-100',
-    'bg-emerald-50 text-emerald-700 ring-emerald-100',
+    'bg-warning-bg text-warning ring-warning-bg',
+    'bg-danger-bg text-danger ring-danger-bg',
+    'bg-success-bg text-success ring-success-bg',
 ];
 
 const Contracts = () => {
@@ -29,17 +29,17 @@ const Contracts = () => {
     const [pageSize, setPageSize] = useState(10);
 
     const FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Tous', dot: 'bg-indigo-600' },
-        { value: 'RESERVE', label: 'Réservation', dot: 'bg-blue-500' },
-        { value: 'EN_COURS', label: 'En cours', dot: 'bg-emerald-500' },
-        { value: 'TERMINE', label: 'Terminé', dot: 'bg-slate-400' },
-        { value: 'ANNULE', label: 'Annulé', dot: 'bg-rose-500' },
+        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+        { value: 'RESERVE', label: 'Réservation', dot: 'bg-info' },
+        { value: 'EN_COURS', label: 'En cours', dot: 'bg-success' },
+        { value: 'TERMINE', label: 'Terminé', dot: 'bg-secondary' },
+        { value: 'ANNULE', label: 'Annulé', dot: 'bg-danger' },
     ];
 
     const fetchContracts = async () => {
         try {
-            const response = await api.get('contracts/');
-            setContracts(response.data);
+            const contracts = await fetchAllPages('contracts/');
+            setContracts(contracts);
             setLoading(false);
         } catch (error) {
             console.error('Erreur lors de la récupération des contrats', error);
@@ -95,26 +95,6 @@ const Contracts = () => {
     // Reset to page 1 on filter/search change
     useEffect(() => { setCurrentPage(1); }, [search, activeFilter]);
 
-    const statusStyles = {
-        'EN_COURS': 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20',
-        'TERMINE': 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
-        'RESERVE': 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20',
-        'ANNULE': 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/20',
-    };
-
-    const statusLabels = {
-        'EN_COURS': 'En cours',
-        'TERMINE': 'Terminé',
-        'RESERVE': 'Réservé',
-        'ANNULE': 'Annulé',
-    };
-
-    const paymentStyles = {
-        'Paid': 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20',
-        'Partial': 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20',
-        'Unpaid': 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/20',
-    };
-
     const activeRentals = contracts.filter(c => c.statut === 'EN_COURS').length;
     const totalRevenue = contracts.reduce((acc, c) => acc + parseFloat(c.montant_total || 0), 0).toLocaleString();
 
@@ -130,10 +110,10 @@ const Contracts = () => {
 
     const paginatedContracts = filteredContracts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-    if (loading) return <div className="text-center mt-20 font-bold text-indigo-600">Chargement des opérations...</div>;
+    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement des opérations...</div>;
 
     return (
-        <div className="flex flex-col gap-6">
+        <div>
             {/* Close Contract Modal */}
             {closeContract && (
                 <CloseContractModal
@@ -145,31 +125,31 @@ const Contracts = () => {
 
             {/* Print Contract Modal */}
             {printContractId && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center">
-                        <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 ring-1 ring-indigo-100">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-on-surface/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-card-white w-full max-w-sm rounded-lg shadow-l2 overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center border border-stroke">
+                        <div className="w-14 h-14 bg-info-bg rounded-lg flex items-center justify-center mx-auto mb-4 text-primary">
                             <span className="material-symbols-outlined text-2xl">print</span>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 mb-1">Imprimer le Contrat</h3>
-                        <p className="text-xs text-slate-500 mb-6 font-medium">Souhaitez-vous inclure le cachet de l'agence sur ce contrat ?</p>
+                        <h3 className="text-title-lg font-bold text-on-surface mb-1">Imprimer le Contrat</h3>
+                        <p className="text-body-sm text-on-surface-variant mb-6 font-medium">Souhaitez-vous inclure le cachet de l'agence sur ce contrat ?</p>
                         <div className="flex flex-col gap-2.5">
                             <button
                                 onClick={() => handleDownloadPDF(printContractId, true)}
-                                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-indigo-200/50 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-2.5 bg-primary hover:bg-primary-deep text-white font-semibold rounded-lg text-label-sm shadow-l1 transition-all flex items-center justify-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-sm">verified</span>
                                 Oui, avec Cachet
                             </button>
                             <button
                                 onClick={() => handleDownloadPDF(printContractId, false)}
-                                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+                                className="w-full py-2.5 bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold rounded-lg text-label-sm transition-all flex items-center justify-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-sm">description</span>
                                 Non, sans Cachet
                             </button>
                             <button
                                 onClick={() => setPrintContractId(null)}
-                                className="w-full py-2 text-slate-400 font-medium text-xs hover:text-slate-600 transition-colors"
+                                className="w-full py-2 text-on-surface-variant font-medium text-body-sm hover:text-on-surface transition-colors"
                             >
                                 Annuler
                             </button>
@@ -179,72 +159,70 @@ const Contracts = () => {
             )}
 
             {/* Editorial Header */}
-            <div className="flex items-end justify-between">
+            <div className="flex items-end justify-between mb-8">
                 <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Opérations de Flotte</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Contrats de Location</h2>
+                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Opérations de Flotte</p>
+                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>Contrats de Location</h2>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleExport}
-                        className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all flex items-center gap-2"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[13px] card hover:bg-slate-50 transition-colors shadow-l1"
                         title="Exporter en CSV (Excel)"
+                        style={{ color: 'var(--on-surface)' }}
                     >
-                        <span className="material-symbols-outlined text-lg">download</span>
+                        <span className="material-symbols-outlined text-[18px]">download</span>
                         <span>Exporter (CSV)</span>
                     </button>
                     <button
                         onClick={() => navigate('/contracts/new')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 flex items-center gap-2.5 hover:-translate-y-0.5"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white hover:opacity-90 transition-opacity"
+                        style={{ background: 'var(--primary-container)' }}
                     >
-                        <span className="material-symbols-outlined text-lg">add</span>
+                        <span className="material-symbols-outlined text-[18px]">add</span>
                         Nouveau Contrat
                     </button>
                 </div>
             </div>
 
-            {/* KPI Architecture (Compact Row) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-slate-200 px-5 py-3 rounded-xl shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-indigo-600 bg-indigo-50 p-2 rounded-lg text-lg ring-1 ring-indigo-100">car_rental</span>
-                        <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Contrats Actifs</p>
-                            <p className="text-lg font-extrabold text-slate-900 mt-0.5">{activeRentals}</p>
-                        </div>
+            {/* KPI Cards Row */}
+            <div className="grid grid-cols-3 gap-6 mb-8">
+                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--info-bg)' }}>
+                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>car_rental</span>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        +12%
+                    <div>
+                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{activeRentals}</p>
+                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Contrats Actifs</p>
                     </div>
+                    <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--success)', background: 'var(--success-bg)' }}>+12%</span>
                 </div>
 
-                <div className="bg-white border border-slate-200 px-5 py-3 rounded-xl shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-indigo-600 bg-indigo-50 p-2 rounded-lg text-lg ring-1 ring-indigo-100">payments</span>
-                        <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chiffre d'Affaires</p>
-                            <p className="text-lg font-extrabold text-slate-900 mt-0.5">{totalRevenue} DH</p>
-                        </div>
+                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--secondary-container)' }}>
+                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--secondary)' }}>payments</span>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        +5.4%
+                    <div>
+                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{totalRevenue} DH</p>
+                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Chiffre d'Affaires</p>
                     </div>
+                    <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--success)', background: 'var(--success-bg)' }}>+5.4%</span>
                 </div>
 
-                <div className="bg-indigo-600 text-white px-5 py-3 rounded-xl shadow-sm flex items-center justify-between relative overflow-hidden">
-                    <div className="flex items-center gap-3 relative z-10">
-                        <span className="material-symbols-outlined text-white p-2 bg-white/10 rounded-lg text-lg">signature</span>
-                        <div>
-                            <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Signatures en Attente</p>
-                            <p className="text-lg font-extrabold mt-0.5">{contracts.filter(c => c.statut === 'RESERVE').length}</p>
-                        </div>
+                <div className="rounded-token p-5 shadow-l1 flex items-center gap-4" style={{ background: 'var(--primary-container)' }}>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-white/20">
+                        <span className="material-symbols-outlined text-[20px] text-white">signature</span>
                     </div>
-                    <span className="text-[10px] font-bold bg-white/10 px-2.5 py-0.5 rounded-full text-indigo-100 relative z-10">À traiter</span>
+                    <div>
+                        <p className="font-bold text-[22px] leading-tight text-white">{contracts.filter(c => c.statut === 'RESERVE').length}</p>
+                        <p className="text-[12px] mt-0.5 text-white/70">Signatures en Attente</p>
+                    </div>
+                    <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full text-white bg-white/20">À traiter</span>
                 </div>
             </div>
 
             {/* Search & Filter */}
-            <div>
+            <div className="mb-6">
                 <SearchFilterBar
                     placeholder="Rechercher (client, matricule, marque)..."
                     search={search}
@@ -256,79 +234,81 @@ const Contracts = () => {
             </div>
 
             {/* Contracts Table */}
-            <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="card rounded-token overflow-hidden shadow-l1">
                 <div className="overflow-x-auto w-full">
-                    <table className="min-w-full divide-y divide-slate-100">
-                        <thead className="bg-slate-50/80">
-                            <tr>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Client / ID Contrat</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Véhicule</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Durée</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Montant</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Statut</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Paiement</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr style={{ background: 'var(--slate-bg)' }}>
+                                <th className="px-6 py-4">Client / ID Contrat</th>
+                                <th className="px-6 py-4">Véhicule</th>
+                                <th className="px-6 py-4">Durée</th>
+                                <th className="px-6 py-4">Montant</th>
+                                <th className="px-6 py-4">Statut</th>
+                                <th className="px-6 py-4">Paiement</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-slate-100">
+                        <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
                             {paginatedContracts.map((contract, i) => {
                                 const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
                                 return (
-                                    <tr key={contract.id} className="hover:bg-slate-50/80 transition-colors group">
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                    <tr key={contract.id} className="row hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 font-semibold">
                                             <div className="flex items-center gap-3.5">
-                                                <div className={`flex-shrink-0 h-10 w-10 rounded-xl ${avatarClass} flex items-center justify-center font-bold text-sm ring-1`}>
+                                                <div className={`avatar ${avatarClass}`}>
                                                     {contract.client_initials}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{contract.client_name} {contract.client_prenom}</div>
-                                                    <div className="text-xs text-slate-500 font-medium mt-0.5">#CTR-{contract.id.toString().padStart(5, '0')}</div>
+                                                    <div className="font-semibold" style={{ color: 'var(--on-surface)' }}>{contract.client_name} {contract.client_prenom}</div>
+                                                    <div className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>#CTR-{contract.id.toString().padStart(5, '0')}</div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-semibold text-slate-900">{contract.vehicle_name}</div>
-                                            <div className="text-xs text-slate-500 font-mono mt-0.5">{contract.vehicle_matricule}</div>
+                                        <td className="px-6">
+                                            <div className="font-semibold">{contract.vehicle_name}</div>
+                                            <div className="font-mono text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{contract.vehicle_matricule}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-slate-800">{contract.formatted_dates?.range}</div>
-                                            <div className="text-xs font-semibold text-indigo-600 mt-0.5">{contract.jours} Jours</div>
+                                        <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
+                                            <div className="text-[13px]">{contract.formatted_dates?.range}</div>
+                                            <div className="text-[12px] font-semibold" style={{ color: 'var(--primary-container)' }}>{contract.jours} Jours</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{contract.montant_total} DH</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-3 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full ${statusStyles[contract.statut]}`}>
-                                                {statusLabels[contract.statut] || contract.statut}
-                                            </span>
+                                        <td className="px-6 font-bold">{contract.montant_total} DH</td>
+                                        <td className="px-6">
+                                            <StatusBadge status={contract.statut} />
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-3 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full ${paymentStyles[contract.payment_status]}`}>
-                                                {contract.payment_status}
-                                            </span>
+                                        <td className="px-6">
+                                            <StatusBadge
+                                                variant={contract.payment_status === 'Paid' ? 'success' : contract.payment_status === 'Partial' ? 'warning' : 'danger'}
+                                                label={contract.payment_status === 'Paid' ? 'Payé' : contract.payment_status === 'Partial' ? 'Partiel' : 'Non payé'}
+                                            />
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                                        <td className="px-6 text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {contract.statut === 'EN_COURS' && (
                                                     <button
                                                         onClick={() => setCloseContract(contract)}
-                                                        className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
+                                                        className="p-2 rounded-token transition-colors"
+                                                        style={{ color: 'var(--error-c)', background: 'var(--error-bg)' }}
                                                         title="Clôturer le Contrat"
                                                     >
-                                                        <span className="material-symbols-outlined text-lg">lock</span>
+                                                        <span className="material-symbols-outlined text-[18px]">lock</span>
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => navigate(`/contracts/edit/${contract.id}`)}
-                                                    className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                                                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                                                    style={{ color: 'var(--on-surface-variant)' }}
                                                     title="Modifier Contrat"
                                                 >
-                                                    <span className="material-symbols-outlined text-lg">edit</span>
+                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
                                                 </button>
                                                 <button
                                                     onClick={() => setPrintContractId(contract.id)}
-                                                    className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                                                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                                                    style={{ color: 'var(--on-surface-variant)' }}
                                                     title="Générer PDF"
                                                 >
-                                                    <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                                    <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
                                                 </button>
                                             </div>
                                         </td>
@@ -337,7 +317,7 @@ const Contracts = () => {
                             })}
                             {filteredContracts.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-10 text-center text-slate-400">Aucun contrat enregistré.</td>
+                                    <td colSpan="7" className="px-6 py-10 text-center text-on-surface-variant">Aucun contrat enregistré.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -356,3 +336,4 @@ const Contracts = () => {
 };
 
 export default Contracts;
+

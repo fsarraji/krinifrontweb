@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import carDiagram from '../assets/car_damage_diagram.png';
+import carDiagram from '../assets/car_damage_diagram.webp';
 
 const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPART' }) => {
     const imgRef = useRef(null);

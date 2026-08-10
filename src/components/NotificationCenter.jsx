@@ -100,11 +100,12 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
     }, [onCountChange]);
 
     useEffect(() => {
+        if (!isOpen) return;
         fetchNotifications();
-        // Refresh notifications every 60 seconds
+        // Refresh notifications every 60 seconds only while the panel is open
         const interval = setInterval(fetchNotifications, 60000);
         return () => clearInterval(interval);
-    }, [fetchNotifications]);
+    }, [isOpen, fetchNotifications]);
 
     const requestWebPush = async () => {
         if (!('Notification' in window)) {

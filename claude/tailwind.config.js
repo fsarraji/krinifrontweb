@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Core Vantage Fleet tokens (strictly matching krini_vantage_fleet.html)
+        // Surfaces
         surface: '#faf8ff',
         'surface-dim': '#d2d9f4',
         'surface-bright': '#faf8ff',
@@ -19,24 +19,23 @@ export default {
         'on-surface': '#131b2e',
         'on-surface-variant': '#434655',
 
-        // Backgrounds & Cards
-        'slate-bg': '#F8FAFC',
+        // App background (Electric Blue system used in the prose spec)
         'app-bg': '#F8FAFC',
         'card-white': '#FFFFFF',
         stroke: '#E2E8F0',
 
-        // Primary & Accent Colors
-        primary: '#004ac6',
-        'primary-container': '#2563eb',
+        // Primary
+        primary: '#2563EB',
+        'primary-deep': '#004AC6',
         'on-primary': '#ffffff',
-        'on-primary-container': '#eeefff',
+        'primary-container': '#eeefff',
 
-        // Secondary
+        // Secondary / tertiary
         secondary: '#505f76',
         'secondary-container': '#d0e1fb',
         'on-secondary-container': '#54647a',
 
-        // Status system
+        // Status
         success: '#16A34A',
         'success-bg': '#DCFCE7',
         warning: '#D97706',
@@ -45,9 +44,6 @@ export default {
         'info-bg': '#DBEAFE',
         danger: '#DC2626',
         'danger-bg': '#FEE2E2',
-        'error-c': '#DC2626',
-        'error-bg': '#FEE2E2',
-        'on-error-container': '#93000a',
 
         outline: '#737686',
         'outline-variant': '#c3c6d7',
@@ -55,19 +51,37 @@ export default {
       fontFamily: {
         sans: ['Manrope', 'sans-serif'],
       },
+      fontSize: {
+        display: ['32px', { lineHeight: '40px', fontWeight: '700', letterSpacing: '-0.02em' }],
+        'headline-lg': ['24px', { lineHeight: '32px', fontWeight: '700', letterSpacing: '-0.01em' }],
+        'headline-md': ['20px', { lineHeight: '28px', fontWeight: '600' }],
+        'title-lg': ['16px', { lineHeight: '24px', fontWeight: '600' }],
+        'body-lg': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'body-md': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+        'body-sm': ['12px', { lineHeight: '16px', fontWeight: '400' }],
+        'label-md': ['14px', { lineHeight: '20px', fontWeight: '600' }],
+        'label-sm': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+      },
       borderRadius: {
-        token: '8px',
-        sm: '4px',
-        DEFAULT: '8px',
-        md: '8px',
-        lg: '8px',
-        xl: '12px',
-        '2xl': '16px',
+        sm: '0.25rem',
+        DEFAULT: '0.5rem',
+        md: '0.75rem',
+        lg: '1rem',
+        xl: '1.5rem',
         full: '9999px',
       },
       boxShadow: {
         l1: '0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02)',
         l2: '0px 4px 6px -1px rgba(0,0,0,0.08), 0px 2px 4px -2px rgba(0,0,0,0.05)',
+      },
+      spacing: {
+        'container-margin': '2rem', // 32px desktop
+        gutter: '1.5rem',
+        'card-padding': '1.5rem',
+        'stack-sm': '0.5rem',
+        'stack-md': '1rem',
+        'stack-lg': '2rem',
+        sidebar: '280px',
       },
     },
   },

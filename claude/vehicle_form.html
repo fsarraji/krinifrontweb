@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KRINI — Formulaire Véhicule</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL@24,500,0" rel="stylesheet">
+<style>
+  :root{
+    --app-bg:#F8FAFC; --card:#FFFFFF; --stroke:#E2E8F0;
+    --on-surface:#131b2e; --on-surface-variant:#434655;
+    --primary:#2563EB; --primary-deep:#004AC6; --primary-bg:#DBEAFE;
+    --success:#16A34A; --success-bg:#DCFCE7;
+    --warning:#D97706; --warning-bg:#FEF3C7;
+    --danger:#DC2626; --danger-bg:#FEE2E2;
+    --secondary:#505f76;
+  }
+  body{ font-family:'Manrope',sans-serif; background:var(--app-bg); color:var(--on-surface); }
+  .material-symbols-outlined{ font-variation-settings:'FILL' 0,'wght' 500,'opsz' 24; }
+  .card{ background:var(--card); border:1px solid var(--stroke); border-radius:8px; }
+  .shadow-l1{ box-shadow:0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02); }
+  .field{ width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--stroke); background:#F8FAFC; font-size:14px; font-weight:500; color:var(--on-surface); }
+  .field:focus{ outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 2px rgba(37,99,235,0.15); }
+  .label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--on-surface-variant); opacity:0.7; margin-bottom:6px; }
+  .step-dot{ width:36px; height:36px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+  .step-line{ height:2px; flex:1; background:var(--stroke); }
+</style>
+</head>
+<body class="antialiased">
+<div class="max-w-5xl mx-auto px-8 py-10">
+
+  <!-- Breadcrumb + header -->
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-[11px] font-bold uppercase tracking-wide mb-1" style="color:var(--on-surface-variant); opacity:0.6;">Véhicules / Nouveau</p>
+      <h1 class="font-bold text-[28px] tracking-tight" style="letter-spacing:-0.02em;">Ajouter un véhicule</h1>
+    </div>
+    <div class="flex gap-3">
+      <button class="px-5 py-2.5 rounded-lg text-[13px] font-semibold card" style="color:var(--on-surface-variant);">Annuler</button>
+      <button class="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white" style="background:var(--secondary);">Étape précédente</button>
+      <button class="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style="background:var(--primary);">
+        Continuer <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stepper -->
+  <div class="flex items-center mb-8">
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot text-white" style="background:var(--success);"><span class="material-symbols-outlined text-[18px]">check</span></div>
+      <span class="text-[13px] font-semibold" style="color:var(--on-surface);">Identification</span>
+    </div>
+    <div class="step-line mx-4" style="background:var(--success);"></div>
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot text-white" style="background:var(--primary);">2</div>
+      <span class="text-[13px] font-bold" style="color:var(--primary);">Spécifications</span>
+    </div>
+    <div class="step-line mx-4"></div>
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot" style="background:var(--stroke); color:var(--on-surface-variant);">3</div>
+      <span class="text-[13px] font-medium" style="color:var(--on-surface-variant); opacity:0.6;">Tarification</span>
+    </div>
+    <div class="step-line mx-4"></div>
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot" style="background:var(--stroke); color:var(--on-surface-variant);">4</div>
+      <span class="text-[13px] font-medium" style="color:var(--on-surface-variant); opacity:0.6;">Validité & Statut</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-6">
+
+    <!-- Form panel (step 2 shown: Spécifications) -->
+    <div class="col-span-2 card shadow-l1 p-8">
+      <div class="flex items-center gap-3 mb-7">
+        <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+        <h2 class="font-bold text-[17px]">Spécifications techniques</h2>
+      </div>
+
+      <div class="grid grid-cols-2 gap-5">
+        <div>
+          <label class="label">Couleur</label>
+          <input class="field" placeholder="ex. Gris météorite" />
+        </div>
+        <div>
+          <label class="label">Carburant</label>
+          <select class="field">
+            <option>Diesel</option><option>Essence</option><option>Hybride</option><option>Électrique</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Kilométrage actuel</label>
+          <input class="field" placeholder="0" />
+        </div>
+        <div>
+          <label class="label">Prochaine vidange (km)</label>
+          <input class="field" placeholder="ex. 45 000" />
+        </div>
+        <div class="col-span-2 flex items-center gap-3 p-4 rounded-lg" style="background:#F8FAFC; border:1px solid var(--stroke);">
+          <input type="checkbox" class="w-4 h-4 rounded" style="accent-color:var(--primary);" />
+          <span class="text-[13px] font-semibold">Chauffeur disponible avec ce véhicule</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 my-7">
+        <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+        <h2 class="font-bold text-[17px]">Suivi GPS</h2>
+      </div>
+      <div class="grid grid-cols-2 gap-5">
+        <div>
+          <label class="label">Boîtier Traccar</label>
+          <select class="field"><option>— Sélectionner un boîtier —</option></select>
+        </div>
+        <div>
+          <label class="label">IMEI GPS</label>
+          <input class="field" placeholder="ex. 356938035643809" />
+        </div>
+        <div>
+          <label class="label">N° SIM</label>
+          <input class="field" placeholder="ex. 0612345678" />
+        </div>
+        <div>
+          <label class="label">Opérateur SIM</label>
+          <select class="field"><option>Maroc Telecom</option><option>Orange</option><option>Inwi</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar : photo + progress -->
+    <div class="space-y-6">
+      <div class="card shadow-l1 p-6">
+        <h3 class="font-bold text-[14px] mb-4">Photo du véhicule</h3>
+        <div class="aspect-video rounded-lg flex flex-col items-center justify-center gap-2 border-2 border-dashed" style="border-color:var(--stroke); background:#F8FAFC;">
+          <span class="material-symbols-outlined text-[28px]" style="color:var(--on-surface-variant); opacity:0.5;">add_a_photo</span>
+          <p class="text-[12px] font-medium" style="color:var(--on-surface-variant); opacity:0.6;">Glisser une image ou parcourir</p>
+        </div>
+      </div>
+
+      <div class="card shadow-l1 p-6">
+        <h3 class="font-bold text-[14px] mb-4">Résumé</h3>
+        <div class="space-y-3 text-[13px]">
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Matricule</span><span class="font-semibold">45478-أ-12</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Marque</span><span class="font-semibold">Dacia</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Modèle</span><span class="font-semibold">Duster</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Année</span><span class="font-semibold">2023</span></div>
+        </div>
+        <div class="mt-5 pt-5" style="border-top:1px solid var(--stroke);">
+          <p class="text-[11px] font-bold uppercase tracking-wide mb-2" style="color:var(--on-surface-variant); opacity:0.6;">Progression</p>
+          <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--stroke);">
+            <div class="h-full rounded-full" style="width:50%; background:var(--primary);"></div>
+          </div>
+          <p class="text-[11px] mt-2 font-semibold" style="color:var(--primary);">Étape 2 sur 4</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import api, { fetchAllPages } from '../api';
 import Dropdown from './Dropdown';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
@@ -19,8 +19,8 @@ const UserManagement = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await api.get('users/');
-            setUsers(response.data);
+            const users = await fetchAllPages('users/');
+            setUsers(users);
             setLoading(false);
         } catch (error) {
             console.error("Erreur lors de la récupération des utilisateurs", error);
@@ -30,8 +30,8 @@ const UserManagement = () => {
 
     const fetchAgencies = async () => {
         try {
-            const response = await api.get('agencies/');
-            setAgencies(response.data);
+            const agencies = await fetchAllPages('agencies/');
+            setAgencies(agencies);
         } catch (error) {
             console.error("Erreur les agences", error);
         }

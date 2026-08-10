@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import Dropdown from './Dropdown';
-import api from '../api';
+import api, { fetchAllPages } from '../api';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from './Toast';
 
@@ -47,11 +47,11 @@ const ReservationForm = () => {
         
         const fetchInitialData = async () => {
             try {
-                const [cRes, settingsRes] = await Promise.all([
-                    api.get('clients/'),
+                const [clients, settingsRes] = await Promise.all([
+                    fetchAllPages('clients/'),
                     api.get('agency/settings/').catch(() => ({ data: { caution_active: true, caution_montant: 1500 } }))
                 ]);
-                setClients(cRes.data);
+                setClients(clients);
                 
                 const settings = settingsRes.data;
                 setAgencySettings(settings);
@@ -575,11 +575,55 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [uniqueErrors, setUniqueErrors] = useState({});
 
-    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const UNIQUE_FIELDS = {
+        cin_passport: 'CIN/passeport',
+        email: 'email',
+        telephone: 'téléphone',
+        permis_conduite: 'permis de conduire',
+    };
+
+    const handleChange = (e) => {
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        if (UNIQUE_FIELDS[e.target.name]) {
+            setUniqueErrors(prev => ({ ...prev, [e.target.name]: false }));
+        }
+    };
+
+    const checkUnique = async (field, value) => {
+        if (!value || !value.trim()) {
+            setUniqueErrors(prev => ({ ...prev, [field]: false }));
+            return;
+        }
+        try {
+            const res = await api.get('clients/check-unique/', {
+                params: { field, value: value.trim() }
+            });
+            setUniqueErrors(prev => ({
+                ...prev,
+                [field]: res.data.available === false
+                    ? `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`
+                    : false
+            }));
+        } catch (err) {
+            setUniqueErrors(prev => ({ ...prev, [field]: false }));
+        }
+    };
+
+    const handleBlurUnique = (field) => (e) => {
+        checkUnique(field, e.target.value);
+    };
+
+    const fieldClass = (name) => `w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-slate-900 bg-slate-50/50 focus:bg-white outline-none transition-all ${uniqueErrors[name] ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' : 'border-slate-200 focus:border-indigo-600'}`;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const duplicates = Object.keys(UNIQUE_FIELDS).filter(k => uniqueErrors[k]);
+        if (duplicates.length > 0) {
+            setError(`Corrigez d'abord les champs en double : ${duplicates.map(k => UNIQUE_FIELDS[k]).join(', ')}`);
+            return;
+        }
         setLoading(true);
         try {
             const response = await api.post('clients/', formData);
@@ -603,8 +647,20 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <input name="prenom" value={formData.prenom} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="Prénom" />
                         <input name="nom" value={formData.nom} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="Nom" />
-                        <input name="cin_passport" value={formData.cin_passport} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="CIN/Passeport" />
-                        <input name="telephone" value={formData.telephone} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="Téléphone" />
+                        <input name="cin_passport" value={formData.cin_passport} onChange={handleChange} onBlur={handleBlurUnique('cin_passport')} required className={fieldClass('cin_passport')} placeholder="CIN/Passeport" />
+                        {uniqueErrors.cin_passport && (
+                            <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                <span className="material-symbols-outlined text-[13px]">error</span>
+                                {uniqueErrors.cin_passport}
+                            </p>
+                        )}
+                        <input name="telephone" value={formData.telephone} onChange={handleChange} onBlur={handleBlurUnique('telephone')} required className={fieldClass('telephone')} placeholder="Téléphone" />
+                        {uniqueErrors.telephone && (
+                            <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                <span className="material-symbols-outlined text-[13px]">error</span>
+                                {uniqueErrors.telephone}
+                            </p>
+                        )}
                     </div>
                     <div className="flex gap-4">
                         <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-bold text-sm flex-1">Annuler</button>

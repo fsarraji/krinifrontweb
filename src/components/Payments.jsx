@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api';
+import { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
 import exportToCSV from '../utils/exportUtils';
@@ -17,8 +17,8 @@ const Payments = () => {
     useEffect(() => {
         const fetchPayments = async () => {
             try {
-                const response = await api.get('payments/');
-                setPayments(response.data.results || response.data);
+                const payments = await fetchAllPages('payments/');
+                setPayments(payments);
                 setLoading(false);
             } catch (error) {
                 console.error("Erreur lors de la récupération des paiements", error);

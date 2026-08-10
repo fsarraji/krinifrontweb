@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
-import api from '../api';
+import api, { fetchAllPages } from '../api';
 
 // Design tokens for consistency with existing premium theme
 const tokens = {
@@ -33,9 +33,12 @@ const AddContract = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [cRes, vRes] = await Promise.all([api.get('clients/'), api.get('vehicles/')]);
-        setClients(cRes.data.results || cRes.data);
-        setVehicles(vRes.data.results || vRes.data);
+        const [clients, vehicles] = await Promise.all([
+            fetchAllPages('clients/'),
+            fetchAllPages('vehicles/'),
+        ]);
+        setClients(clients);
+        setVehicles(vehicles);
       } catch (err) {
         console.error('Error loading data', err);
       } finally {

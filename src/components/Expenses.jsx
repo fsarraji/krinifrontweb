@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import api, { fetchAllPages } from '../api';
 import Dropdown from './Dropdown';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
@@ -53,12 +53,12 @@ const Expenses = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [expRes, vehRes] = await Promise.all([
-                    api.get('expenses/'),
-                    api.get('vehicles/')
+                const [expenses, vehicles] = await Promise.all([
+                    fetchAllPages('expenses/'),
+                    fetchAllPages('vehicles/')
                 ]);
-                setExpenses(expRes.data.results || expRes.data);
-                setVehicles(vehRes.data.results || vehRes.data);
+                setExpenses(expenses);
+                setVehicles(vehicles);
                 setLoading(false);
             } catch (error) {
                 console.error("Erreur lors de la récupération des données", error);
@@ -82,8 +82,8 @@ const Expenses = () => {
 
             await api.post('expenses/', payload);
             
-            const expRes = await api.get('expenses/');
-            setExpenses(expRes.data.results || expRes.data);
+            const expenses = await fetchAllPages('expenses/');
+            setExpenses(expenses);
             setShowModal(false);
             toast.success("La dépense a été enregistrée avec succès.");
             setFormData({

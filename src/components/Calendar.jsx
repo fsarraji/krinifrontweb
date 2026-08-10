@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 
@@ -45,12 +45,12 @@ const Calendar = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [vehiclesRes, contractsRes] = await Promise.all([
-                    api.get('vehicles/'),
-                    api.get('contracts/')
+                const [vehicles, contracts] = await Promise.all([
+                    fetchAllPages('vehicles/'),
+                    fetchAllPages('contracts/')
                 ]);
-                setVehicles(Array.isArray(vehiclesRes.data) ? vehiclesRes.data : (vehiclesRes.data.results || []));
-                setContracts(Array.isArray(contractsRes.data) ? contractsRes.data : (contractsRes.data.results || []));
+                setVehicles(Array.isArray(vehicles) ? vehicles : []);
+                setContracts(Array.isArray(contracts) ? contracts : []);
             } catch (error) {
                 console.error("Erreur chargement calendrier:", error);
             } finally {

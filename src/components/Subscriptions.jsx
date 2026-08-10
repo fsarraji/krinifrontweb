@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import api, { fetchAllPages } from '../api';
 import Dropdown from './Dropdown';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
@@ -59,8 +59,8 @@ const Subscriptions = () => {
 
     const fetchSubscriptions = async () => {
         try {
-            const response = await api.get('subscriptions/');
-            setSubscriptions(response.data);
+            const subscriptions = await fetchAllPages('subscriptions/');
+            setSubscriptions(subscriptions);
             setLoading(false);
         } catch (error) {
             console.error("Erreur lors de la récupération des abonnements", error);
@@ -70,8 +70,8 @@ const Subscriptions = () => {
 
     const fetchAgencies = async () => {
         try {
-            const response = await api.get('agencies/');
-            setAgencies(response.data);
+            const agencies = await fetchAllPages('agencies/');
+            setAgencies(agencies);
         } catch (error) {
             console.error("Erreur lors de la récupération des agences", error);
         }

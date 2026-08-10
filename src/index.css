@@ -1,16 +1,239 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL@24,500,0&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --surface: #faf8ff;
+  --surface-dim: #d2d9f4;
+  --surface-bright: #faf8ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f2f3ff;
+  --surface-container: #eaedff;
+  --surface-container-high: #e2e7ff;
+  --surface-container-highest: #dae2fd;
+  --on-surface: #131b2e;
+  --on-surface-variant: #434655;
+  --inverse-surface: #283044;
+  --inverse-on-surface: #eef0ff;
+  --outline: #737686;
+  --outline-variant: #c3c6d7;
+  --primary: #004ac6;
+  --on-primary: #ffffff;
+  --primary-container: #2563eb;
+  --on-primary-container: #eeefff;
+  --secondary: #505f76;
+  --secondary-container: #d0e1fb;
+  --on-secondary-container: #54647a;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-error-container: #93000a;
+  --background: #faf8ff;
+  --on-background: #131b2e;
+
+  /* App-level aliases from krini_vantage_fleet.html */
+  --slate-bg: #F8FAFC;
+  --card-white: #FFFFFF;
+  --stroke: #E2E8F0;
+  --success: #16A34A;
+  --success-bg: #DCFCE7;
+  --warning: #D97706;
+  --warning-bg: #FEF3C7;
+  --info: #2563EB;
+  --info-bg: #DBEAFE;
+  --error-c: #DC2626;
+  --error-bg: #FEE2E2;
+  --danger: #DC2626;
+  --danger-bg: #FEE2E2;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f8fafc;
+  font-family: 'Manrope', sans-serif;
+  background-color: var(--slate-bg);
+  color: var(--on-background);
 }
 
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 
-.editorial-shadow {
-  box-shadow: 0px 12px 32px rgba(25, 28, 30, 0.06);
+/* Vantage Fleet utility classes matching HTML reference */
+.shadow-l1 {
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02);
+}
+
+.card {
+  background: var(--card-white);
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+}
+
+.rounded-token {
+  border-radius: 8px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+
+.sidebar-link.active {
+  background: var(--info-bg);
+  color: var(--primary-container);
+}
+
+.sidebar-link:not(.active):hover {
+  background: var(--slate-bg);
+}
+
+th {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--secondary);
+  letter-spacing: 0.04em;
+}
+
+tr.row {
+  height: 72px;
+}
+
+tr.row:not(:last-child) td {
+  border-bottom: 1px solid var(--stroke);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.input {
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--info);
+  border-color: var(--info);
+}
+
+/* Vantage Fleet form system (claude/vehicle_form.html, contract_form.html, client_form.html) */
+.field {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--stroke);
+  background: var(--slate-bg);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--primary-container);
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.step-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.step-line {
+  height: 2px;
+  flex: 1;
+  background: var(--stroke);
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--stroke);
+  background: var(--slate-bg);
+  cursor: pointer;
+}
+
+.check-item.on {
+  background: var(--success-bg);
+  border-color: #bbf0cf;
+}
+
+.dropzone {
+  border: 1.5px dashed var(--stroke);
+  border-radius: 8px;
+  background: var(--slate-bg);
+}
+
+.gauge-seg {
+  width: 14px;
+  height: 26px;
+  border-radius: 3px;
+  background: var(--stroke);
+}
+
+.gauge-seg.on {
+  background: var(--primary-container);
 }

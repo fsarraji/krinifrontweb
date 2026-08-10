@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KRINI — Formulaire Contrat</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL@24,500,0" rel="stylesheet">
+<style>
+  :root{
+    --app-bg:#F8FAFC; --card:#FFFFFF; --stroke:#E2E8F0;
+    --on-surface:#131b2e; --on-surface-variant:#434655;
+    --primary:#2563EB; --primary-bg:#DBEAFE;
+    --success:#16A34A; --success-bg:#DCFCE7;
+    --warning:#D97706; --warning-bg:#FEF3C7;
+    --danger:#DC2626; --danger-bg:#FEE2E2;
+    --secondary:#505f76;
+  }
+  body{ font-family:'Manrope',sans-serif; background:var(--app-bg); color:var(--on-surface); }
+  .material-symbols-outlined{ font-variation-settings:'FILL' 0,'wght' 500,'opsz' 24; }
+  .card{ background:var(--card); border:1px solid var(--stroke); border-radius:8px; }
+  .shadow-l1{ box-shadow:0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02); }
+  .field{ width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--stroke); background:#F8FAFC; font-size:14px; font-weight:500; color:var(--on-surface); }
+  .field:focus{ outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 2px rgba(37,99,235,0.15); }
+  .label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--on-surface-variant); opacity:0.7; margin-bottom:6px; }
+  .step-dot{ width:36px; height:36px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+  .step-line{ height:2px; flex:1; background:var(--stroke); }
+  .check-item{ display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:8px; border:1px solid var(--stroke); background:#F8FAFC; cursor:pointer; }
+  .check-item.on{ background:var(--success-bg); border-color:#bbf0cf; }
+  .gauge-seg{ width:14px; height:26px; border-radius:3px; background:var(--stroke); }
+  .gauge-seg.on{ background:var(--primary); }
+</style>
+</head>
+<body class="antialiased">
+<div class="max-w-6xl mx-auto px-8 py-10">
+
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-[11px] font-bold uppercase tracking-wide mb-1" style="color:var(--on-surface-variant); opacity:0.6;">Contrats / Nouveau</p>
+      <h1 class="font-bold text-[28px] tracking-tight" style="letter-spacing:-0.02em;">Nouveau contrat de location</h1>
+    </div>
+    <div class="flex gap-3">
+      <button class="px-5 py-2.5 rounded-lg text-[13px] font-semibold card" style="color:var(--on-surface-variant);">Annuler</button>
+      <button class="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white" style="background:var(--secondary);">Étape précédente</button>
+      <button class="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style="background:var(--success);">
+        <span class="material-symbols-outlined text-[16px]">fact_check</span> Valider le contrat
+      </button>
+    </div>
+  </div>
+
+  <!-- Stepper -->
+  <div class="flex items-center mb-8">
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot text-white" style="background:var(--success);"><span class="material-symbols-outlined text-[18px]">check</span></div>
+      <span class="text-[13px] font-semibold">Véhicule</span>
+    </div>
+    <div class="step-line mx-4" style="background:var(--success);"></div>
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot text-white" style="background:var(--success);"><span class="material-symbols-outlined text-[18px]">check</span></div>
+      <span class="text-[13px] font-semibold">Client</span>
+    </div>
+    <div class="step-line mx-4" style="background:var(--success);"></div>
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot text-white" style="background:var(--success);"><span class="material-symbols-outlined text-[18px]">check</span></div>
+      <span class="text-[13px] font-semibold">Période & Tarification</span>
+    </div>
+    <div class="step-line mx-4" style="background:var(--success);"></div>
+    <div class="flex items-center gap-2.5">
+      <div class="step-dot text-white" style="background:var(--primary);">4</div>
+      <span class="text-[13px] font-bold" style="color:var(--primary);">Inspection & Validation</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-6">
+
+    <div class="col-span-2 space-y-6">
+
+      <!-- Fuel + odometer -->
+      <div class="card shadow-l1 p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+          <h2 class="font-bold text-[17px]">État de sortie du véhicule</h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-8">
+          <div>
+            <label class="label mb-3">Niveau de carburant au départ</label>
+            <div class="flex items-end gap-1.5">
+              <div class="gauge-seg on"></div><div class="gauge-seg on"></div><div class="gauge-seg"></div>
+              <div class="gauge-seg"></div><div class="gauge-seg"></div><div class="gauge-seg"></div>
+              <div class="gauge-seg"></div><div class="gauge-seg"></div>
+            </div>
+            <p class="text-[12px] font-semibold mt-2" style="color:var(--primary);">2/8 — Réservoir presque vide</p>
+          </div>
+          <div>
+            <label class="label">Kilométrage de sortie</label>
+            <div class="flex gap-2">
+              <input class="field" placeholder="32 140" />
+              <button class="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0" style="background:var(--primary-bg); color:var(--primary);">
+                <span class="material-symbols-outlined text-[16px]">satellite_alt</span> GPS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <label class="label mt-7 mb-3">Dégâts constatés au départ (cliquer sur le schéma dans l'app)</label>
+        <div class="flex items-center gap-4 p-4 rounded-lg" style="background:#F8FAFC; border:1px solid var(--stroke);">
+          <span class="material-symbols-outlined text-[22px]" style="color:var(--warning);">directions_car</span>
+          <p class="text-[13px]" style="color:var(--on-surface-variant);">2 zones marquées — rayure aile avant droite, pare-choc arrière</p>
+        </div>
+      </div>
+
+      <!-- Checklist -->
+      <div class="card shadow-l1 p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+          <h2 class="font-bold text-[17px]">Équipements fournis</h2>
+        </div>
+        <div class="grid grid-cols-4 gap-3">
+          <label class="check-item on"><input type="checkbox" checked class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Roue secours</span></label>
+          <label class="check-item on"><input type="checkbox" checked class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Cric</span></label>
+          <label class="check-item"><input type="checkbox" class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Manivelle</span></label>
+          <label class="check-item on"><input type="checkbox" checked class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Gilet</span></label>
+          <label class="check-item on"><input type="checkbox" checked class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Triangle</span></label>
+          <label class="check-item"><input type="checkbox" class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Extincteur</span></label>
+          <label class="check-item on"><input type="checkbox" checked class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Papiers</span></label>
+          <label class="check-item on"><input type="checkbox" checked class="w-4 h-4" style="accent-color:var(--success);" /><span class="text-[12.5px] font-semibold">Clés</span></label>
+        </div>
+      </div>
+
+      <div class="card shadow-l1 p-8">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+          <h2 class="font-bold text-[17px]">Notes internes</h2>
+        </div>
+        <textarea class="field" rows="3" placeholder="Remarques sur l'état du véhicule, accord particulier..."></textarea>
+      </div>
+    </div>
+
+    <!-- Summary sidebar -->
+    <div class="space-y-6">
+      <div class="card shadow-l1 p-6">
+        <h3 class="font-bold text-[14px] mb-4">Résumé du contrat</h3>
+        <div class="space-y-3 text-[13px]">
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Véhicule</span><span class="font-semibold">Dacia Duster</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Client</span><span class="font-semibold">Jonathan Wick</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Sortie</span><span class="font-semibold">10 Août, 09:00</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Retour prévu</span><span class="font-semibold">13 Août, 09:00</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Durée</span><span class="font-semibold">3 jours</span></div>
+        </div>
+        <div class="my-4 h-px" style="background:var(--stroke);"></div>
+        <div class="space-y-3 text-[13px]">
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Prix / jour</span><span class="font-semibold">420 DH</span></div>
+          <div class="flex justify-between"><span style="color:var(--on-surface-variant); opacity:0.6;">Caution</span><span class="font-semibold">1 500 DH</span></div>
+          <div class="flex justify-between items-center pt-2">
+            <span class="font-bold text-[14px]">Total</span>
+            <span class="font-bold text-[20px]" style="color:var(--primary);">1 260 DH</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-l1 p-5" style="background:var(--success-bg); border-color:#bbf0cf;">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-[18px] mt-0.5" style="color:var(--success);">task_alt</span>
+          <p class="text-[12.5px] font-medium" style="color:#166534;">Toutes les étapes précédentes sont complètes. Valide le contrat pour générer le PDF et activer la location.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

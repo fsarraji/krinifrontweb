@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KRINI — Formulaire Client</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL@24,500,0" rel="stylesheet">
+<style>
+  :root{
+    --app-bg:#F8FAFC; --card:#FFFFFF; --stroke:#E2E8F0;
+    --on-surface:#131b2e; --on-surface-variant:#434655;
+    --primary:#2563EB; --primary-bg:#DBEAFE;
+    --success:#16A34A; --success-bg:#DCFCE7;
+    --warning:#D97706; --warning-bg:#FEF3C7;
+    --danger:#DC2626; --danger-bg:#FEE2E2;
+    --secondary:#505f76;
+  }
+  body{ font-family:'Manrope',sans-serif; background:var(--app-bg); color:var(--on-surface); }
+  .material-symbols-outlined{ font-variation-settings:'FILL' 0,'wght' 500,'opsz' 24; }
+  .card{ background:var(--card); border:1px solid var(--stroke); border-radius:8px; }
+  .shadow-l1{ box-shadow:0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02); }
+  .field{ width:100%; padding:11px 14px; border-radius:8px; border:1px solid var(--stroke); background:#F8FAFC; font-size:14px; font-weight:500; color:var(--on-surface); }
+  .field:focus{ outline:none; border-color:var(--primary); background:#fff; box-shadow:0 0 0 2px rgba(37,99,235,0.15); }
+  .label{ display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--on-surface-variant); opacity:0.7; margin-bottom:6px; }
+  .section-title{ display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+  .dropzone{ border:1.5px dashed var(--stroke); border-radius:8px; background:#F8FAFC; }
+</style>
+</head>
+<body class="antialiased">
+<div class="max-w-6xl mx-auto px-8 py-10">
+
+  <div class="flex items-end justify-between mb-8">
+    <div>
+      <nav class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide mb-2" style="color:var(--on-surface-variant); opacity:0.6;">
+        <span>Clients</span><span>/</span><span style="color:var(--primary);">Nouveau client</span>
+      </nav>
+      <h1 class="font-bold text-[28px] tracking-tight" style="letter-spacing:-0.02em;">Ajouter un client</h1>
+    </div>
+    <div class="flex gap-3">
+      <button class="px-5 py-2.5 rounded-lg text-[13px] font-semibold card" style="color:var(--on-surface-variant);">Annuler</button>
+      <button class="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2" style="background:var(--primary);">
+        <span class="material-symbols-outlined text-[16px]">save</span> Enregistrer le client
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-6">
+
+    <!-- Main form -->
+    <div class="col-span-2 space-y-6">
+
+      <div class="card shadow-l1 p-8">
+        <div class="section-title">
+          <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+          <h2 class="font-bold text-[17px]">Informations personnelles</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-5">
+          <div><label class="label">Prénom</label><input class="field" placeholder="ex. Jonathan" /></div>
+          <div><label class="label">Nom</label><input class="field" placeholder="ex. Wick" /></div>
+          <div><label class="label">CIN / Passeport</label><input class="field" placeholder="ex. BE482910" /></div>
+          <div><label class="label">Sexe</label>
+            <select class="field"><option>— Sélectionner —</option><option>Homme</option><option>Femme</option></select>
+          </div>
+          <div><label class="label">Nationalité</label><input class="field" placeholder="ex. Marocaine" /></div>
+          <div><label class="label">Téléphone</label><input class="field" placeholder="ex. +212 6 12 34 56 78" /></div>
+          <div class="col-span-2"><label class="label">Email</label><input class="field" placeholder="ex. jonathan.wick@email.com" /></div>
+        </div>
+      </div>
+
+      <div class="card shadow-l1 p-8">
+        <div class="section-title">
+          <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+          <h2 class="font-bold text-[17px]">Adresse</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-5">
+          <div class="col-span-2"><label class="label">Adresse</label><input class="field" placeholder="ex. 12 Rue des Orangers" /></div>
+          <div><label class="label">Ville</label><input class="field" placeholder="ex. Nador" /></div>
+          <div><label class="label">Pays</label><input class="field" placeholder="ex. Maroc" /></div>
+        </div>
+      </div>
+
+      <div class="card shadow-l1 p-8">
+        <div class="section-title">
+          <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+          <h2 class="font-bold text-[17px]">Permis de conduire</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-5">
+          <div><label class="label">N° de permis</label><input class="field" placeholder="ex. 09/A/458213" /></div>
+          <div><label class="label">Date de délivrance</label><input type="date" class="field" /></div>
+        </div>
+      </div>
+
+      <div class="card shadow-l1 p-8">
+        <div class="section-title">
+          <div class="w-1.5 h-6 rounded-full" style="background:var(--primary);"></div>
+          <h2 class="font-bold text-[17px]">Remarques</h2>
+        </div>
+        <textarea class="field" rows="3" placeholder="Notes internes sur ce client (optionnel)"></textarea>
+      </div>
+    </div>
+
+    <!-- Sidebar: documents -->
+    <div class="space-y-6">
+      <div class="card shadow-l1 p-6">
+        <h3 class="font-bold text-[14px] mb-1">Documents</h3>
+        <p class="text-[12px] mb-4" style="color:var(--on-surface-variant); opacity:0.6;">Scans requis pour la validation du dossier</p>
+
+        <p class="label">Scan CIN / Passeport</p>
+        <div class="dropzone p-6 flex flex-col items-center justify-center gap-2 mb-5">
+          <span class="material-symbols-outlined text-[24px]" style="color:var(--on-surface-variant); opacity:0.5;">badge</span>
+          <p class="text-[12px] font-medium text-center" style="color:var(--on-surface-variant); opacity:0.6;">Glisser un fichier ou parcourir</p>
+        </div>
+
+        <p class="label">Scan permis de conduire</p>
+        <div class="dropzone p-6 flex flex-col items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[24px]" style="color:var(--on-surface-variant); opacity:0.5;">contract</span>
+          <p class="text-[12px] font-medium text-center" style="color:var(--on-surface-variant); opacity:0.6;">Glisser un fichier ou parcourir</p>
+        </div>
+      </div>
+
+      <div class="card shadow-l1 p-6" style="background:var(--primary-bg); border-color:#bfd7fb;">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-[18px] mt-0.5" style="color:var(--primary);">info</span>
+          <p class="text-[12.5px] font-medium" style="color:#1e3a8a;">Le dossier client sera automatiquement rattaché aux contrats et réservations créés à son nom.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

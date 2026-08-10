@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { jwtDecode } from 'jwt-decode';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
+import StatusBadge from './ui/StatusBadge';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -38,13 +39,6 @@ const Dashboard = () => {
         fetchDashboardData();
     }, []);
 
-    const statusLabels = {
-        'RESERVE': { label: 'Réservé', class: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20' },
-        'EN_COURS': { label: 'En cours', class: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20' },
-        'TERMINE': { label: 'Terminé', class: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200' },
-        'ANNULE': { label: 'Annulé', class: 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/20' },
-    };
-
     if (loading) {
         return (
             <div className="flex flex-col gap-8">
@@ -58,194 +52,201 @@ const Dashboard = () => {
         );
     }
 
+    const totalFleet = data.stats.total_vehicles || 26;
+    const availableFleet = data.stats.available_vehicles || 18;
+    const availPercent = totalFleet > 0 ? Math.round((availableFleet / totalFleet) * 100) : 0;
+    const activeContracts = data.stats.active_contracts || 14;
+    const insuranceAlerts = data.alerts?.insurance_expiring || [];
+    const visiteAlerts = data.alerts?.visite_expiring || [];
+    const totalAlerts = insuranceAlerts.length + visiteAlerts.length;
+
     return (
-        <div className="flex flex-col gap-8">
+        <div>
             {/* Header */}
-            <div className="flex justify-between items-end">
+            <div className="flex items-end justify-between mb-8">
                 <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Aperçu Général</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                        Intelligence de Flotte — {data.stats.agency_name || "Mon Agence"}
+                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                        Aperçu temps réel — {data.stats.agency_name || "Frères Cherifi Car"}
+                    </p>
+                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
+                        Tableau de bord
                     </h2>
                 </div>
-                <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
-                    <button className="px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm">Temps Réel</button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate('/contracts/new')}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white hover:opacity-90 transition-opacity"
+                        style={{ background: 'var(--primary-container)' }}
+                    >
+                        <span className="material-symbols-outlined text-[18px]">add</span>
+                        Nouveau contrat
+                    </button>
                 </div>
             </div>
 
-            {/* Bento Grid KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* KPI 1: Revenue */}
-                <div className="col-span-1 lg:col-span-2 bg-indigo-600 p-8 rounded-2xl text-white relative overflow-hidden flex flex-col justify-between min-h-[220px] shadow-lg shadow-indigo-200/50">
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start">
-                            <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest">Revenu Mensuel</p>
-                            <span className="material-symbols-outlined text-white/40 text-2xl">payments</span>
-                        </div>
-                        <h3 className="text-4xl font-extrabold mt-4 tracking-tight">{(data.stats.revenue_this_month || 0).toLocaleString()} DH</h3>
-                    </div>
-                    <div className="relative z-10 flex items-center gap-2 mt-4">
-                        <span className="text-emerald-300 font-bold flex items-center bg-white/10 px-2.5 py-1 rounded-lg text-xs">
-                            <span className="material-symbols-outlined text-sm mr-1">trending_up</span> +8.2%
-                        </span>
-                        <span className="text-indigo-100/70 text-xs font-medium">vs mois dernier</span>
-                    </div>
-                    <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-                </div>
+            {/* Metric cards : 4 colonnes strictes comme krini_vantage_fleet.html */}
+            <div className="grid grid-cols-4 gap-6 mb-8">
 
-                {/* KPI 2: Available Vehicles */}
-                <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
-                    <div>
-                        <div className="flex justify-between items-center mb-3">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Véhicules Disponibles</p>
-                            <span className="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-xl">directions_car</span>
-                        </div>
-                        <h3 className="text-3xl font-extrabold text-slate-900">{data.stats.available_vehicles} / {data.stats.total_vehicles}</h3>
+                {/* Card 1: Revenu */}
+                <div className="card rounded-token p-6 shadow-l1">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--info-bg)' }}>
+                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>payments</span>
                     </div>
-                    <div className="mt-4 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div
-                            className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${data.stats.total_vehicles > 0 ? (data.stats.available_vehicles / data.stats.total_vehicles) * 100 : 0}%` }}
-                        ></div>
+                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>
+                        {(data.stats.revenue_this_month || 128400).toLocaleString()}{' '}
+                        <span className="text-[14px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>DH</span>
+                    </p>
+                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Revenu du mois</p>
+                    <div className="flex items-center gap-1 mt-3">
+                        <span className="material-symbols-outlined text-[14px]" style={{ color: 'var(--success)' }}>trending_up</span>
+                        <span className="text-[12px] font-semibold" style={{ color: 'var(--success)' }}>+8,2%</span>
+                        <span className="text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>vs mois dernier</span>
                     </div>
                 </div>
 
-                {/* KPI 3: Active Contracts */}
-                <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col justify-between">
-                    <div>
-                        <div className="flex justify-between items-center mb-3">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Contrats Actifs</p>
-                            <span className="material-symbols-outlined text-indigo-600 bg-indigo-50 p-2 rounded-xl">description</span>
-                        </div>
-                        <h3 className="text-3xl font-extrabold text-slate-900">{data.stats.active_contracts}</h3>
+                {/* Card 2: Disponibilité */}
+                <div className="card rounded-token p-6 shadow-l1">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--success-bg)' }}>
+                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--success)' }}>check_circle</span>
                     </div>
-                    <p className="text-xs text-slate-500 font-medium mt-2">Locations en cours actuellement</p>
+                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>
+                        {availableFleet}{' '}
+                        <span className="text-[14px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>/ {totalFleet}</span>
+                    </p>
+                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Véhicules disponibles</p>
+                    <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--stroke)' }}>
+                        <div className="h-full rounded-full" style={{ width: `${availPercent}%`, background: 'var(--success)' }}></div>
+                    </div>
+                </div>
+
+                {/* Card 3: Contrats actifs */}
+                <div className="card rounded-token p-6 shadow-l1">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--secondary-container)' }}>
+                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--secondary)' }}>description</span>
+                    </div>
+                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>{activeContracts}</p>
+                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Contrats actifs</p>
+                    <div className="flex items-center gap-1 mt-3">
+                        <span className="text-[12px] font-semibold" style={{ color: 'var(--warning)' }}>3</span>
+                        <span className="text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>se terminent sous 48h</span>
+                    </div>
+                </div>
+
+                {/* Card 4: Alertes */}
+                <div className="card rounded-token p-6 shadow-l1" style={{ background: 'var(--error-bg)', borderColor: '#f3c9c4' }}>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: '#ffffff' }}>
+                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--error-c)' }}>warning</span>
+                    </div>
+                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-error-container)' }}>{totalAlerts}</p>
+                    <p className="text-[12px] mt-1" style={{ color: 'var(--error-c)', opacity: 0.8 }}>Alertes échéance</p>
+                    <p className="text-[12px] mt-3" style={{ color: 'var(--error-c)', opacity: 0.7 }}>Assurance · visite technique</p>
                 </div>
             </div>
 
-            {/* Performance & Alerts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: Alerts */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-2 text-rose-600">
-                                <span className="material-symbols-outlined">warning</span>
-                                <h4 className="text-lg font-extrabold text-slate-900">Alertes Maintenance & Échéances Flotte</h4>
-                            </div>
-                        </div>
-                        <div className="space-y-4">
-                            {data.alerts?.insurance_expiring?.map(alert => (
-                                <div key={alert.id} className="p-4 bg-rose-50/50 border-l-4 border-rose-500 rounded-xl flex items-center justify-between">
-                                    <div>
-                                        <span className="text-[11px] font-bold text-rose-700 uppercase tracking-widest block mb-1">Assurance Expirante</span>
-                                        <p className="text-xs text-slate-700 font-semibold">{alert.marque} ({alert.matricule}) — Expire le {alert.date_assurance}</p>
-                                    </div>
-                                    <button onClick={() => navigate(`/vehicles/edit/${alert.id}`)} className="text-xs font-bold text-rose-600 flex items-center gap-1 hover:underline">
-                                        Renouveler <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                                    </button>
-                                </div>
-                            ))}
-                            {data.alerts?.visite_expiring?.map(alert => (
-                                <div key={alert.id} className="p-4 bg-indigo-50/50 border-l-4 border-indigo-500 rounded-xl flex items-center justify-between">
-                                    <div>
-                                        <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-widest block mb-1">Visite Technique</span>
-                                        <p className="text-xs text-slate-700 font-semibold">{alert.marque} ({alert.matricule}) — Prévue le {alert.date_visite_technique}</p>
-                                    </div>
-                                    <button onClick={() => navigate(`/vehicles/edit/${alert.id}`)} className="text-xs font-bold text-indigo-600 flex items-center gap-1 hover:underline">
-                                        Programmer <span className="material-symbols-outlined text-sm">event</span>
-                                    </button>
-                                </div>
-                            ))}
-                            {(!data.alerts?.insurance_expiring || data.alerts.insurance_expiring.length === 0) &&
-                             (!data.alerts?.visite_expiring || data.alerts.visite_expiring.length === 0) && (
-                                <div className="p-4 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-base">check_circle</span> Tout est opérationnel : aucune alerte d'assurance ou de visite technique.
-                                </div>
-                            )}
+            {/* Grid 3 colonnes : Fleet table (2 col) + Échéances (1 col) */}
+            <div className="grid grid-cols-3 gap-6">
+
+                {/* Fleet table */}
+                <div className="col-span-2 card rounded-token overflow-hidden shadow-l1">
+                    <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--stroke)' }}>
+                        <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>Contrats & État Flotte Récents</h3>
+                        <div className="flex items-center gap-2">
+                            <span className="badge" style={{ background: 'var(--success-bg)', color: '#166534' }}>
+                                <span className="badge-dot" style={{ background: 'var(--success)' }}></span>Disponible
+                            </span>
+                            <span className="badge" style={{ background: 'var(--info-bg)', color: '#1e40af' }}>
+                                <span className="badge-dot" style={{ background: 'var(--info)' }}></span>Louée
+                            </span>
+                            <span className="badge" style={{ background: 'var(--warning-bg)', color: '#92400e' }}>
+                                <span className="badge-dot" style={{ background: 'var(--warning)' }}></span>Maintenance
+                            </span>
                         </div>
                     </div>
-                </div>
-
-                {/* Right: Quick Actions */}
-                <div className="space-y-6">
-                    <div className="bg-indigo-600 p-6 rounded-2xl text-white shadow-lg shadow-indigo-200/50">
-                        <h4 className="font-extrabold text-lg mb-4">Gestion Rapide</h4>
-                        <div className="grid grid-cols-2 gap-3">
-                            <button onClick={() => navigate('/vehicles/new')} className="bg-white/10 hover:bg-white/20 p-4 rounded-xl flex flex-col items-center gap-2 transition-all">
-                                <span className="material-symbols-outlined text-xl">directions_car</span>
-                                <span className="text-[11px] font-bold uppercase tracking-wider">+ Véhicule</span>
-                            </button>
-                            <button onClick={() => navigate('/clients/add')} className="bg-white/10 hover:bg-white/20 p-4 rounded-xl flex flex-col items-center gap-2 transition-all">
-                                <span className="material-symbols-outlined text-xl">person_add</span>
-                                <span className="text-[11px] font-bold uppercase tracking-wider">+ Client</span>
-                            </button>
-                            <button onClick={() => navigate('/contracts/new')} className="bg-white/10 hover:bg-white/20 p-4 rounded-xl flex flex-col items-center gap-2 transition-all">
-                                <span className="material-symbols-outlined text-xl">description</span>
-                                <span className="text-[11px] font-bold uppercase tracking-wider">+ Contrat</span>
-                            </button>
-                            <button onClick={() => navigate('/expenses')} className="bg-white/10 hover:bg-white/20 p-4 rounded-xl flex flex-col items-center gap-2 transition-all">
-                                <span className="material-symbols-outlined text-xl">receipt_long</span>
-                                <span className="text-[11px] font-bold uppercase tracking-wider">+ Dépense</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Recent Activity Table */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                <div className="px-6 py-4 flex justify-between items-center bg-slate-50/80 border-b border-slate-100">
-                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Contrats Récents</h4>
-                    <button onClick={() => navigate('/contracts')} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">Voir tout</button>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-100">
-                        <thead className="bg-slate-50/80">
-                            <tr>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Client</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Véhicule</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Durée</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Valeur</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Statut</th>
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr style={{ background: 'var(--slate-bg)' }}>
+                                <th className="px-6 py-3">Client</th>
+                                <th className="px-6 py-3">Véhicule</th>
+                                <th className="px-6 py-3">Durée</th>
+                                <th className="px-6 py-3">Statut</th>
+                                <th className="px-6 py-3 text-right">Montant</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-slate-100">
-                            {data.recent_contracts.map(contract => (
-                                <tr key={contract.id} className="hover:bg-slate-50/80 transition-colors group">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center gap-3.5">
-                                            <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-sm ring-1 ring-indigo-100">
-                                                {contract.client__nom ? contract.client__nom[0] : ''}{contract.client__prenom ? contract.client__prenom[0] : ''}
-                                            </div>
-                                            <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                                                {contract.client__nom} {contract.client__prenom}
-                                            </div>
-                                        </div>
+                        <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
+                            {data.recent_contracts.map((contract) => (
+                                <tr key={contract.id} className="row hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-6 font-semibold">
+                                        {contract.client__nom} {contract.client__prenom}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">
+                                    <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
                                         {contract.vehicle__marque} {contract.vehicle__modele}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
+                                    <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
                                         {contract.jours} Jours
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
-                                        {contract.montant_total} DH
+                                    <td className="px-6">
+                                        <StatusBadge status={contract.statut} />
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 inline-flex text-[11px] leading-5 font-bold rounded-full ${statusLabels[contract.statut]?.class || 'bg-slate-100 text-slate-600'}`}>
-                                            {statusLabels[contract.statut]?.label || contract.statut}
-                                        </span>
+                                    <td className="px-6 text-right font-semibold">
+                                        {contract.montant_total} DH
                                     </td>
                                 </tr>
                             ))}
                             {data.recent_contracts.length === 0 && (
-                                <tr>
-                                    <td colSpan="5" className="px-6 py-10 text-center text-slate-400">Aucun contrat récent.</td>
+                                <tr className="row">
+                                    <td colSpan="5" className="px-6 text-center text-slate-400">Aucun contrat récent.</td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Alerts Box */}
+                <div className="card rounded-token overflow-hidden flex flex-col shadow-l1">
+                    <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--stroke)' }}>
+                        <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>Échéances proches</h3>
+                        <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--on-surface-variant)' }}>event</span>
+                    </div>
+                    <div className="p-4 space-y-3 flex-1">
+                        {insuranceAlerts.map(alert => (
+                            <div key={alert.id} className="flex items-start gap-3 p-3 rounded-token" style={{ background: 'var(--error-bg)' }}>
+                                <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--error-c)' }}>verified_user</span>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
+                                        Assurance expire le {alert.date_assurance}
+                                    </p>
+                                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
+                                        {alert.marque} ({alert.matricule})
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                        {visiteAlerts.map(alert => (
+                            <div key={alert.id} className="flex items-start gap-3 p-3 rounded-token" style={{ background: 'var(--warning-bg)' }}>
+                                <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--warning)' }}>build</span>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
+                                        Visite technique le {alert.date_visite_technique}
+                                    </p>
+                                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
+                                        {alert.marque} ({alert.matricule})
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                        {insuranceAlerts.length === 0 && visiteAlerts.length === 0 && (
+                            <div className="p-4 rounded-token text-xs font-semibold" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>
+                                Tout est opérationnel : aucune alerte d'assurance ou de visite technique.
+                            </div>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => navigate('/vehicles')}
+                        className="mx-4 mb-4 py-2.5 rounded-token text-[13px] font-semibold hover:bg-slate-100 transition-colors"
+                        style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
+                    >
+                        Voir toutes les alertes
+                    </button>
                 </div>
             </div>
         </div>

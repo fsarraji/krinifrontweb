@@ -21,7 +21,9 @@ api.interceptors.request.use(
 
 // Le backend Django utilise la pagination globale (PageNumberPagination).
 // Les endpoints de liste renvoient donc { count, next, previous, results }.
-// On déroule automatiquement .results pour que les composants reçoivent bien un tableau.
+// On déroule automatiquement .results pour que les composants reçoivent bien un tableau,
+// tout en gardant count/next/previous accrochés au tableau (aucun composant n'est cassé,
+// .map()/.filter()/.length continuent de fonctionner).
 api.interceptors.response.use(
     (response) => {
         if (
@@ -30,7 +32,11 @@ api.interceptors.response.use(
             !Array.isArray(response.data) &&
             Array.isArray(response.data.results)
         ) {
-            response.data = response.data.results;
+            const { results, count, next, previous } = response.data;
+            results.count = count;
+            results.next = next;
+            results.previous = previous;
+            response.data = results;
         }
         return response;
     },
@@ -38,5 +44,19 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+// Suit automatiquement le lien `next` de la pagination Django pour récupérer
+// toutes les pages d'un endpoint de liste.
+export const fetchAllPages = async (url, params = {}) => {
+    let response = await api.get(url, { params });
+    let results = [...response.data];
+    let nextUrl = response.data.next;
+    while (nextUrl) {
+        response = await api.get(nextUrl);
+        results = results.concat(response.data);
+        nextUrl = response.data.next;
+    }
+    return results;
+};
 
 export default api;
