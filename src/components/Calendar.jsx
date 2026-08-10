@@ -21,7 +21,7 @@ const Calendar = () => {
     const handleToday = () => setCurrentDate(new Date());
 
     // Timeline calculations
-    const dayWidth = 54; // px per day
+    const dayWidth = 62; // px per day
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
     const daysInMonthCount = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -112,13 +112,6 @@ const Calendar = () => {
         });
     }, [vehicles, contracts, search, statusFilter]);
 
-    // Analytics KPIs
-    const totalFleet = vehicles.length;
-    const rentedCount = vehicles.filter(v => v.statut === 'Rented').length;
-    const maintenanceCount = vehicles.filter(v => v.statut === 'Maintenance').length;
-    const activeContractsCount = contracts.filter(c => c.statut === 'EN_COURS').length;
-    const occupancyRate = totalFleet > 0 ? Math.round((rentedCount / totalFleet) * 100) : 0;
-
     if (loading) {
         return (
             <div className="flex flex-col gap-6">
@@ -166,47 +159,6 @@ const Calendar = () => {
                 </div>
             </div>
 
-            {/* KPI Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                    <div className="flex justify-between items-start mb-3">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Taux d'Occupation</p>
-                        <span className="material-symbols-outlined text-indigo-600 bg-indigo-50 p-2 rounded-xl ring-1 ring-indigo-100">percent</span>
-                    </div>
-                    <p className="text-3xl font-extrabold text-slate-900">{occupancyRate}%</p>
-                    <div className="mt-3 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-indigo-600 h-full rounded-full transition-all duration-500" style={{ width: `${occupancyRate}%` }}></div>
-                    </div>
-                </div>
-
-                <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                    <div className="flex justify-between items-start mb-3">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Contrats Actifs</p>
-                        <span className="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-xl ring-1 ring-emerald-100">key</span>
-                    </div>
-                    <p className="text-3xl font-extrabold text-slate-900">{activeContractsCount}</p>
-                    <p className="text-xs text-slate-400 font-medium mt-2">Véhicules en cours de location</p>
-                </div>
-
-                <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                    <div className="flex justify-between items-start mb-3">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">En Maintenance</p>
-                        <span className="material-symbols-outlined text-rose-600 bg-rose-50 p-2 rounded-xl ring-1 ring-rose-100">build</span>
-                    </div>
-                    <p className="text-3xl font-extrabold text-rose-600">{maintenanceCount}</p>
-                    <p className="text-xs text-slate-400 font-medium mt-2">Actuellement indisponibles</p>
-                </div>
-
-                <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                    <div className="flex justify-between items-start mb-3">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Flotte Totale</p>
-                        <span className="material-symbols-outlined text-indigo-600 bg-indigo-50 p-2 rounded-xl ring-1 ring-indigo-100">directions_car</span>
-                    </div>
-                    <p className="text-3xl font-extrabold text-slate-900">{totalFleet}</p>
-                    <p className="text-xs text-slate-400 font-medium mt-2">Véhicules enregistrés</p>
-                </div>
-            </div>
-
             {/* Search & Filter Bar */}
             <div>
                 <SearchFilterBar
@@ -223,13 +175,13 @@ const Calendar = () => {
             <div className="flex items-center justify-between px-2 text-xs font-semibold text-slate-600">
                 <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-md bg-emerald-600"></span> Location En Cours
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Location En Cours
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-md bg-indigo-600"></span> Réservation Confirmée
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Réservation Confirmée
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-md bg-rose-500"></span> Maintenance
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Maintenance
                     </span>
                 </div>
                 <span className="text-slate-400 font-medium">Cliquez sur un contrat pour afficher les détails</span>
@@ -240,9 +192,9 @@ const Calendar = () => {
                 <div className="overflow-x-auto">
                     <div className="min-w-max flex flex-col">
                         {/* Days Header */}
-                        <div className="flex sticky top-0 z-20 bg-slate-50/90 backdrop-blur-sm border-b border-slate-200">
+                        <div className="flex sticky top-0 z-20 bg-[#f8fafc] border-b border-slate-200">
                             {/* Vehicle Column Header */}
-                            <div className="w-64 shrink-0 p-4 border-r border-slate-200 bg-slate-100/80 sticky left-0 top-0 z-30 font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <div className="w-[245px] shrink-0 h-[54px] px-4 border-r border-slate-100 bg-[#f8fafc] sticky left-0 top-0 z-40 shadow-[4px_0_10px_-4px_rgba(16,24,40,0.10)] font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                 <span className="material-symbols-outlined text-base">directions_car</span>
                                 Véhicule
                             </div>
@@ -257,13 +209,13 @@ const Calendar = () => {
                                         <div
                                             key={day}
                                             style={{ width: `${dayWidth}px` }}
-                                            className={`p-2 text-center border-r border-slate-100 ${isWeekend ? 'bg-slate-100/50' : ''}`}
+                                            className={`relative h-[54px] flex flex-col items-center justify-center border-r border-slate-100 ${isWeekend ? 'bg-[#fff7f8]' : ''} ${isToday ? 'bg-[#f8f8ff]' : ''}`}
                                         >
                                             <p className={`text-[10px] font-bold ${isWeekend ? 'text-rose-500' : 'text-slate-400'}`}>{dayName}</p>
-                                            <p className={`text-xs font-extrabold mx-auto mt-0.5 ${
+                                            <p className={`text-xs font-extrabold mt-0.5 ${
                                                 isToday
-                                                    ? 'text-white bg-indigo-600 rounded-lg w-6 h-6 flex items-center justify-center shadow-sm'
-                                                    : isWeekend ? 'text-rose-600' : 'text-slate-700'
+                                                    ? 'bg-indigo-600 text-white rounded-lg px-[7px] py-[4px] shadow-sm'
+                                                    : isWeekend ? 'text-rose-600' : 'text-slate-600'
                                             }`}>
                                                 {day.toString().padStart(2, '0')}
                                             </p>
@@ -277,17 +229,16 @@ const Calendar = () => {
                         <div className="divide-y divide-slate-100">
                             {filteredVehicles.map((vehicle) => {
                                 const vehicleContracts = contracts.filter(c => c.vehicle === vehicle.id && c.statut !== 'ANNULE');
-                                const isRented = vehicle.statut === 'Rented' || vehicleContracts.some(c => c.statut === 'EN_COURS');
                                 const isMaintenance = vehicle.statut === 'Maintenance';
 
                                 return (
-                                    <div key={vehicle.id} className="flex group hover:bg-slate-50/70 transition-colors">
+                                    <div key={vehicle.id} className="flex h-[76px] group hover:bg-slate-50/70 transition-colors">
                                         {/* Vehicle Info Sticky Left Column */}
-                                        <div className="w-64 shrink-0 p-4 border-r border-slate-200 bg-white sticky left-0 z-10 group-hover:bg-slate-50/70 transition-colors flex items-center gap-3">
+                                        <div className="w-[245px] shrink-0 px-4 border-r border-slate-100 bg-white sticky left-0 z-30 group-hover:bg-slate-50/70 transition-colors flex items-center gap-3 shadow-[4px_0_10px_-4px_rgba(16,24,40,0.10)]">
                                             {vehicle.image ? (
-                                                <img src={vehicle.image} alt={vehicle.matricule} className="w-12 h-9 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0" />
+                                                <img src={vehicle.image} alt={vehicle.matricule} className="w-[46px] h-9 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0" />
                                             ) : (
-                                                <div className="w-12 h-9 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                                                <div className="w-[46px] h-9 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
                                                     <span className="material-symbols-outlined text-lg">directions_car</span>
                                                 </div>
                                             )}
@@ -296,11 +247,11 @@ const Calendar = () => {
                                                     {vehicle.marque_name} {vehicle.modele_name}
                                                 </p>
                                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                                    <span className="font-mono text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded ring-1 ring-indigo-100">
+                                                    <span className="font-mono text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
                                                         {vehicle.matricule}
                                                     </span>
                                                     {isMaintenance && (
-                                                        <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded ring-1 ring-rose-100">
+                                                        <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">
                                                             Maint.
                                                         </span>
                                                     )}
@@ -309,7 +260,7 @@ const Calendar = () => {
                                         </div>
 
                                         {/* Timeline Bar Track */}
-                                        <div className="relative h-16 flex-1" style={{ width: `${daysInMonthCount * dayWidth}px` }}>
+                                        <div className="relative h-[76px] flex-1" style={{ width: `${daysInMonthCount * dayWidth}px` }}>
                                             {/* Today Vertical Highlight Line */}
                                             {currentMonth === now.getMonth() && currentYear === now.getFullYear() && (
                                                 <div
@@ -328,10 +279,10 @@ const Calendar = () => {
                                                         key={contract.id}
                                                         onClick={() => setSelectedContract(contract)}
                                                         style={barStyle}
-                                                        className={`absolute top-1/2 -translate-y-1/2 h-10 rounded-xl px-3 flex items-center justify-between gap-2 cursor-pointer transition-all z-20 shadow-sm hover:shadow-md hover:scale-[1.02] ${
+                                                        className={`absolute top-[18px] h-10 rounded-xl px-3 flex items-center justify-between gap-2 cursor-pointer transition-all z-20 ${
                                                             isActive
-                                                                ? 'bg-emerald-600 text-white shadow-emerald-200'
-                                                                : 'bg-indigo-600 text-white shadow-indigo-200'
+                                                                ? 'bg-emerald-600 text-white shadow-[0_3px_8px_rgba(5,150,105,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
+                                                                : 'bg-indigo-600 text-white shadow-[0_3px_8px_rgba(79,70,229,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
                                                         }`}
                                                     >
                                                         <span className="text-xs font-extrabold truncate">
@@ -344,8 +295,8 @@ const Calendar = () => {
 
                                             {/* Maintenance Bar */}
                                             {isMaintenance && vehicleContracts.length === 0 && (
-                                                <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center gap-2 text-xs font-bold z-10">
-                                                    <span className="material-symbols-outlined text-base text-rose-500">build</span>
+                                                <div className="absolute inset-x-2 top-[18px] h-10 rounded-xl bg-rose-500 text-white shadow-[0_3px_8px_rgba(225,29,72,0.35)] flex items-center justify-center gap-2 text-xs font-bold z-10">
+                                                    <span className="material-symbols-outlined text-base text-white/90">build</span>
                                                     <span>Véhicule en Maintenance</span>
                                                 </div>
                                             )}

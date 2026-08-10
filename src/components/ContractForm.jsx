@@ -7,6 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 import DamageSelector from './DamageSelector';
 import FuelGaugeSelector from './FuelGaugeSelector';
 import { toast } from './Toast';
+import DatePicker from './ui/DatePicker';
 
 const getLocalDatetime = (date) => {
     const tzoffset = date.getTimezoneOffset() * 60000;
@@ -66,6 +67,7 @@ const ContractForm = () => {
 
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [showClientModal, setShowClientModal] = useState(false);
+    const [unavailableRanges, setUnavailableRanges] = useState([]);
 
     const fetchClients = async () => {
         try {
@@ -125,12 +127,24 @@ const ContractForm = () => {
                     setSelectedVehicle(v);
                     setFieldErrors(prev => ({ ...prev, vehicle: false }));
                     setFormData(prev => ({ ...prev, vehicle: v.id, prix_par_jour: v.prix_par_jour || 0, km_sortie: v.kilometrage || 0 }));
+                    fetchUnavailable(v.id);
                     setCurrentStep(2);
                 })
                 .catch((error) => console.error("Erreur lors du chargement du véhicule présélectionné", error));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const fetchUnavailable = async (vehicleId) => {
+        if (!vehicleId) return;
+        try {
+            const res = await api.get(`public-vehicles/${vehicleId}/unavailable-dates/`);
+            setUnavailableRanges(res.data?.unavailable || []);
+        } catch (err) {
+            console.error("Erreur lors du chargement des dates indisponibles", err);
+            setUnavailableRanges([]);
+        }
+    };
 
     const handleVehicleSelect = (vehicle) => {
         setSelectedVehicle(vehicle);
@@ -141,6 +155,7 @@ const ContractForm = () => {
                 prix_par_jour: vehicle.prix_par_jour || 0,
                 km_sortie: vehicle.kilometrage || 0
             });
+            fetchUnavailable(vehicle.id);
         };
 
     const fetchGpsKm = async () => {
@@ -497,20 +512,24 @@ const ContractForm = () => {
                                     <div className="grid grid-cols-2 gap-5">
                                         <div>
                                             <label className="label">Date et Heure de Départ</label>
-                                            <input
+                                            <DatePicker
                                                 className={fieldClass('date_sortie')}
-                                                type="datetime-local"
                                                 value={formData.date_sortie}
-                                                onChange={(e) => setFormData({...formData, date_sortie: e.target.value})}
+                                                onChange={(v) => setFormData({...formData, date_sortie: v})}
+                                                min={getLocalDatetime(new Date()).slice(0, 10)}
+                                                disabledRanges={unavailableRanges}
+                                                placeholder="Choisir la date de départ"
                                             />
                                         </div>
                                         <div>
                                             <label className="label">Date et Heure de Retour Prévu</label>
-                                            <input
+                                            <DatePicker
                                                 className={fieldClass('date_retour_prevue')}
-                                                type="datetime-local"
                                                 value={formData.date_retour_prevue}
-                                                onChange={(e) => setFormData({...formData, date_retour_prevue: e.target.value})}
+                                                onChange={(v) => setFormData({...formData, date_retour_prevue: v})}
+                                                min={formData.date_sortie ? formData.date_sortie.slice(0, 10) : getLocalDatetime(new Date()).slice(0, 10)}
+                                                disabledRanges={unavailableRanges}
+                                                placeholder="Choisir la date de retour"
                                             />
                                         </div>
                                     </div>

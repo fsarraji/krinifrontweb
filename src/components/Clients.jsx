@@ -75,6 +75,7 @@ const Clients = () => {
 
     const [menuId, setMenuId] = useState(null);
     const [infoClient, setInfoClient] = useState(null);
+    const requestSeq = useRef(0);
 
     const isSuperAdmin = getRole() === 'SUPERADMIN';
 
@@ -105,6 +106,7 @@ const Clients = () => {
     };
 
     const fetchClients = useCallback(async (p) => {
+        const seq = ++requestSeq.current;
         setLoading(true);
         try {
             const params = new URLSearchParams();
@@ -119,17 +121,29 @@ const Clients = () => {
             }
 
             const response = await api.get(`clients/?${params.toString()}`);
+            if (seq !== requestSeq.current) return; // ignore une réponse périmée
+
             const data = response.data;
             const results = Array.isArray(data) ? data : (data.results || []);
             setClients(results);
-            setCount(Array.isArray(data) ? results.length : (data.count ?? results.length));
+            // data est déjà le tableau "results" (l'intercepteur attache count dessus),
+            // donc on lit data.count pour le vrai total, sinon on retombe sur la page courante.
+            setCount(data.count ?? results.length);
+
+            // Si la page courante n'existe plus (ex. suppression sur la dernière page),
+            // on rebascule sur la dernière page valide.
+            if (results.length === 0 && p > 1 && (data.count ?? results.length) > 0) {
+                setPage(Math.max(1, Math.ceil((data.count ?? results.length) / pageSize)));
+                return;
+            }
             setPage(p);
         } catch (error) {
+            if (seq !== requestSeq.current) return;
             console.error("Erreur lors de la récupération des clients", error);
             setClients([]);
             setCount(0);
         } finally {
-            setLoading(false);
+            if (seq === requestSeq.current) setLoading(false);
         }
     }, [debouncedSearch, filterMode, pageSize]);
 
