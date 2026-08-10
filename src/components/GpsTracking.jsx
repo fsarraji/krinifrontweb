@@ -317,8 +317,12 @@ const GpsTracking = () => {
                                         const status = deriveStatus(v);
                                         return (
                                             <div key={v.id} className={`veh-row ${active ? 'selected' : ''}`} onClick={() => { setSelectedId(v.id); setView('detail'); }}>
-                                                <div className="thumb" style={{ background: status.bg }}>
-                                                    <span className="material-symbols-outlined text-[20px]" style={{ color: status.color }}>directions_car</span>
+                                                <div className="thumb overflow-hidden" style={{ background: status.bg }}>
+                                                    {resolveImage(v.image) ? (
+                                                        <img src={resolveImage(v.image)} alt={`${v.marque_name || 'Véhicule'} ${v.modele_name || ''}`} className="w-full h-full object-cover" loading="lazy" />
+                                                    ) : (
+                                                        <span className="material-symbols-outlined text-[20px]" style={{ color: status.color }}>directions_car</span>
+                                                    )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-[13.5px] font-bold truncate" style={{ color: 'var(--on-surface)' }}>

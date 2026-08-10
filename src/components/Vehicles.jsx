@@ -15,6 +15,7 @@ const Vehicles = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
 
@@ -167,95 +168,206 @@ const Vehicles = () => {
                 </div>
             </div>
 
-            {/* Search Filter Bar */}
-            <div className="mb-6">
-                <SearchFilterBar
-                    placeholder="Rechercher par matricule, marque, modèle, carburant..."
-                    search={search}
-                    onSearchChange={setSearch}
-                    options={FILTER_OPTIONS}
-                    filter={statusFilter}
-                    onFilterChange={setStatusFilter}
-                />
+            {/* Search Filter Bar & View Switcher */}
+            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6">
+                <div className="flex-1">
+                    <SearchFilterBar
+                        placeholder="Rechercher par matricule, marque, modèle, carburant..."
+                        search={search}
+                        onSearchChange={setSearch}
+                        options={FILTER_OPTIONS}
+                        filter={statusFilter}
+                        onFilterChange={setStatusFilter}
+                    />
+                </div>
+
+                {/* View switcher */}
+                <div className="flex items-center p-1 rounded-token shrink-0" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
+                    <button
+                        onClick={() => setViewMode('table')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-token text-[13px] font-semibold transition-all ${
+                            viewMode === 'table'
+                                ? 'card text-on-surface shadow-sm'
+                                : 'hover:bg-slate-100'
+                        }`}
+                        style={{ color: viewMode === 'table' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
+                    >
+                        <span className="material-symbols-outlined text-[18px]">table_rows</span>
+                        Tableau
+                    </button>
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-token text-[13px] font-semibold transition-all ${
+                            viewMode === 'grid'
+                                ? 'card text-on-surface shadow-sm'
+                                : 'hover:bg-slate-100'
+                        }`}
+                        style={{ color: viewMode === 'grid' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
+                    >
+                        <span className="material-symbols-outlined text-[18px]">grid_view</span>
+                        Grille
+                    </button>
+                </div>
             </div>
 
-            {/* Data Table */}
+            {/* Data Table / Grid */}
             <div className="card rounded-token overflow-hidden shadow-l1">
-                <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-4">Véhicule</th>
-                                <th className="px-6 py-4">Matricule</th>
-                                <th className="px-6 py-4">Carburant</th>
-                                <th className="px-6 py-4">Km</th>
-                                <th className="px-6 py-4">Statut</th>
-                                <th className="px-6 py-4 text-right">Tarif / jour</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
-                            {paginatedVehicles.map((vehicle) => (
-                                <tr key={vehicle.id} className="row hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 font-semibold">
-                                        <div className="flex items-center gap-3">
-                                            {vehicle.image ? (
-                                                <img
-                                                    src={resolveImage(vehicle.image)}
-                                                    alt={`${vehicle.marque_name} ${vehicle.modele_name}`}
-                                                    className="w-10 h-10 rounded-lg object-cover border border-stroke"
-                                                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>
-                                                    {vehicle.marque_name?.slice(0, 2).toUpperCase() || 'VE'}
+                {viewMode === 'table' ? (
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr style={{ background: 'var(--slate-bg)' }}>
+                                    <th className="px-6 py-4">Véhicule</th>
+                                    <th className="px-6 py-4">Matricule</th>
+                                    <th className="px-6 py-4">Carburant</th>
+                                    <th className="px-6 py-4">Km</th>
+                                    <th className="px-6 py-4">Statut</th>
+                                    <th className="px-6 py-4 text-right">Tarif / jour</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
+                                {paginatedVehicles.map((vehicle) => (
+                                    <tr key={vehicle.id} className="row hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-6 font-semibold">
+                                            <div className="flex items-center gap-3">
+                                                {vehicle.image ? (
+                                                    <img
+                                                        src={resolveImage(vehicle.image)}
+                                                        alt={`${vehicle.marque_name} ${vehicle.modele_name}`}
+                                                        className="w-10 h-10 rounded-lg object-cover border border-stroke"
+                                                        onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>
+                                                        {vehicle.marque_name?.slice(0, 2).toUpperCase() || 'VE'}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <span className="font-semibold" style={{ color: 'var(--on-surface)' }}>{vehicle.marque_name} {vehicle.modele_name}</span>
+                                                    <span className="ml-1.5 font-normal text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{vehicle.annee}</span>
                                                 </div>
-                                            )}
-                                            <div>
-                                                <span className="font-semibold" style={{ color: 'var(--on-surface)' }}>{vehicle.marque_name} {vehicle.modele_name}</span>
-                                                <span className="ml-1.5 font-normal text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{vehicle.annee}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
+                                            {vehicle.matricule}
+                                        </td>
+                                        <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
+                                            {vehicle.carburant}
+                                        </td>
+                                        <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
+                                            {vehicle.kilometrage ? parseInt(vehicle.kilometrage).toLocaleString() : 0} km
+                                        </td>
+                                        <td className="px-6">
+                                            <StatusBadge status={vehicle.statut} />
+                                        </td>
+                                        <td className="px-6 text-right font-semibold">
+                                            {vehicle.prix_par_jour} DH
+                                        </td>
+                                        <td className="px-6 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Link
+                                                    to={`/vehicles/edit/${vehicle.id}`}
+                                                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                                                    style={{ color: 'var(--on-surface-variant)' }}
+                                                    title="Modifier"
+                                                >
+                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                </Link>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredVehicles.length === 0 && (
+                                    <tr className="row">
+                                        <td colSpan="7" className="px-6 text-center text-slate-400">
+                                            Aucun véhicule ne correspond aux critères.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    /* Grid View */
+                    filteredVehicles.length === 0 ? (
+                        <div className="p-16 text-center font-medium flex flex-col items-center gap-2" style={{ color: 'var(--on-surface-variant)' }}>
+                            <span className="material-symbols-outlined text-4xl" style={{ opacity: 0.4 }}>directions_car_off</span>
+                            <p>Aucun véhicule ne correspond aux critères.</p>
+                        </div>
+                    ) : (
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paginatedVehicles.map((vehicle) => (
+                                <div
+                                    key={vehicle.id}
+                                    className="bg-card-white rounded-lg p-5 border border-stroke hover:shadow-l2 transition-all flex flex-col justify-between group"
+                                >
+                                    <div>
+                                        <div className="flex items-start justify-between gap-3 mb-4">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                {vehicle.image ? (
+                                                    <img
+                                                        src={resolveImage(vehicle.image)}
+                                                        alt={`${vehicle.marque_name} ${vehicle.modele_name}`}
+                                                        className="w-12 h-12 rounded-lg object-cover border border-stroke shrink-0"
+                                                        onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>
+                                                        <span className="material-symbols-outlined text-[20px]">directions_car</span>
+                                                    </div>
+                                                )}
+                                                <div className="min-w-0">
+                                                    <h3 className="text-title-lg text-on-surface group-hover:text-primary transition-colors truncate">
+                                                        {vehicle.marque_name} {vehicle.modele_name}
+                                                    </h3>
+                                                    <p className="text-body-sm text-on-surface-variant font-medium">{vehicle.matricule}</p>
+                                                </div>
+                                            </div>
+                                            <StatusBadge status={vehicle.statut} />
+                                        </div>
+
+                                        <div className="space-y-2 text-body-sm text-on-surface-variant border-t border-stroke pt-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-sm">local_gas_station</span> Carburant:
+                                                </span>
+                                                <span className="font-semibold text-on-surface">{vehicle.carburant}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-sm">speed</span> Kilométrage:
+                                                </span>
+                                                <span className="font-mono font-semibold text-on-surface">{vehicle.kilometrage ? parseInt(vehicle.kilometrage).toLocaleString() : 0} km</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-sm">event</span> Année:
+                                                </span>
+                                                <span className="font-semibold text-on-surface">{vehicle.annee}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-sm">payments</span> Tarif / jour:
+                                                </span>
+                                                <span className="font-bold text-on-surface">{vehicle.prix_par_jour} DH</span>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                        {vehicle.matricule}
-                                    </td>
-                                    <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                        {vehicle.carburant}
-                                    </td>
-                                    <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                        {vehicle.kilometrage ? parseInt(vehicle.kilometrage).toLocaleString() : 0} km
-                                    </td>
-                                    <td className="px-6">
-                                        <StatusBadge status={vehicle.statut} />
-                                    </td>
-                                    <td className="px-6 text-right font-semibold">
-                                        {vehicle.prix_par_jour} DH
-                                    </td>
-                                    <td className="px-6 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <Link
-                                                to={`/vehicles/edit/${vehicle.id}`}
-                                                className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                                                style={{ color: 'var(--on-surface-variant)' }}
-                                                title="Modifier"
-                                            >
-                                                <span className="material-symbols-outlined text-[18px]">edit</span>
-                                            </Link>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    </div>
+
+                                    <div className="mt-4 pt-3 border-t border-stroke flex items-center justify-end">
+                                        <Link
+                                            to={`/vehicles/edit/${vehicle.id}`}
+                                            className="text-label-sm font-bold text-primary hover:underline flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                                        >
+                                            Gérer le véhicule <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                        </Link>
+                                    </div>
+                                </div>
                             ))}
-                            {filteredVehicles.length === 0 && (
-                                <tr className="row">
-                                    <td colSpan="7" className="px-6 text-center text-slate-400">
-                                        Aucun véhicule ne correspond aux critères.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                        </div>
+                    )
+                )}
                 <Pagination
                     currentPage={currentPage}
                     totalItems={filteredVehicles.length}

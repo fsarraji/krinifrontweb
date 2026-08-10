@@ -44,6 +44,8 @@ const VehicleForm = () => {
     const [error, setError] = useState(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [uniqueErrors, setUniqueErrors] = useState({});
+    const [checkingUnique, setCheckingUnique] = useState({});
     const [syncingDevice, setSyncingDevice] = useState(false);
 
     const steps = [
@@ -72,6 +74,45 @@ const VehicleForm = () => {
         ],
     };
 
+    const UNIQUE_FIELDS = {
+        matricule: 'matricule',
+    };
+
+    const checkUnique = async (field, value) => {
+        if (!value || !value.trim()) {
+            setUniqueErrors((prev) => ({ ...prev, [field]: false }));
+            return;
+        }
+        setCheckingUnique((prev) => ({ ...prev, [field]: true }));
+        try {
+            const res = await api.get('vehicles/check-unique/', {
+                params: {
+                    field,
+                    value: value.trim(),
+                    ...(isEditMode ? { exclude_id: id } : {}),
+                },
+            });
+            setUniqueErrors((prev) => ({
+                ...prev,
+                [field]: res.data.available === false
+                    ? `Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.`
+                    : false,
+            }));
+        } catch (err) {
+            console.error("Erreur lors de la vérification de l'unicité", err);
+            setUniqueErrors((prev) => ({ ...prev, [field]: false }));
+            toast.error(err.response?.status === 404
+                ? "Vérification indisponible : le serveur doit être mis à jour (vehicles/check-unique)."
+                : "Impossible de vérifier l'unicité de ce matricule.");
+        } finally {
+            setCheckingUnique((prev) => ({ ...prev, [field]: false }));
+        }
+    };
+
+    const handleBlurUnique = (field) => (e) => {
+        checkUnique(field, e.target.value);
+    };
+
     const validateStep = (step) => (requiredFields[step] || []).filter((f) => f.check());
 
     const markErrors = (fields) => {
@@ -90,14 +131,21 @@ const VehicleForm = () => {
             toast.error(`Champs requis manquants : ${missing.map((m) => m.label).join(', ')}`);
             return;
         }
+        const uniqueFieldsOnStep = (requiredFields[currentStep] || [])
+            .map((f) => f.key)
+            .filter((k) => UNIQUE_FIELDS[k] && uniqueErrors[k]);
+        if (uniqueFieldsOnStep.length > 0) {
+            toast.error(`Corrigez d'abord les champs en double : ${uniqueFieldsOnStep.map((k) => UNIQUE_FIELDS[k]).join(', ')}`);
+            return;
+        }
         setCurrentStep((prev) => Math.min(prev + 1, 4));
     };
 
     const handlePrev = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
-    const hasError = (name) => Boolean(fieldErrors[name]);
+    const hasError = (name) => Boolean(fieldErrors[name]) || Boolean(uniqueErrors[name]);
 
-    const fieldErrorMsg = (name) => (fieldErrors[name] ? 'Champ requis' : '');
+    const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? 'Champ requis' : '');
 
     const inputClass = (name) => `field transition-all duration-200 ${
         hasError(name)
@@ -179,6 +227,9 @@ const VehicleForm = () => {
         if (fieldErrors[name]) {
             setFieldErrors((prev) => ({ ...prev, [name]: false }));
         }
+        if (uniqueErrors[name]) {
+            setUniqueErrors((prev) => ({ ...prev, [name]: false }));
+        }
     };
 
     const handleImageChange = (e) => {
@@ -225,6 +276,28 @@ const VehicleForm = () => {
             toast.error(`Champs requis manquants : ${missingAll.map((m) => m.label).join(', ')}`);
             setCurrentStep(Math.min(...stepsWithErrors));
             return;
+        }
+
+        for (const field of Object.keys(UNIQUE_FIELDS)) {
+            const val = formData[field];
+            if (!val || !val.trim()) continue;
+            try {
+                const res = await api.get('vehicles/check-unique/', {
+                    params: {
+                        field,
+                        value: val.trim(),
+                        ...(isEditMode ? { exclude_id: id } : {}),
+                    },
+                });
+                if (res.data.available === false) {
+                    setUniqueErrors((prev) => ({ ...prev, [field]: `Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.` }));
+                    toast.error(`Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.`);
+                    setCurrentStep(1);
+                    return;
+                }
+            } catch (err) {
+                console.error("Erreur lors de la vérification de l'unicité", err);
+            }
         }
 
         setLoading(true);
@@ -450,10 +523,17 @@ const VehicleForm = () => {
                                         name="matricule"
                                         value={formData.matricule}
                                         onChange={handleChange}
+                                        onBlur={handleBlurUnique('matricule')}
                                         className={inputClass('matricule')}
                                         type="text"
                                         placeholder="Ex: 12345-A-50"
                                     />
+                                    {checkingUnique['matricule'] && (
+                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--on-surface-variant)' }}>
+                                            <span className="material-symbols-outlined text-[13px] animate-spin">progress_activity</span>
+                                            Vérification de l'unicité…
+                                        </p>
+                                    )}
                                     {fieldErrorMsg('matricule') && (
                                         <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                             <span className="material-symbols-outlined text-[13px]">error</span>
