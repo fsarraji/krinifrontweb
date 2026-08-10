@@ -37,6 +37,29 @@ const getRole = () => {
     }
 };
 
+const MenuButton = ({ client, items, menuId, setMenuId }) => {
+    const btnRef = useRef(null);
+    return (
+        <div className="inline-block">
+            <button
+                ref={btnRef}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === client.id ? null : client.id); }}
+                className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                style={{ color: 'var(--on-surface-variant)' }}
+                title="Options"
+            >
+                <span className="material-symbols-outlined text-[18px]">more_vert</span>
+            </button>
+            <DropdownMenu
+                open={menuId === client.id}
+                onClose={() => setMenuId(null)}
+                items={items}
+                anchor={btnRef.current}
+            />
+        </div>
+    );
+};
+
 const Clients = () => {
     const navigate = useNavigate();
     const [clients, setClients] = useState([]);
@@ -195,29 +218,6 @@ const Clients = () => {
             items.push({ key: 'supprimer', icon: 'delete', label: 'Supprimer', color: 'var(--danger)', destructive: true, onClick: () => handleDelete(c) });
         }
         return items;
-    };
-
-    const MenuButton = ({ client }) => {
-        const btnRef = useRef(null);
-        return (
-            <div className="inline-block">
-                <button
-                    ref={btnRef}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === client.id ? null : client.id); }}
-                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                    style={{ color: 'var(--on-surface-variant)' }}
-                    title="Options"
-                >
-                    <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                </button>
-                <DropdownMenu
-                    open={menuId === client.id}
-                    onClose={() => setMenuId(null)}
-                    items={buildMenuItems(client)}
-                    anchor={btnRef.current}
-                />
-            </div>
-        );
     };
 
     const ClientStatus = ({ client }) => (
@@ -409,17 +409,7 @@ const Clients = () => {
                                             </td>
                                             <td className="px-6 text-right">
                                                 <div className="flex items-center justify-end gap-1">
-                                                    {!client.is_deleted && (
-                                                        <Link
-                                                            to={`/clients/edit/${client.id}`}
-                                                            className="inline-flex items-center p-2 rounded-token hover:bg-slate-100 transition-colors"
-                                                            style={{ color: 'var(--on-surface-variant)' }}
-                                                            title="Modifier"
-                                                        >
-                                                            <span className="material-symbols-outlined text-[18px]">edit</span>
-                                                        </Link>
-                                                    )}
-                                                    <MenuButton client={client} />
+                                                    <MenuButton client={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
                                                 </div>
                                             </td>
                                         </tr>
@@ -487,7 +477,7 @@ const Clients = () => {
                                                 Gérer la fiche <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
-                                        <MenuButton client={client} />
+                                        <MenuButton client={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
                                     </div>
                                 </div>
                             );

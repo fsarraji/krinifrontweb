@@ -25,6 +25,29 @@ const getRole = () => {
     }
 };
 
+const MenuButton = ({ vehicle, items, menuId, setMenuId }) => {
+    const btnRef = useRef(null);
+    return (
+        <div className="inline-block">
+            <button
+                ref={btnRef}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === vehicle.id ? null : vehicle.id); }}
+                className="p-2 rounded-token hover:bg-slate-100 transition-colors"
+                style={{ color: 'var(--on-surface-variant)' }}
+                title="Options"
+            >
+                <span className="material-symbols-outlined text-[18px]">more_vert</span>
+            </button>
+            <DropdownMenu
+                open={menuId === vehicle.id}
+                onClose={() => setMenuId(null)}
+                items={items}
+                anchor={btnRef.current}
+            />
+        </div>
+    );
+};
+
 const Vehicles = () => {
     const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
@@ -167,29 +190,6 @@ const Vehicles = () => {
             items.push({ key: 'supprimer', icon: 'delete', label: 'Supprimer', color: 'var(--danger)', destructive: true, onClick: () => handleDelete(v) });
         }
         return items;
-    };
-
-    const MenuButton = ({ vehicle }) => {
-        const btnRef = useRef(null);
-        return (
-            <div className="inline-block">
-                <button
-                    ref={btnRef}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === vehicle.id ? null : vehicle.id); }}
-                    className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                    style={{ color: 'var(--on-surface-variant)' }}
-                    title="Options"
-                >
-                    <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                </button>
-                <DropdownMenu
-                    open={menuId === vehicle.id}
-                    onClose={() => setMenuId(null)}
-                    items={buildMenuItems(vehicle)}
-                    anchor={btnRef.current}
-                />
-            </div>
-        );
     };
 
     if (loading) {
@@ -386,17 +386,7 @@ const Vehicles = () => {
                                         </td>
                                         <td className="px-6 text-right">
                                             <div className="flex items-center justify-end gap-1">
-                                                {!vehicle.is_deleted && !vehicle.is_archived && (
-                                                    <Link
-                                                        to={`/vehicles/edit/${vehicle.id}`}
-                                                        className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                                                        style={{ color: 'var(--on-surface-variant)' }}
-                                                        title="Modifier"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
-                                                    </Link>
-                                                )}
-                                                <MenuButton vehicle={vehicle} />
+                                                <MenuButton vehicle={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
                                             </div>
                                         </td>
                                     </tr>
@@ -493,7 +483,7 @@ const Vehicles = () => {
                                                 Gérer le véhicule <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
-                                        <MenuButton vehicle={vehicle} />
+                                        <MenuButton vehicle={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
                                     </div>
                                 </div>
                             ))}

@@ -32,7 +32,9 @@ const DropdownMenu = ({ open, onClose, items, anchor }) => {
     useEffect(() => {
         if (!open) return;
         const handler = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) onClose();
+            const isInsideMenu = ref.current && ref.current.contains(e.target);
+            const isAnchor = anchor && anchor.contains && anchor.contains(e.target);
+            if (!isInsideMenu && !isAnchor) onClose();
         };
         const escHandler = (e) => { if (e.key === 'Escape') onClose(); };
         document.addEventListener('mousedown', handler);
