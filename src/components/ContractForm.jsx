@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api, { fetchAllPages } from '../api';
@@ -15,6 +15,7 @@ const getLocalDatetime = (date) => {
 
 const ContractForm = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -114,6 +115,21 @@ const ContractForm = () => {
             }
         };
         fetchData();
+    }, []);
+
+    useEffect(() => {
+        if (location.state?.vehicleId) {
+            api.get(`vehicles/${location.state.vehicleId}/`)
+                .then((res) => {
+                    const v = res.data;
+                    setSelectedVehicle(v);
+                    setFieldErrors(prev => ({ ...prev, vehicle: false }));
+                    setFormData(prev => ({ ...prev, vehicle: v.id, prix_par_jour: v.prix_par_jour || 0, km_sortie: v.kilometrage || 0 }));
+                    setCurrentStep(2);
+                })
+                .catch((error) => console.error("Erreur lors du chargement du véhicule présélectionné", error));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleVehicleSelect = (vehicle) => {

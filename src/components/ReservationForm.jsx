@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api, { fetchAllPages } from '../api';
@@ -8,6 +8,7 @@ import { toast } from './Toast';
 
 const ReservationForm = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -64,6 +65,20 @@ const ReservationForm = () => {
             }
         };
         fetchInitialData();
+    }, []);
+
+    useEffect(() => {
+        if (location.state?.vehicleId) {
+            api.get(`vehicles/${location.state.vehicleId}/`)
+                .then((res) => {
+                    const v = res.data;
+                    setSelectedVehicle(v);
+                    setFormData(prev => ({ ...prev, vehicle: v.id, prix_par_jour: v.prix_par_jour || 0 }));
+                    setStep(3);
+                })
+                .catch((error) => console.error("Erreur lors du chargement du véhicule présélectionné", error));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleVehicleSelect = (vehicle) => {

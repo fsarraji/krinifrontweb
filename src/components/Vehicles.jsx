@@ -178,8 +178,8 @@ const Vehicles = () => {
     const buildMenuItems = (v) => {
         const items = [];
         if (!v.is_deleted && !v.is_archived && v.statut === 'Available') {
-            items.push({ key: 'louer', icon: 'directions_car', label: 'Louer', color: 'var(--success)', onClick: () => navigate('/contracts/new') });
-            items.push({ key: 'reserver', icon: 'event', label: 'Réserver', color: 'var(--info)', onClick: () => navigate('/reservations/new') });
+            items.push({ key: 'louer', icon: 'directions_car', label: 'Louer', color: 'var(--success)', onClick: () => navigate('/contracts/new', { state: { vehicleId: v.id } }) });
+            items.push({ key: 'reserver', icon: 'event', label: 'Réserver', color: 'var(--info)', onClick: () => navigate('/reservations/new', { state: { vehicleId: v.id } }) });
         }
         items.push({ key: 'info', icon: 'info', label: 'Informations', onClick: () => setInfoVehicle(v) });
         if (v.is_deleted || v.is_archived) {
