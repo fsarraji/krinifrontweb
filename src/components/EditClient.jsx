@@ -4,6 +4,7 @@ import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstants';
+import { optimizeImageFile } from '../utils/imageUtils';
 
 const EditClient = () => {
     const { id } = useParams();
@@ -114,10 +115,11 @@ const EditClient = () => {
         }
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const { name, files: selectedFiles } = e.target;
         if (selectedFiles.length > 0) {
-            setFiles(prev => ({ ...prev, [name]: selectedFiles[0] }));
+            const optimized = await optimizeImageFile(selectedFiles[0]);
+            setFiles(prev => ({ ...prev, [name]: optimized }));
         }
     };
 

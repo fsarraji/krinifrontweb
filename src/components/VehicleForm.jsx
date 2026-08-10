@@ -6,6 +6,7 @@ import Dropdown from './Dropdown';
 import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
+import { optimizeImageFile } from '../utils/imageUtils';
 
 const VehicleForm = () => {
     const { id } = useParams();
@@ -232,11 +233,12 @@ const VehicleForm = () => {
         }
     };
 
-    const handleImageChange = (e) => {
+    const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            setImage(file);
-            setImagePreview(URL.createObjectURL(file));
+            const optimized = await optimizeImageFile(file);
+            setImage(optimized);
+            setImagePreview(URL.createObjectURL(optimized));
         }
     };
 

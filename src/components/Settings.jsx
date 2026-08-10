@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import api from '../api';
 import { jwtDecode } from 'jwt-decode';
+import { optimizeImageFile } from '../utils/imageUtils';
 
 const ToggleSwitch = ({ checked, onChange, disabled }) => (
     <label className="relative inline-flex items-center cursor-pointer">
@@ -568,9 +569,9 @@ const Settings = () => {
                                                 accept=".png,.jpg,.jpeg"
                                                 className="hidden"
                                                 disabled={!isOwner || saving}
-                                                onChange={(e) => {
+                                                onChange={async (e) => {
                                                     if (e.target.files && e.target.files[0]) {
-                                                        setLogoFile(e.target.files[0]);
+                                                        setLogoFile(await optimizeImageFile(e.target.files[0]));
                                                     }
                                                 }}
                                             />
@@ -615,9 +616,9 @@ const Settings = () => {
                                                 accept=".png,.jpg,.jpeg"
                                                 className="hidden"
                                                 disabled={!isOwner || saving}
-                                                onChange={(e) => {
+                                                onChange={async (e) => {
                                                     if (e.target.files && e.target.files[0]) {
-                                                        setCachetFile(e.target.files[0]);
+                                                        setCachetFile(await optimizeImageFile(e.target.files[0]));
                                                     }
                                                 }}
                                             />
