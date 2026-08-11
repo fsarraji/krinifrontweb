@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import api, { fetchAllPages } from '../api';
 import { resolveImage } from '../imageUrl';
+import { toast } from './Toast';
 
 const REFRESH_MS = 15000;
 const MOROCCO = [31.63, -7.98];
@@ -31,6 +32,18 @@ const STATUS = {
     offline: { label: 'Hors ligne', moving: false, color: '#94A3B8', dotBg: '#64748B', bg: '#F1F5F9', text: '#64748B' },
 };
 
+const COMMAND_LABELS = {
+    engineStop: { label: 'Couper le moteur', icon: 'power_settings_new', danger: true },
+    engineResume: { label: 'Réactiver le moteur', icon: 'play_circle' },
+    custom: { label: 'Commande personnalisée', icon: 'terminal' },
+    movement: { label: 'Alarme mouvement', icon: 'directions_run' },
+    positionPeriodic: { label: 'Position périodique', icon: 'update' },
+    setTimezone: { label: 'Fuseau horaire', icon: 'schedule' },
+    sos: { label: 'SOS', icon: 'sos' },
+    reset: { label: 'Réinitialiser', icon: 'restart_alt' },
+    reboot: { label: 'Redémarrer', icon: 'refresh' },
+};
+
 const deriveStatus = (v) => {
     if (v.statut === 'Maintenance') return STATUS.offline;
     const p = v.position;
@@ -49,6 +62,9 @@ const GpsTracking = () => {
     const [fleetOpen, setFleetOpen] = useState(true);
     const [route, setRoute] = useState(null);
     const [routeLoading, setRouteLoading] = useState(false);
+    const [commands, setCommands] = useState([]);
+    const [customCommand, setCustomCommand] = useState('');
+    const [commandLoading, setCommandLoading] = useState(false);
 
     const mapRef = useRef(null);
     const map = useRef(null);
@@ -159,6 +175,31 @@ const GpsTracking = () => {
     }, [vehicles, search]);
 
     const selected = useMemo(() => vehicles.find((v) => v.id === selectedId) || null, [vehicles, selectedId]);
+
+    useEffect(() => {
+        if (!selected?.traccar_device_id) {
+            setCommands([]);
+            return;
+        }
+        api.get('gps/commands/', { params: { vehicle_id: selected.id } })
+            .then((r) => setCommands(Array.isArray(r.data.commands) ? r.data.commands : []))
+            .catch(() => setCommands([]));
+    }, [selected]);
+
+    const sendCommand = async (type, attributes) => {
+        if (!selected?.traccar_device_id) return;
+        const meta = COMMAND_LABELS[type];
+        if (meta?.danger && !window.confirm(`${meta.label} ? Cette action peut immobiliser le véhicule.`)) return;
+        setCommandLoading(true);
+        try {
+            const { data } = await api.post('gps/commands/', { vehicle_id: selected.id, type, attributes: attributes || {} });
+            toast.success(`Commande « ${data.command?.type || type} » envoyée au dispositif.`);
+        } catch (error) {
+            toast.error(error.response?.data?.detail || `Échec de l'envoi de la commande « ${type} ».`);
+        } finally {
+            setCommandLoading(false);
+        }
+    };
 
     const showHistory = async () => {
         if (!selected || !selected.traccar_device_id) return;
@@ -506,6 +547,57 @@ const GpsTracking = () => {
                                                     Recentrer la carte
                                                 </button>
                                             </div>
+
+                                            {commands.length > 0 && (
+                                                <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--stroke)' }}>
+                                                    <p className="text-[12px] font-bold mb-2" style={{ color: 'var(--on-surface-variant)' }}>Commandes du boîtier</p>
+                                                    <div className="flex flex-col gap-2">
+                                                        {commands.map((t) => {
+                                                            const meta = COMMAND_LABELS[t] || { label: t, icon: 'terminal' };
+                                                            return (
+                                                                <button
+                                                                    key={t}
+                                                                    disabled={commandLoading}
+                                                                    onClick={() => sendCommand(t)}
+                                                                    className="flex items-center justify-center gap-2 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                    style={
+                                                                        meta.danger
+                                                                            ? { background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#B91C1C' }
+                                                                            : { background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }
+                                                                    }
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[16px]">{meta.icon}</span>
+                                                                    {meta.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        {commands.includes('custom') && (
+                                                            <div className="flex gap-2 mt-1">
+                                                                <input
+                                                                    className="input"
+                                                                    placeholder="Données custom (ex: hex)"
+                                                                    value={customCommand}
+                                                                    onChange={(e) => setCustomCommand(e.target.value)}
+                                                                    style={{ fontSize: 12 }}
+                                                                />
+                                                                <button
+                                                                    disabled={commandLoading || !customCommand.trim()}
+                                                                    onClick={() => sendCommand('custom', { data: customCommand.trim() })}
+                                                                    className="px-4 py-2 rounded-token text-[12px] font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                                                                    style={{ background: 'var(--primary-container)' }}
+                                                                >
+                                                                    Envoyer
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {commandLoading && (
+                                                        <p className="text-[11.5px] mt-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                                                            Envoi de la commande en cours…
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
                                         </details>
                                     </>
                                 )}
