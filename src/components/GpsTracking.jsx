@@ -552,7 +552,7 @@ const GpsTracking = () => {
                                                 <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--stroke)' }}>
                                                     <p className="text-[12px] font-bold mb-2" style={{ color: 'var(--on-surface-variant)' }}>Commandes du boîtier</p>
                                                     <div className="flex flex-col gap-2">
-                                                        {commands.map((t) => {
+                                                        {commands.filter((t) => t !== 'custom').map((t) => {
                                                             const meta = COMMAND_LABELS[t] || { label: t, icon: 'terminal' };
                                                             return (
                                                                 <button
@@ -578,6 +578,11 @@ const GpsTracking = () => {
                                                                     placeholder="Données custom (ex: hex)"
                                                                     value={customCommand}
                                                                     onChange={(e) => setCustomCommand(e.target.value)}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter' && customCommand.trim() && !commandLoading) {
+                                                                            sendCommand('custom', { data: customCommand.trim() });
+                                                                        }
+                                                                    }}
                                                                     style={{ fontSize: 12 }}
                                                                 />
                                                                 <button
