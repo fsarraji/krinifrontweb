@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import NotificationCenter from './NotificationCenter';
+import UserMenu from './ui/UserMenu';
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -63,15 +64,6 @@ const Layout = ({ children }) => {
         }
     ];
 
-    const getInitials = (name) => {
-        if (!name) return 'FC';
-        const parts = name.trim().split(/\s+/);
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return name.slice(0, 2).toUpperCase();
-    };
-
     return (
         <div className="flex min-h-screen antialiased" style={{ background: 'var(--slate-bg)', color: 'var(--on-background)' }}>
             {/* Sidebar Sticky & Collapsible */}
@@ -105,8 +97,8 @@ const Layout = ({ children }) => {
                         </div>
                         {!isCollapsed && (
                             <div className="overflow-hidden min-w-0">
-                                <h1 className="font-bold text-[15px] tracking-tight leading-none truncate" style={{ color: 'var(--on-surface)' }} title="KRINI">
-                                    KRINI
+                                <h1 className="font-bold text-[15px] tracking-tight leading-none truncate" style={{ color: 'var(--on-surface)' }} title="KRINICAR">
+                                    KRINICAR
                                 </h1>
                                 <p className="text-[10.5px] font-semibold uppercase tracking-wide mt-1 truncate" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
                                     {agencyName}
@@ -174,30 +166,8 @@ const Layout = ({ children }) => {
                         </div>
                     </button>
 
-                    {/* Profile Card */}
-                    <div className="relative group">
-                        <div className={`flex items-center gap-3 px-2 py-2 rounded-token card ${isCollapsed ? 'justify-center' : ''}`}>
-                            <div className="avatar flex-shrink-0" style={{ background: 'var(--primary-container)', color: '#fff' }}>
-                                {getInitials(userName)}
-                            </div>
-                            {!isCollapsed && (
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--on-surface)' }}>{userName}</p>
-                                    <p className="text-[11px] font-medium truncate" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{userRole || "Admin"}</p>
-                                </div>
-                            )}
-                            {!isCollapsed && (
-                                <button
-                                    onClick={() => { localStorage.clear(); window.location.href = '/login'; }}
-                                    title="Se déconnecter"
-                                    className="material-symbols-outlined text-[18px] ml-auto hover:text-rose-600 transition-colors"
-                                    style={{ color: 'var(--on-surface-variant)' }}
-                                >
-                                    logout
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                    {/* Profile Card / User Menu */}
+                    <UserMenu userName={userName} userRole={userRole} agencyName={agencyName} collapsed={isCollapsed} />
                 </div>
             </aside>
 

@@ -26,9 +26,11 @@ export const STATUS_MAP = {
 };
 
 export default function StatusBadge({ status, label, variant }) {
-  const resolved = STATUS_MAP[status];
+  // Lookup insensible à la casse : 'AVAILABLE'/'available' -> STATUS_MAP['Available'].
+  const key = String(status ?? '').trim();
+  const resolved = key && (STATUS_MAP[key] || Object.entries(STATUS_MAP).find(([k]) => k.toLowerCase() === key.toLowerCase())?.[1]);
   const finalVariant = variant || resolved?.variant || 'neutral';
-  const finalLabel = label || resolved?.label || status;
+  const finalLabel = label || resolved?.label || key || '—';
   const v = VARIANTS[finalVariant];
 
   return (

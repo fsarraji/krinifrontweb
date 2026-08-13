@@ -1,5 +1,6 @@
 import React from 'react';
 import { resolveImage } from '../../imageUrl';
+import { normalizeVehicleStatut } from '../../utils/vehicleStatus';
 
 const fmt = (v, suffix = '') => (v === null || v === undefined || v === '' ? '—' : `${v}${suffix}`);
 const fmtNum = (v, suffix = '') => (v === null || v === undefined ? '—' : `${Number(v).toLocaleString('fr-FR')}${suffix}`);
@@ -33,11 +34,16 @@ const Section = ({ title, children }) => (
 const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
     if (!isOpen || !vehicle) return null;
 
+    const status = normalizeVehicleStatut(vehicle.statut);
     const statusInfo = vehicle.is_deleted
         ? { label: 'Supprimé', variant: 'danger' }
         : vehicle.is_archived
             ? { label: 'Archivé', variant: 'neutral' }
-            : { label: vehicle.statut === 'Available' ? 'Disponible' : vehicle.statut === 'Rented' ? 'Loué' : 'Maintenance', variant: vehicle.statut === 'Available' ? 'success' : vehicle.statut === 'Rented' ? 'info' : 'warning' };
+            : status === 'Rented'
+                ? { label: 'Loué', variant: 'info' }
+                : status === 'Maintenance'
+                    ? { label: 'Maintenance', variant: 'warning' }
+                    : { label: 'Disponible', variant: 'success' };
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">

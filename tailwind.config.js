@@ -68,6 +68,7 @@ export default {
       boxShadow: {
         l1: '0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02)',
         l2: '0px 4px 6px -1px rgba(0,0,0,0.08), 0px 2px 4px -2px rgba(0,0,0,0.05)',
+        soft: '0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.04)',
       },
     },
   },

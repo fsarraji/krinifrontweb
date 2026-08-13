@@ -7,6 +7,7 @@ import { resolveImage } from '../imageUrl';
 import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
+import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 import DropdownMenu from './ui/DropdownMenu';
 import VehicleInfoModal from './ui/VehicleInfoModal';
 import ArchiveVehicleModal from './ui/ArchiveVehicleModal';
@@ -95,8 +96,8 @@ const Vehicles = () => {
     useEffect(() => { setCurrentPage(1); }, [search, statusFilter]);
 
     const totalFleet = vehicles.length;
-    const rentedCount = vehicles.filter(v => v.statut === 'Rented').length;
-    const maintenanceCount = vehicles.filter(v => v.statut === 'Maintenance').length;
+    const rentedCount = vehicles.filter(v => normalizeVehicleStatut(v.statut) === 'Rented').length;
+    const maintenanceCount = vehicles.filter(v => normalizeVehicleStatut(v.statut) === 'Maintenance').length;
     const avgDailyRate = totalFleet > 0
         ? (vehicles.reduce((acc, v) => acc + parseFloat(v.prix_par_jour), 0) / totalFleet).toFixed(2)
         : "0.00";
@@ -108,7 +109,7 @@ const Vehicles = () => {
             .some(x => x.toLowerCase().includes(q));
         if (statusFilter === 'archived') return matchSearch && v.is_archived;
         if (statusFilter === 'deleted') return matchSearch && v.is_deleted;
-        if (statusFilter !== 'ALL' && v.statut !== statusFilter) return false;
+        if (statusFilter !== 'ALL' && normalizeVehicleStatut(v.statut) !== statusFilter) return false;
         if (statusFilter !== 'archived' && statusFilter !== 'deleted' && (v.is_archived || v.is_deleted)) return false;
         return matchSearch;
     });
@@ -177,7 +178,7 @@ const Vehicles = () => {
 
     const buildMenuItems = (v) => {
         const items = [];
-        if (!v.is_deleted && !v.is_archived && v.statut === 'Available') {
+        if (!v.is_deleted && !v.is_archived && normalizeVehicleStatut(v.statut) === 'Available') {
             items.push({ key: 'louer', icon: 'directions_car', label: 'Louer', color: 'var(--success)', onClick: () => navigate('/contracts/new', { state: { vehicleId: v.id } }) });
             items.push({ key: 'reserver', icon: 'event', label: 'Réserver', color: 'var(--info)', onClick: () => navigate('/reservations/new', { state: { vehicleId: v.id } }) });
         }

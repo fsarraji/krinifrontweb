@@ -115,7 +115,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
         const perm = await Notification.requestPermission();
         setPushPermission(perm);
         if (perm === 'granted') {
-            new Notification("Notifications Krini Activées 🚀", {
+            new Notification("Notifications Krinicar Activées 🚀", {
                 body: "Vous recevrez désormais les alerte de réservations et d'assurance en temps réel.",
                 icon: "/favicon.ico"
             });

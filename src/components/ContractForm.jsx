@@ -8,6 +8,7 @@ import DamageSelector from './DamageSelector';
 import FuelGaugeSelector from './FuelGaugeSelector';
 import { toast } from './Toast';
 import DatePicker from './ui/DatePicker';
+import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 
 const getLocalDatetime = (date) => {
     const tzoffset = date.getTimezoneOffset() * 60000;
@@ -99,7 +100,7 @@ const ContractForm = () => {
                     api.get('agency/settings/').catch(() => ({ data: { caution_active: true, caution_montant: 1500 } }))
                 ]);
                 // On ne garde que les véhicules disponibles pour un nouveau contrat
-                setVehicles(vehicles.filter(v => v.statut === 'Available'));
+                setVehicles(vehicles.filter(v => normalizeVehicleStatut(v.statut) === 'Available'));
                 setClients(clients);
                 
                 const settings = settingsRes.data;

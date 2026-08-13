@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
+import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 
 const Calendar = () => {
     const navigate = useNavigate();
@@ -99,9 +100,9 @@ const Calendar = () => {
             if (!matchSearch) return false;
 
             const vehicleContracts = contracts.filter(c => c.vehicle === v.id && c.statut !== 'ANNULE');
-            const isRented = v.statut === 'Rented' || vehicleContracts.some(c => c.statut === 'EN_COURS');
+            const isRented = normalizeVehicleStatut(v.statut) === 'Rented' || vehicleContracts.some(c => c.statut === 'EN_COURS');
             const isReserved = vehicleContracts.some(c => c.statut === 'RESERVE');
-            const isMaintenance = v.statut === 'Maintenance';
+            const isMaintenance = normalizeVehicleStatut(v.statut) === 'Maintenance';
             const isAvailable = !isRented && !isReserved && !isMaintenance;
 
             if (statusFilter === 'Rented') return isRented;
@@ -229,7 +230,7 @@ const Calendar = () => {
                         <div className="divide-y divide-slate-100">
                             {filteredVehicles.map((vehicle) => {
                                 const vehicleContracts = contracts.filter(c => c.vehicle === vehicle.id && c.statut !== 'ANNULE');
-                                const isMaintenance = vehicle.statut === 'Maintenance';
+                                const isMaintenance = normalizeVehicleStatut(vehicle.statut) === 'Maintenance';
 
                                 return (
                                     <div key={vehicle.id} className="flex h-[76px] group hover:bg-slate-50/70 transition-colors">

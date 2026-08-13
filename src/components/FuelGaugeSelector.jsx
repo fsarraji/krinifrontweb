@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const FuelGaugeSelector = ({ value, onChange }) => {
+const FuelGaugeSelector = ({ value, onChange, compact = false }) => {
     // value expected format: "2/8", "0/8", etc.
     const [isDragging, setIsDragging] = useState(false);
     const svgRef = useRef(null);
@@ -75,7 +75,7 @@ const FuelGaugeSelector = ({ value, onChange }) => {
             if (e.pointerId && svgRef.current) {
                 svgRef.current.releasePointerCapture(e.pointerId);
             }
-        } catch (err) {
+        } catch {
             // ignore capture release errors
         }
     };
@@ -129,12 +129,12 @@ const FuelGaugeSelector = ({ value, onChange }) => {
     const ty = cy + tailLength * Math.sin(radNeedle);
 
     return (
-        <div className="flex flex-col items-center justify-center bg-slate-50 p-2 rounded-xl border border-slate-100 relative select-none touch-none w-full max-w-sm mx-auto shadow-inner">
+        <div className={`flex flex-col items-center justify-center bg-slate-50 rounded-xl border border-slate-100 relative select-none touch-none w-full mx-auto shadow-inner ${compact ? 'p-1 max-w-[150px]' : 'p-2 max-w-sm'}`}>
             <svg 
                 ref={svgRef}
                 viewBox="0 0 200 120" 
                 className="w-full h-auto cursor-pointer focus:outline-none"
-                style={{ maxHeight: '140px' }}
+                style={{ maxHeight: compact ? '85px' : '140px' }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -145,8 +145,8 @@ const FuelGaugeSelector = ({ value, onChange }) => {
                 <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4 4" />
 
                 {/* Letters E and F */}
-                <text x="30" y="115" fontSize="22" fontFamily="Inter, sans-serif" fontWeight="900" fill="#0f172a" textAnchor="middle">E</text>
-                <text x="170" y="115" fontSize="22" fontFamily="Inter, sans-serif" fontWeight="900" fill="#0f172a" textAnchor="middle">F</text>
+                <text x="30" y="115" fontSize={compact ? 13 : 22} fontFamily="Inter, sans-serif" fontWeight="900" fill="#0f172a" textAnchor="middle">E</text>
+                <text x="170" y="115" fontSize={compact ? 13 : 22} fontFamily="Inter, sans-serif" fontWeight="900" fill="#0f172a" textAnchor="middle">F</text>
 
                 {/* Ticks */}
                 {ticks}
@@ -156,29 +156,29 @@ const FuelGaugeSelector = ({ value, onChange }) => {
                     x1={tx} y1={ty} 
                     x2={nx} y2={ny} 
                     stroke="#ef4444" 
-                    strokeWidth="5" 
+                    strokeWidth={compact ? 4 : 5} 
                     strokeLinecap="round" 
                     style={{ transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
                 />
                 
                 {/* Needle center dot */}
-                <circle cx={cx} cy={cy} r="10" fill="#0f172a" />
+                <circle cx={cx} cy={cy} r={compact ? 8 : 10} fill="#0f172a" />
             </svg>
             
             {/* Fuel Icon in center */}
-            <div className={`absolute top-[35%] left-1/2 -translate-x-1/2 pointer-events-none transition-colors duration-300 ${currentLevel <= 1 ? 'text-red-500' : 'text-slate-800'}`}>
-                <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <div className={`absolute left-1/2 -translate-x-1/2 pointer-events-none transition-colors duration-300 ${compact ? 'top-[32%]' : 'top-[35%]'} ${currentLevel <= 1 ? 'text-red-500' : 'text-slate-800'}`}>
+                <span className={`material-symbols-outlined ${compact ? 'text-lg' : 'text-4xl'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
                     local_gas_station
                 </span>
             </div>
 
             {/* Display fraction text */}
-            <div className="absolute top-2 right-2 px-2.5 py-1 bg-white border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 shadow-sm pointer-events-none font-mono">
+            <div className={`absolute right-1 bg-white border border-slate-200 rounded-md font-bold text-slate-600 shadow-sm pointer-events-none font-mono ${compact ? 'top-0.5 px-1 py-px text-[7px]' : 'top-2 right-2 px-2.5 py-1 text-[10px]'}`}>
                 {currentLevel}/8
             </div>
             
             {/* Quick helper text */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] text-slate-400 font-medium bg-white/90 px-3 py-0.5 rounded-full pointer-events-none uppercase tracking-wider">
+            <div className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 text-slate-400 font-medium bg-white/90 rounded-full pointer-events-none uppercase tracking-wider ${compact ? 'text-[6px] px-1.5 py-px' : 'bottom-2 text-[9px] px-3 py-0.5'}`}>
                 Glisser ou Cliquer
             </div>
         </div>

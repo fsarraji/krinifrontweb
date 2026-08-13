@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import api, { fetchAllPages } from '../api';
 import { resolveImage } from '../imageUrl';
 import { toast } from './Toast';
+import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 
 const REFRESH_MS = 15000;
 const MOROCCO = [31.63, -7.98];
@@ -45,7 +46,8 @@ const COMMAND_LABELS = {
 };
 
 const deriveStatus = (v) => {
-    if (v.statut === 'Maintenance') return STATUS.offline;
+    if (normalizeVehicleStatut(v.statut) === 'Maintenance') return STATUS.offline;
+    if (v.gps_status === 'offline') return STATUS.offline;
     const p = v.position;
     if (!p) return STATUS.offline;
     const moving = p.moving ?? p.speed_kph > 0;
@@ -66,35 +68,48 @@ const GpsTracking = () => {
     const [customCommand, setCustomCommand] = useState('');
     const [commandLoading, setCommandLoading] = useState(false);
 
+    // Gestion des dispositifs GPS
+    const [devicesOpen, setDevicesOpen] = useState(false);
+    const [devices, setDevices] = useState([]);
+    const [devicesLoading, setDevicesLoading] = useState(false);
+    const [newDeviceImei, setNewDeviceImei] = useState('');
+    const [newDeviceName, setNewDeviceName] = useState('');
+    const [addingDevice, setAddingDevice] = useState(false);
+    const [deletingDeviceId, setDeletingDeviceId] = useState(null);
+    const [assocMap, setAssocMap] = useState({});
+    const [associatingDeviceId, setAssociatingDeviceId] = useState(null);
+    const [dissociatingVehicle, setDissociatingVehicle] = useState(false);
+
     const mapRef = useRef(null);
     const map = useRef(null);
     const markerLayer = useRef(null);
     const routeLayer = useRef(null);
     const scrollRef = useRef(null);
 
-    useEffect(() => {
-        const load = async () => {
+    const loadFleet = async () => {
+        try {
+            const { data } = await api.get('gps/positions/');
+            setTracking(Boolean(data.tracking));
+            setVehicles(data.vehicles || []);
+        } catch (error) {
+            console.error("Erreur lors de la récupération des positions GPS", error);
+            // Repli : si l'endpoint GPS échoue, on affiche quand même la flotte
+            // (sans positions) pour ne pas laisser la liste vide.
             try {
-                const { data } = await api.get('gps/positions/');
-                setTracking(Boolean(data.tracking));
-                setVehicles(data.vehicles || []);
-            } catch (error) {
-                console.error("Erreur lors de la récupération des positions GPS", error);
-                // Repli : si l'endpoint GPS échoue, on affiche quand même la flotte
-                // (sans positions) pour ne pas laisser la liste vide.
-                try {
-                    const vehicles = await fetchAllPages('vehicles/');
-                    setVehicles(Array.isArray(vehicles) ? vehicles : []);
-                    setTracking(false);
-                } catch (e2) {
-                    console.error("Erreur lors du repli sur la liste des véhicules", e2);
-                }
-            } finally {
-                setLoading(false);
+                const vehicles = await fetchAllPages('vehicles/');
+                setVehicles(Array.isArray(vehicles) ? vehicles : []);
+                setTracking(false);
+            } catch (e2) {
+                console.error("Erreur lors du repli sur la liste des véhicules", e2);
             }
-        };
-        load();
-        const timer = setInterval(load, REFRESH_MS);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadFleet();
+        const timer = setInterval(loadFleet, REFRESH_MS);
         return () => clearInterval(timer);
     }, []);
 
@@ -230,6 +245,128 @@ const GpsTracking = () => {
         }
     };
 
+    const openDevices = () => {
+        setDevicesOpen(true);
+        loadDevices();
+    };
+
+    const loadDevices = async () => {
+        setDevicesLoading(true);
+        try {
+            const { data } = await api.get('gps/devices/');
+            setDevices(Array.isArray(data.devices) ? data.devices : []);
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Impossible de charger les dispositifs GPS.');
+        } finally {
+            setDevicesLoading(false);
+        }
+    };
+
+    const addDevice = async () => {
+        const imei = newDeviceImei.trim();
+        if (!imei) {
+            toast.error("Renseignez l'ID/IMEI du dispositif.");
+            return;
+        }
+        setAddingDevice(true);
+        try {
+            const res = await api.post('gps/devices/', {
+                name: newDeviceName.trim() || `Dispositif ${imei}`,
+                uniqueId: imei,
+            });
+            const dev = res.data;
+            setDevices((prev) => (prev.some((d) => String(d.id) === String(dev.id)) ? prev : [...prev, dev]));
+            setNewDeviceImei('');
+            setNewDeviceName('');
+            toast.success('Dispositif ajouté au serveur Traccar.');
+        } catch (error) {
+            toast.error(error.response?.data?.detail || "Impossible d'ajouter le dispositif sur Traccar.");
+        } finally {
+            setAddingDevice(false);
+        }
+    };
+
+    const deleteDevice = async (device) => {
+        if (!window.confirm(`Supprimer le dispositif « ${device.name || `#${device.id}`} » (#${device.id}) du serveur Traccar ?`)) return;
+        setDeletingDeviceId(device.id);
+        try {
+            await api.delete('gps/devices/', { params: { device_id: device.id } });
+            setDevices((prev) => prev.filter((d) => d.id !== device.id));
+            toast.success('Dispositif supprimé.');
+            loadFleet();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Échec de la suppression du dispositif.');
+        } finally {
+            setDeletingDeviceId(null);
+        }
+    };
+
+    const associateDevice = async (device, vehicleId) => {
+        if (!vehicleId) {
+            toast.error('Sélectionnez un véhicule.');
+            return;
+        }
+        setAssociatingDeviceId(device.id);
+        try {
+            await api.post('gps/devices/associate/', { device_id: device.id, vehicle_id: vehicleId });
+            toast.success('Dispositif associé au véhicule.');
+            await loadDevices();
+            loadFleet();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || "Impossible d'associer le dispositif.");
+        } finally {
+            setAssociatingDeviceId(null);
+        }
+    };
+
+    const dissociateDevice = async (device) => {
+        if (!window.confirm(`Dissocier le dispositif « ${device.name || `#${device.id}`} » du véhicule « ${device.vehicle_matricule || `#${device.vehicle_id}`} » ?`)) return;
+        setAssociatingDeviceId(device.id);
+        try {
+            await api.post('gps/devices/associate/', { device_id: device.id });
+            toast.success('Dispositif dissocié du véhicule.');
+            await loadDevices();
+            loadFleet();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Impossible de dissocier le dispositif.');
+        } finally {
+            setAssociatingDeviceId(null);
+        }
+    };
+
+    const dissociateSelectedVehicle = async () => {
+        if (!selected?.traccar_device_id) return;
+        if (!window.confirm(`Dissocier le boîtier #${selected.traccar_device_id} du véhicule « ${selected.matricule} » ? Le véhicule n'apparaîtra plus sur le suivi GPS.`)) return;
+        setDissociatingVehicle(true);
+        try {
+            await api.post('gps/devices/associate/', { device_id: selected.traccar_device_id });
+            toast.success('Boîtier dissocié du véhicule.');
+            setView('list');
+            setSelectedId(null);
+            loadFleet();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Impossible de dissocier le boîtier.');
+        } finally {
+            setDissociatingVehicle(false);
+        }
+    };
+
+    const dissociateAllDevices = async () => {
+        const linked = devices.filter((d) => d.vehicle_id != null).length;
+        if (!window.confirm(`Dissocier les ${linked} dispositifs associés de tous les véhicules ? Les véhicules n'apparaîtront plus sur le suivi GPS (les boîtiers restent sur le serveur Traccar).`)) return;
+        setAssociatingDeviceId('all');
+        try {
+            await api.post('gps/devices/associate/', { dissociate_all: true });
+            toast.success('Tous les dispositifs ont été dissociés.');
+            await loadDevices();
+            loadFleet();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Impossible de dissocier tous les dispositifs.');
+        } finally {
+            setAssociatingDeviceId(null);
+        }
+    };
+
     const movingCount = vehicles.filter((v) => deriveStatus(v).moving).length;
     const offlineCount = vehicles.length - movingCount;
 
@@ -289,6 +426,14 @@ const GpsTracking = () => {
                             <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)' }}>format_list_bulleted</span>
                         </button>
                     )}
+                    <button
+                        onClick={openDevices}
+                        className="card rounded-token shadow-l1 h-10 px-4 flex items-center gap-2 hover:opacity-80"
+                        title="Gérer les dispositifs GPS (ajouter, supprimer, associer)"
+                    >
+                        <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>sensors</span>
+                        <span className="text-[12.5px] font-bold" style={{ color: 'var(--on-surface)' }}>Dispositifs</span>
+                    </button>
                     <span className="badge" style={{ background: 'var(--success-bg)', color: '#166534' }}>
                         <span className="badge-dot pulse" style={{ background: 'var(--success)' }}></span>
                         {movingCount} en mouvement
@@ -508,6 +653,20 @@ const GpsTracking = () => {
                                                 )}
                                             </div>
 
+                                            {selected.traccar_device_id != null && (
+                                                <button
+                                                    onClick={dissociateSelectedVehicle}
+                                                    disabled={dissociatingVehicle}
+                                                    className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    style={{ background: 'var(--warning-bg)', border: '1px solid #FCD34D', color: 'var(--warning)' }}
+                                                >
+                                                    <span className={`material-symbols-outlined text-[16px] ${dissociatingVehicle ? 'animate-spin' : ''}`}>
+                                                        {dissociatingVehicle ? 'progress_activity' : 'link_off'}
+                                                    </span>
+                                                    {dissociatingVehicle ? 'Dissociation en cours…' : 'Dissocier le boîtier du véhicule'}
+                                                </button>
+                                            )}
+
                                             {routeLoading && <p className="text-[12px] mt-4" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Chargement de l'historique…</p>}
                                             {route && !routeLoading && (
                                                 <p className="text-[12px] font-semibold mt-4" style={{ color: 'var(--primary-container)' }}>
@@ -661,6 +820,211 @@ const GpsTracking = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Modal de gestion des dispositifs GPS */}
+            {devicesOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    style={{ background: 'rgba(15,23,42,.55)', backdropFilter: 'blur(2px)' }}
+                    onClick={() => setDevicesOpen(false)}
+                >
+                    <div
+                        className="card rounded-token shadow-l2 w-full max-w-2xl overflow-hidden flex flex-col max-h-[88vh]"
+                        style={{ background: 'var(--card-white)' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="px-6 py-5 flex items-center justify-between flex-shrink-0" style={{ borderBottom: '1px solid var(--stroke)' }}>
+                            <h3 className="font-bold text-[17px] flex items-center gap-2" style={{ color: 'var(--on-surface)' }}>
+                                <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--primary-container)' }}>sensors</span>
+                                Dispositifs GPS
+                                <span className="font-semibold text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>· {devices.length}</span>
+                            </h3>
+                            <button
+                                onClick={() => setDevicesOpen(false)}
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
+                                style={{ color: 'var(--on-surface-variant)' }}
+                                title="Fermer"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            <div className="stat-tile">
+                                <p className="text-[12px] font-bold mb-3" style={{ color: 'var(--on-surface)' }}>Ajouter un dispositif</p>
+                                <div className="grid grid-cols-2 gap-2 items-end">
+                                    <div>
+                                        <label className="block text-[10.5px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                                            ID / IMEI <span style={{ color: '#DC2626' }}>*</span>
+                                        </label>
+                                        <input
+                                            className="input"
+                                            value={newDeviceImei}
+                                            onChange={(e) => setNewDeviceImei(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') addDevice(); }}
+                                            placeholder="Ex: 862345048765432"
+                                            style={{ fontSize: 12.5 }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10.5px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                                            Nom (optionnel)
+                                        </label>
+                                        <input
+                                            className="input"
+                                            value={newDeviceName}
+                                            onChange={(e) => setNewDeviceName(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') addDevice(); }}
+                                            placeholder="Ex: STEPWAY"
+                                            style={{ fontSize: 12.5 }}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={addDevice}
+                                        disabled={addingDevice}
+                                        className="col-span-2 inline-flex items-center justify-center gap-2 py-2.5 rounded-token text-[12.5px] font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                                        style={{ background: 'var(--primary-container)' }}
+                                    >
+                                        <span className={`material-symbols-outlined text-[16px] ${addingDevice ? 'animate-spin' : ''}`}>
+                                            {addingDevice ? 'progress_activity' : 'add'}
+                                        </span>
+                                        {addingDevice ? 'Ajout en cours…' : 'Ajouter au serveur Traccar'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-[12px] font-bold" style={{ color: 'var(--on-surface)' }}>Dispositifs du serveur Traccar</p>
+                                    <div className="flex items-center gap-1.5">
+                                        {devices.some((d) => d.vehicle_id != null) && (
+                                            <button
+                                                onClick={dissociateAllDevices}
+                                                disabled={associatingDeviceId != null || dissociatingVehicle}
+                                                className="text-[11px] font-bold px-3 py-1.5 rounded-token flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                style={{ background: 'var(--warning-bg)', border: '1px solid #FCD34D', color: 'var(--warning)' }}
+                                                title="Dissocier tous les dispositifs des véhicules"
+                                            >
+                                                <span className="material-symbols-outlined text-[13px]">link_off</span>
+                                                Tout dissocier
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={loadDevices}
+                                            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
+                                            style={{ color: 'var(--on-surface-variant)' }}
+                                            title="Actualiser"
+                                        >
+                                            <span className={`material-symbols-outlined text-[15px] ${devicesLoading ? 'animate-spin' : ''}`}>refresh</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {devicesLoading && (
+                                    <div className="space-y-2">
+                                        {Array.from({ length: 2 }).map((_, i) => (
+                                            <div key={i} className="h-16 rounded-token animate-pulse" style={{ background: 'var(--slate-bg)' }}></div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {!devicesLoading && devices.length === 0 && (
+                                    <p className="text-[12.5px] font-semibold text-center py-6" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                                        Aucun dispositif — ajoutez-en un ci-dessus.
+                                    </p>
+                                )}
+
+                                <div className="space-y-2">
+                                    {devices.map((d) => {
+                                        const online = d.status === 'online';
+                                        const associated = d.vehicle_id != null;
+                                        const chosen = assocMap[d.id] ?? (associated ? String(d.vehicle_id) : '');
+                                        return (
+                                            <div key={d.id} className="rounded-token p-3.5" style={{ border: '1px solid var(--stroke)', background: 'var(--slate-bg)' }}>
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-[13px] font-bold truncate" style={{ color: 'var(--on-surface)' }}>
+                                                                {d.name || `Dispositif #${d.id}`}
+                                                            </p>
+                                                            <span className="badge" style={{ background: online ? 'var(--success-bg)' : '#F1F5F9', color: online ? '#166534' : '#64748B' }}>
+                                                                <span className="badge-dot" style={{ background: online ? 'var(--success)' : '#64748B' }}></span>
+                                                                {online ? 'En ligne' : 'Hors ligne'}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[11px] mono mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
+                                                            #{d.id} · {d.uniqueId || 'IMEI inconnu'}
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => deleteDevice(d)}
+                                                        disabled={deletingDeviceId === d.id}
+                                                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                                                        style={{ color: '#DC2626' }}
+                                                        title="Supprimer le dispositif"
+                                                    >
+                                                        <span className={`material-symbols-outlined text-[17px] ${deletingDeviceId === d.id ? 'animate-spin' : ''}`}>
+                                                            {deletingDeviceId === d.id ? 'progress_activity' : 'delete'}
+                                                        </span>
+                                                    </button>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 mt-2.5">
+                                                    {associated ? (
+                                                        <>
+                                                            <span className="flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: '#166534' }}>
+                                                                <span className="material-symbols-outlined text-[13px]">link</span>
+                                                                Associé à {d.vehicle_matricule || `Véhicule #${d.vehicle_id}`}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => dissociateDevice(d)}
+                                                                disabled={associatingDeviceId === d.id}
+                                                                className="ml-auto text-[11px] font-bold px-3 py-1.5 rounded-token disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                style={{ background: 'var(--warning-bg)', border: '1px solid #FCD34D', color: 'var(--warning)' }}
+                                                            >
+                                                                Dissocier
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="flex items-center gap-1.5 text-[11.5px] font-semibold flex-shrink-0" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
+                                                                <span className="material-symbols-outlined text-[13px]">link_off</span>
+                                                                Non associé
+                                                            </span>
+                                                            <select
+                                                                value={chosen}
+                                                                onChange={(e) => setAssocMap((prev) => ({ ...prev, [d.id]: e.target.value }))}
+                                                                className="flex-1 min-w-0 input"
+                                                                style={{ height: 30, fontSize: 12, padding: '0 8px' }}
+                                                            >
+                                                                <option value="">Associer à un véhicule…</option>
+                                                                {vehicles.map((v) => (
+                                                                    <option key={v.id} value={v.id}>
+                                                                        {(v.marque_name || 'Véhicule') + ' ' + (v.modele_name || '')} — {v.matricule}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            <button
+                                                                onClick={() => associateDevice(d, chosen)}
+                                                                disabled={associatingDeviceId === d.id || !chosen}
+                                                                className="h-[30px] px-3 rounded-token text-[11.5px] font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 flex-shrink-0"
+                                                                style={{ background: 'var(--primary-container)' }}
+                                                            >
+                                                                <span className="material-symbols-outlined text-[14px]">link</span>
+                                                                Associer
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

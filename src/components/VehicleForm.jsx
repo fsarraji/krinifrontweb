@@ -28,15 +28,10 @@ const VehicleForm = () => {
         date_visite_technique: '',
         prochain_vidange_km: 0,
         tarif_km_extra: '',
-        traccar_device_id: '',
-        gps_imei: '',
-        sim_number: '',
-        sim_operator: '',
     });
 
     const [brands, setBrands] = useState([]);
     const [models, setModels] = useState([]);
-    const [traccarDevices, setTraccarDevices] = useState([]);
     const [fetching, setFetching] = useState(isEditMode);
 
     const [image, setImage] = useState(null);
@@ -47,13 +42,12 @@ const VehicleForm = () => {
     const [fieldErrors, setFieldErrors] = useState({});
     const [uniqueErrors, setUniqueErrors] = useState({});
     const [checkingUnique, setCheckingUnique] = useState({});
-    const [syncingDevice, setSyncingDevice] = useState(false);
 
     const steps = [
-        { num: 1, label: 'Identification', icon: 'fingerprint' },
-        { num: 2, label: 'Spécifications', icon: 'settings_input_component' },
-        { num: 3, label: 'Tarification', icon: 'payments' },
-        { num: 4, label: 'Validité & Statut', icon: 'verified_user' },
+        { num: 1, label: 'Identification', icon: 'fingerprint', subtitle: 'Informations générales' },
+        { num: 2, label: 'Spécifications', icon: 'settings_input_component', subtitle: 'Détails techniques' },
+        { num: 3, label: 'Tarification', icon: 'payments', subtitle: 'Prix et options' },
+        { num: 4, label: 'Validité & Statut', icon: 'verified_user', subtitle: 'Documents et disponibilité' },
     ];
 
     const requiredFields = {
@@ -148,23 +142,34 @@ const VehicleForm = () => {
 
     const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? 'Champ requis' : '');
 
-    const inputClass = (name) => `field transition-all duration-200 ${
+    const inputClass = (name) => `w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition-all duration-200 ${
         hasError(name)
-            ? 'border-rose-400 bg-rose-50/40 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500'
-            : 'focus:bg-white'
+            ? 'border-rose-400 bg-rose-50/40 hover:border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+            : 'border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10'
     }`;
 
     const selectStyles = (name) => ({
         control: (base, state) => ({
             ...base,
-            backgroundColor: state.isDisabled ? '#f1f5f9' : '#f8fafc',
+            backgroundColor: state.isDisabled ? '#f1f5f9' : '#ffffff',
             border: '1px solid',
-            borderRadius: '0.5rem',
-            padding: '4px',
-            borderColor: hasError(name) ? '#fb7185' : (state.isFocused ? '#2563eb' : '#e2e8f0'),
-            boxShadow: hasError(name) ? '0 0 0 1px #fb7185' : (state.isFocused ? '0 0 0 2px rgba(37,99,235,0.15)' : 'none'),
+            borderRadius: '0.75rem',
+            padding: '5px 6px',
+            minHeight: '46px',
+            borderColor: hasError(name) ? '#fb7185' : (state.isFocused ? '#3b82f6' : '#e2e8f0'),
+            boxShadow: hasError(name) ? '0 0 0 3px rgba(244,63,94,0.12)' : (state.isFocused ? '0 0 0 3px rgba(59,130,246,0.12)' : 'none'),
+            '&:hover': { borderColor: state.isFocused ? '#3b82f6' : '#94a3b8' },
         }),
         placeholder: (base) => ({ ...base, color: '#94a3b8' }),
+        menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden' }),
+        option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isFocused ? '#eff6ff' : 'white',
+            color: state.isSelected ? '#1d4ed8' : '#1e293b',
+            fontWeight: state.isSelected || state.isFocused ? '600' : '400',
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+        }),
     });
     useEffect(() => {
         const fetchBrands = async () => {
@@ -176,7 +181,6 @@ const VehicleForm = () => {
             }
         };
         fetchBrands();
-        api.get('gps/devices/').then((r) => setTraccarDevices(r.data.devices || [])).catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -242,66 +246,7 @@ const VehicleForm = () => {
         }
     };
 
-    const handleAddTraccarDevice = async () => {
-        const imei = (formData.gps_imei || '').trim();
-        if (!imei) {
-            toast.error('Renseignez d\'abord l\'ID/IMEI du dispositif.');
-            return;
-        }
-        setSyncingDevice(true);
-        try {
-            const res = await api.post('gps/devices/', {
-                name: formData.matricule || `Dispositif ${imei}`,
-                uniqueId: imei,
-            });
-            const dev = res.data;
-            setFormData((prev) => ({ ...prev, traccar_device_id: String(dev.id) }));
-            setTraccarDevices((prev) =>
-                prev.some((d) => String(d.id) === String(dev.id)) ? prev : [...prev, dev]
-            );
-            toast.success('Dispositif ajouté au serveur Traccar.');
-        } catch (err) {
-            toast.error(err.response?.data?.detail || 'Impossible d\'ajouter le dispositif sur Traccar.');
-        } finally {
-            setSyncingDevice(false);
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-
-        const stepsWithErrors = [1, 2, 3, 4].filter((s) => validateStep(s).length > 0);
-        if (stepsWithErrors.length > 0) {
-            const missingAll = stepsWithErrors.flatMap((s) => validateStep(s));
-            markErrors(missingAll);
-            toast.error(`Champs requis manquants : ${missingAll.map((m) => m.label).join(', ')}`);
-            setCurrentStep(Math.min(...stepsWithErrors));
-            return;
-        }
-
-        for (const field of Object.keys(UNIQUE_FIELDS)) {
-            const val = formData[field];
-            if (!val || !val.trim()) continue;
-            try {
-                const res = await api.get('vehicles/check-unique/', {
-                    params: {
-                        field,
-                        value: val.trim(),
-                        ...(isEditMode ? { exclude_id: id } : {}),
-                    },
-                });
-                if (res.data.available === false) {
-                    setUniqueErrors((prev) => ({ ...prev, [field]: `Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.` }));
-                    toast.error(`Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.`);
-                    setCurrentStep(1);
-                    return;
-                }
-            } catch (err) {
-                console.error("Erreur lors de la vérification de l'unicité", err);
-            }
-        }
-
+    const performSubmit = async () => {
         setLoading(true);
         const data = new FormData();
         const readOnlyFields = ['id', 'agency', 'marque_name', 'modele_name', 'agency_details', 'image'];
@@ -312,9 +257,6 @@ const VehicleForm = () => {
                 
                 // Ensure foreign keys are not empty strings
                 if ((key === 'marque' || key === 'modele') && value === '') {
-                    value = null;
-                }
-                if (key === 'traccar_device_id' && (value === '' || value === null || value === undefined)) {
                     value = null;
                 }
 
@@ -368,6 +310,44 @@ const VehicleForm = () => {
         }
     };
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+
+        const stepsWithErrors = [1, 2, 3, 4].filter((s) => validateStep(s).length > 0);
+        if (stepsWithErrors.length > 0) {
+            const missingAll = stepsWithErrors.flatMap((s) => validateStep(s));
+            markErrors(missingAll);
+            toast.error(`Champs requis manquants : ${missingAll.map((m) => m.label).join(', ')}`);
+            setCurrentStep(Math.min(...stepsWithErrors));
+            return;
+        }
+
+        for (const field of Object.keys(UNIQUE_FIELDS)) {
+            const val = formData[field];
+            if (!val || !val.trim()) continue;
+            try {
+                const res = await api.get('vehicles/check-unique/', {
+                    params: {
+                        field,
+                        value: val.trim(),
+                        ...(isEditMode ? { exclude_id: id } : {}),
+                    },
+                });
+                if (res.data.available === false) {
+                    setUniqueErrors((prev) => ({ ...prev, [field]: `Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.` }));
+                    toast.error(`Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.`);
+                    setCurrentStep(1);
+                    return;
+                }
+            } catch (err) {
+                console.error("Erreur lors de la vérification de l'unicité", err);
+            }
+        }
+
+        await performSubmit();
+    };
+
     const handleDelete = () => {
         messageBox.danger("Êtes-vous sûr de vouloir supprimer ce véhicule ?", "Supprimer le véhicule", {
             onConfirm: async () => {
@@ -392,135 +372,85 @@ const VehicleForm = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="mx-auto max-w-[1500px] px-4 py-6 lg:px-8">
             {/* Breadcrumb + header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                        <Link to="/vehicles" className="hover:underline">Véhicules</Link> / {isEditMode ? 'Modifier' : 'Nouveau'}
-                    </p>
-                    <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        <Link to="/vehicles" className="hover:text-slate-600">Véhicules</Link>
+                        <span className="mx-1">›</span>
+                        {isEditMode ? 'Modifier' : 'Nouveau'}
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-950">
                         {isEditMode ? 'Modifier un véhicule' : 'Ajouter un véhicule'}
                     </h1>
+                    <p className="mt-1 text-sm text-slate-500">Complétez les informations pour enregistrer votre véhicule.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap gap-2">
                     {isEditMode && (
                         <button
                             type="button"
                             onClick={handleDelete}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-100 active:scale-[0.98]"
                         >
                             <span className="material-symbols-outlined text-[18px]">delete</span>
                             Supprimer
                         </button>
                     )}
-                    <button
-                        type="button"
-                        onClick={() => navigate('/vehicles')}
-                        className="px-5 py-2.5 rounded-lg text-[13px] font-semibold card shadow-l1"
-                        style={{ color: 'var(--on-surface-variant)' }}
-                    >
-                        Annuler
-                    </button>
-                    {currentStep > 1 && (
-                        <button
-                            type="button"
-                            onClick={handlePrev}
-                            className="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white"
-                            style={{ background: 'var(--secondary)' }}
-                        >
-                            Étape précédente
-                        </button>
-                    )}
-                    {currentStep < 4 ? (
-                        <button
-                            type="button"
-                            onClick={handleNext}
-                            className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2"
-                            style={{ background: 'var(--primary-container)' }}
-                        >
-                            Continuer
-                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={loading}
-                            className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2 disabled:opacity-60"
-                            style={{ background: 'var(--success)' }}
-                        >
-                            <span className="material-symbols-outlined text-[16px]">save</span>
-                            {loading ? 'Enregistrement...' : 'Sauvegarder'}
-                        </button>
-                    )}
                 </div>
-            </div>
-
-            {/* Stepper */}
-            <div className="flex items-center mb-8">
-                {steps.map((s, i) => {
-                    const state = stepState(s.num);
-                    return (
-                        <React.Fragment key={s.num}>
-                            {i > 0 && (
-                                <div
-                                    className="step-line mx-4"
-                                    style={currentStep >= s.num ? { background: 'var(--success)' } : {}}
-                                ></div>
-                            )}
-                            <div className="flex items-center gap-2.5">
-                                <div
-                                    className="step-dot text-white"
-                                    style={
-                                        state === 'done'
-                                            ? { background: 'var(--success)' }
-                                            : state === 'active'
-                                                ? { background: 'var(--primary-container)' }
-                                                : { background: 'var(--stroke)', color: 'var(--on-surface-variant)' }
-                                    }
-                                >
-                                    {state === 'done' ? (
-                                        <span className="material-symbols-outlined text-[18px]">check</span>
-                                    ) : (
-                                        s.num
-                                    )}
-                                </div>
-                                <span
-                                    className="text-[13px]"
-                                    style={
-                                        state === 'active'
-                                            ? { fontWeight: 700, color: 'var(--primary-container)' }
-                                            : { fontWeight: state === 'done' ? 600 : 500, color: state === 'done' ? 'var(--on-surface)' : 'var(--on-surface-variant)', opacity: state === 'idle' ? 0.6 : 1 }
-                                    }
-                                >
-                                    {s.label}
-                                </span>
-                            </div>
-                        </React.Fragment>
-                    );
-                })}
-            </div>
+            </header>
 
             {error && (
-                <div className="mb-6 p-4 rounded-lg flex items-center gap-3 font-semibold text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
+                <div className="mb-6 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
                     <span className="material-symbols-outlined">error</span>
                     <p>{error}</p>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-6 items-start">
-                {/* Form panel */}
-                <div className="col-span-2 space-y-6">
-                    {currentStep === 1 && (
-                        <div className="card shadow-l1 p-8">
-                            <div className="section-title">
-                                <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Identification</h2>
+            <form onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
+                {/* Stepper */}
+                <div className="grid grid-cols-2 gap-3 border-b border-slate-200 bg-white px-5 py-5 md:grid-cols-4">
+                    {steps.map((s) => {
+                        const state = stepState(s.num);
+                        return (
+                            <div key={s.num} className="flex items-center gap-3">
+                                <div
+                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                                        state === 'done'
+                                            ? 'bg-emerald-500 text-white'
+                                            : state === 'active'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-slate-100 text-slate-500'
+                                    }`}
+                                >
+                                    {state === 'done' ? '✓' : s.num}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className={`text-sm ${state === 'active' ? 'font-semibold text-blue-700' : state === 'done' ? 'text-slate-700' : 'text-slate-500'}`}>
+                                        {s.label}
+                                    </div>
+                                    <div className="hidden text-xs text-slate-400 sm:block">{s.subtitle}</div>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-5">
-                                <div>
-                                    <label className="label">Matricule</label>
+                        );
+                    })}
+                </div>
+
+                <div className="space-y-5 bg-slate-50/50 p-5">
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_390px]">
+                        {/* Form panel */}
+                        <div className="space-y-5">
+                    {currentStep === 1 && (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                            <div className="mb-7 flex items-center gap-3">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                    <span className="material-symbols-outlined text-[18px]">directions_car</span>
+                                </span>
+                                <h2 className="text-lg font-semibold">Identification</h2>
+                            </div>
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Immatriculation (matricule)</span>
                                     <input
                                         name="matricule"
                                         value={formData.matricule}
@@ -531,20 +461,20 @@ const VehicleForm = () => {
                                         placeholder="Ex: 12345-A-50"
                                     />
                                     {checkingUnique['matricule'] && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--on-surface-variant)' }}>
-                                            <span className="material-symbols-outlined text-[13px] animate-spin">progress_activity</span>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+                                            <span className="material-symbols-outlined animate-spin text-[13px]">progress_activity</span>
                                             Vérification de l'unicité…
                                         </p>
                                     )}
                                     {fieldErrorMsg('matricule') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('matricule')}
                                         </p>
                                     )}
-                                </div>
+                                </label>
                                 <div>
-                                    <label className="label">Marque</label>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Marque</span>
                                     <Select
                                         options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
                                         onChange={(opt) => {
@@ -559,14 +489,14 @@ const VehicleForm = () => {
                                         styles={selectStyles('marque')}
                                     />
                                     {fieldErrorMsg('marque') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('marque')}
                                         </p>
                                     )}
                                 </div>
                                 <div>
-                                    <label className="label">Modèle</label>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Modèle</span>
                                     <Select
                                         options={(formData.marque ? models : []).map(model => ({ value: model.id, label: model.name }))}
                                         onChange={(opt) => {
@@ -582,14 +512,14 @@ const VehicleForm = () => {
                                         styles={selectStyles('modele')}
                                     />
                                     {fieldErrorMsg('modele') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('modele')}
                                         </p>
                                     )}
                                 </div>
-                                <div>
-                                    <label className="label">Année</label>
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Année</span>
                                     <input
                                         name="annee"
                                         value={formData.annee}
@@ -598,26 +528,28 @@ const VehicleForm = () => {
                                         type="number"
                                     />
                                     {fieldErrorMsg('annee') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('annee')}
                                         </p>
                                     )}
-                                </div>
+                                </label>
                             </div>
                         </div>
                     )}
 
                     {currentStep === 2 && (
                         <>
-                            <div className="card shadow-l1 p-8">
-                                <div className="section-title">
-                                    <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                    <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Spécifications techniques</h2>
+                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                                <div className="mb-7 flex items-center gap-3">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                        <span className="material-symbols-outlined text-[18px]">settings_input_component</span>
+                                    </span>
+                                    <h2 className="text-lg font-semibold">Spécifications techniques</h2>
                                 </div>
-                                <div className="grid grid-cols-2 gap-5">
-                                    <div>
-                                        <label className="label">Couleur</label>
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    <label className="block">
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Couleur</span>
                                         <input
                                             name="couleur"
                                             value={formData.couleur}
@@ -626,9 +558,9 @@ const VehicleForm = () => {
                                             type="text"
                                             placeholder="Ex: Noir Métallisé"
                                         />
-                                    </div>
+                                    </label>
                                     <div>
-                                        <label className="label">Carburant</label>
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Carburant</span>
                                         <Dropdown
                                             name="carburant"
                                             options={[
@@ -641,8 +573,8 @@ const VehicleForm = () => {
                                             onChange={(v) => handleChange({ target: { name: 'carburant', value: v } })}
                                         />
                                     </div>
-                                    <div>
-                                        <label className="label">Kilométrage actuel</label>
+                                    <label className="block">
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Kilométrage actuel</span>
                                         <input
                                             name="kilometrage"
                                             value={formData.kilometrage}
@@ -651,14 +583,14 @@ const VehicleForm = () => {
                                             type="number"
                                         />
                                         {fieldErrorMsg('kilometrage') && (
-                                            <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                            <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                                 <span className="material-symbols-outlined text-[13px]">error</span>
                                                 {fieldErrorMsg('kilometrage')}
                                             </p>
                                         )}
-                                    </div>
-                                    <div>
-                                        <label className="label">Prochaine vidange (km)</label>
+                                    </label>
+                                    <label className="block">
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Prochaine vidange (km)</span>
                                         <input
                                             name="prochain_vidange_km"
                                             value={formData.prochain_vidange_km}
@@ -666,86 +598,23 @@ const VehicleForm = () => {
                                             className={inputClass('prochain_vidange_km')}
                                             type="number"
                                         />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="card shadow-l1 p-8">
-                                <div className="section-title">
-                                    <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                    <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Suivi GPS</h2>
-                                </div>
-                                <div className="grid grid-cols-2 gap-5">
-                                    <div className="col-span-2">
-                                        <label className="label">Boîtier Traccar</label>
-                                        <Select
-                                            value={traccarDevices.find((d) => String(d.id) === String(formData.traccar_device_id)) || (formData.traccar_device_id === '' ? null : { id: formData.traccar_device_id, name: `Dispositif ${formData.traccar_device_id}` })}
-                                            onChange={(opt) => setFormData((prev) => ({ ...prev, traccar_device_id: opt ? String(opt.id) : '' }))}
-                                            options={traccarDevices.map((d) => ({ id: d.id, name: `${d.name} (${d.uniqueId || d.id})`, value: d.id }))}
-                                            isClearable
-                                            isDisabled={!traccarDevices.length}
-                                            placeholder={traccarDevices.length ? 'Sélectionner un dispositif…' : 'Traccar non configuré'}
-                                            styles={selectStyles('traccar_device_id')}
-                                            getOptionLabel={(o) => o.name}
-                                            getOptionValue={(o) => String(o.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="label">ID / IMEI GPS</label>
-                                        <input
-                                            name="gps_imei"
-                                            value={formData.gps_imei || ''}
-                                            onChange={handleChange}
-                                            className={inputClass('gps_imei')}
-                                            placeholder="Ex: 862345048765432"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleAddTraccarDevice}
-                                            disabled={syncingDevice}
-                                            className="mt-2 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                            style={{ background: 'var(--primary-container)' }}
-                                        >
-                                            <span className={`material-symbols-outlined text-base ${syncingDevice ? 'animate-spin' : ''}`}>
-                                                {syncingDevice ? 'progress_activity' : 'sensors'}
-                                            </span>
-                                            {syncingDevice ? 'Ajout en cours…' : 'Ajouter au serveur Traccar'}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <label className="label">N° SIM</label>
-                                        <input
-                                            name="sim_number"
-                                            value={formData.sim_number || ''}
-                                            onChange={handleChange}
-                                            className={inputClass('sim_number')}
-                                            placeholder="Ex: 0671234567"
-                                        />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="label">Opérateur SIM</label>
-                                        <input
-                                            name="sim_operator"
-                                            value={formData.sim_operator || ''}
-                                            onChange={handleChange}
-                                            className={inputClass('sim_operator')}
-                                            placeholder="Ex: Maroc Telecom, Orange, Inwi"
-                                        />
-                                    </div>
+                                    </label>
                                 </div>
                             </div>
                         </>
                     )}
 
                     {currentStep === 3 && (
-                        <div className="card shadow-l1 p-8">
-                            <div className="section-title">
-                                <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Tarification</h2>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                            <div className="mb-7 flex items-center gap-3">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                    <span className="material-symbols-outlined text-[18px]">payments</span>
+                                </span>
+                                <h2 className="text-lg font-semibold">Tarification</h2>
                             </div>
-                            <div className="grid grid-cols-2 gap-5">
-                                <div>
-                                    <label className="label">Prix journalier (DH)</label>
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Prix journalier (DH)</span>
                                     <input
                                         name="prix_par_jour"
                                         value={formData.prix_par_jour}
@@ -755,27 +624,27 @@ const VehicleForm = () => {
                                         step="0.01"
                                     />
                                     {fieldErrorMsg('prix_par_jour') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('prix_par_jour')}
                                         </p>
                                     )}
-                                </div>
+                                </label>
                                 <div className="flex items-end pb-1">
-                                    <label className="check-item w-full">
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-slate-300">
                                         <input
                                             type="checkbox"
-                                            className="w-4 h-4"
-                                            style={{ accentColor: 'var(--primary-container)' }}
+                                            className="h-5 w-5 rounded border-slate-300 text-blue-600"
+                                            style={{ accentColor: '#2563eb' }}
                                             name="chauffeur_disponible"
                                             checked={formData.chauffeur_disponible}
                                             onChange={handleChange}
                                         />
-                                        <span className="text-[13px] font-semibold">Chauffeur disponible avec ce véhicule</span>
+                                        <span className="text-sm font-medium text-slate-700">Chauffeur disponible avec ce véhicule</span>
                                     </label>
                                 </div>
-                                <div className="col-span-2">
-                                    <label className="label">Tarif km suppl. spécifique à ce véhicule (DH/km)</label>
+                                <div className="md:col-span-2">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Tarif km suppl. spécifique à ce véhicule (DH/km)</span>
                                     <input
                                         name="tarif_km_extra"
                                         value={formData.tarif_km_extra || ''}
@@ -786,21 +655,23 @@ const VehicleForm = () => {
                                         min="0"
                                         placeholder="Laissez vide = utiliser le tarif agence (défaut)"
                                     />
-                                    <p className="text-[10px] mt-1.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Si non renseigné, le tarif par défaut des Paramètres sera appliqué.</p>
+                                    <p className="mt-2 text-xs text-slate-400">Si non renseigné, le tarif par défaut des Paramètres sera appliqué.</p>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {currentStep === 4 && (
-                        <div className="card shadow-l1 p-8">
-                            <div className="section-title">
-                                <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Validité & Statut</h2>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                            <div className="mb-7 flex items-center gap-3">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                    <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                                </span>
+                                <h2 className="text-lg font-semibold">Validité & Statut</h2>
                             </div>
-                            <div className="grid grid-cols-2 gap-5">
-                                <div>
-                                    <label className="label">Expiration assurance</label>
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Expiration assurance</span>
                                     <input
                                         name="date_assurance"
                                         value={formData.date_assurance}
@@ -809,14 +680,14 @@ const VehicleForm = () => {
                                         type="date"
                                     />
                                     {fieldErrorMsg('date_assurance') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('date_assurance')}
                                         </p>
                                     )}
-                                </div>
-                                <div>
-                                    <label className="label">Visite technique</label>
+                                </label>
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Visite technique</span>
                                     <input
                                         name="date_visite_technique"
                                         value={formData.date_visite_technique}
@@ -825,92 +696,140 @@ const VehicleForm = () => {
                                         type="date"
                                     />
                                     {fieldErrorMsg('date_visite_technique') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('date_visite_technique')}
                                         </p>
                                     )}
-                                </div>
+                                </label>
                             </div>
-                            <div className="mt-6">
-                                <label className="label mb-3">Statut</label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {['Available', 'Maintenance', 'Rented'].map((status) => (
-                                        <button
-                                            key={status}
-                                            type="button"
-                                            onClick={() => setFormData(prev => ({ ...prev, statut: status }))}
-                                            className={`check-item justify-center ${formData.statut === status ? 'on' : ''}`}
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">
-                                                {status === 'Available' ? 'check_circle' : status === 'Maintenance' ? 'build' : 'key'}
-                                            </span>
-                                            <span className="text-[12.5px] font-semibold">
-                                                {status === 'Available' ? 'Disponible' : status === 'Maintenance' ? 'Maintenance' : 'Louée'}
-                                            </span>
-                                        </button>
-                                    ))}
+                            <div className="mt-7">
+                                <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-slate-500">Statut</span>
+                                <div className="grid gap-3 md:grid-cols-3">
+                                    {['Available', 'Maintenance', 'Rented'].map((status) => {
+                                        const active = formData.statut === status;
+                                        return (
+                                            <button
+                                                key={status}
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({ ...prev, statut: status }))}
+                                                className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-4 text-sm transition ${
+                                                    active
+                                                        ? 'border-emerald-300 bg-emerald-50 font-semibold text-emerald-700'
+                                                        : 'border-slate-200 bg-white font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">
+                                                    {status === 'Available' ? 'check_circle' : status === 'Maintenance' ? 'build' : 'key'}
+                                                </span>
+                                                <span>{status === 'Available' ? 'Disponible' : status === 'Maintenance' ? 'Maintenance' : 'Louée'}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
                     )}
-                </div>
-
-                {/* Sidebar : photo + summary */}
-                <div className="space-y-6">
-                    <div className="card shadow-l1 p-6">
-                        <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>Photo du véhicule</h3>
-                        {imagePreview ? (
-                            <div className="aspect-video rounded-lg overflow-hidden border border-stroke relative group">
-                                <img
-                                    src={imagePreview}
-                                    className="absolute inset-0 w-full h-full object-cover"
-                                    alt="Aperçu"
-                                />
-                                <label className="absolute top-3 right-3 bg-white/80 backdrop-blur p-2 rounded-full cursor-pointer hover:bg-white transition-colors shadow-l1">
-                                    <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>photo_camera</span>
-                                    <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                                </label>
-                            </div>
-                        ) : (
-                            <label className="dropzone aspect-video flex flex-col items-center justify-center gap-2 cursor-pointer">
-                                <span className="material-symbols-outlined text-[28px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>add_a_photo</span>
-                                <p className="text-[12px] font-medium text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Glisser une image ou parcourir</p>
-                                <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                            </label>
-                        )}
-                    </div>
-
-                    <div className="card shadow-l1 p-6">
-                        <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>Résumé</h3>
-                        <div className="space-y-3 text-[13px]">
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Matricule</span>
-                                <span className="font-semibold">{formData.matricule || '—'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Marque</span>
-                                <span className="font-semibold">{brands.find(b => b.id == formData.marque)?.name || (isEditMode ? formData.marque_name : '—')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Modèle</span>
-                                <span className="font-semibold">{models.find(m => m.id == formData.modele)?.name || (isEditMode ? formData.modele_name : '—')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Année</span>
-                                <span className="font-semibold">{formData.annee || '—'}</span>
-                            </div>
                         </div>
-                        <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--stroke)' }}>
-                            <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Progression</p>
-                            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--stroke)' }}>
-                                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(currentStep / 4) * 100}%`, background: 'var(--primary-container)' }}></div>
+
+                        {/* Photo */}
+                        <div className="space-y-5">
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
+                                <div className="mb-4 flex items-center gap-2">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                        <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
+                                    </span>
+                                    <h2 className="font-semibold text-slate-900">Photo du véhicule</h2>
+                                </div>
+                                {imagePreview ? (
+                                    <div className="group relative aspect-video overflow-hidden rounded-xl border border-slate-200">
+                                        <img
+                                            src={imagePreview}
+                                            className="absolute inset-0 h-full w-full object-cover"
+                                            alt="Aperçu"
+                                        />
+                                        <label className="absolute right-3 top-3 cursor-pointer rounded-full bg-white/80 p-2 shadow-sm backdrop-blur transition-colors hover:bg-white">
+                                            <span className="material-symbols-outlined text-[18px] text-blue-600">photo_camera</span>
+                                            <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-6 text-center transition hover:border-blue-300 hover:bg-blue-50/30">
+                                        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-2xl text-blue-600">📷</div>
+                                        <p className="text-sm font-semibold text-slate-700">Glisser une image ici</p>
+                                        <p className="mt-1 text-sm text-blue-600">ou cliquer pour parcourir</p>
+                                        <p className="mt-3 text-xs text-slate-400">Formats acceptés : JPG, PNG (max. 5 Mo)</p>
+                                        <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
+                                    </label>
+                                )}
                             </div>
-                            <p className="text-[11px] mt-2 font-semibold" style={{ color: 'var(--primary-container)' }}>Étape {currentStep} sur 4</p>
                         </div>
                     </div>
                 </div>
             </form>
+
+            {/* Bottom security + actions */}
+            <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <span className="material-symbols-outlined">shield</span>
+                    </div>
+                    <div>
+                        <p className="text-sm font-semibold text-slate-700">Vos données sont sécurisées</p>
+                        <p className="text-xs text-slate-400">Nous protégeons vos informations avec le plus haut niveau de sécurité.</p>
+                    </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/vehicles')}
+                        className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                    >
+                        Annuler
+                    </button>
+                    {currentStep > 1 && (
+                        <button
+                            type="button"
+                            onClick={handlePrev}
+                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        >
+                            <span className="material-symbols-outlined text-[16px] mr-1">chevron_left</span>
+                            Précédent
+                        </button>
+                    )}
+                    {isEditMode && (
+                        <button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        >
+                            <span className="material-symbols-outlined text-[16px] mr-1">check</span>
+                            {loading ? 'Enregistrement…' : 'Enregistrer'}
+                        </button>
+                    )}
+                    {currentStep < 4 ? (
+                        <button
+                            type="button"
+                            onClick={handleNext}
+                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        >
+                            Suivant
+                            <span className="material-symbols-outlined text-[16px] ml-1">chevron_right</span>
+                        </button>
+                    ) : !isEditMode && (
+                        <button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        >
+                            <span className="material-symbols-outlined text-[16px] mr-1">check</span>
+                            {loading ? 'Enregistrement…' : 'Enregistrer'}
+                        </button>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
