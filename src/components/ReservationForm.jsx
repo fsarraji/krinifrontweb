@@ -362,12 +362,12 @@ const ReservationForm = () => {
                                         styles={{
                                             control: (base, state) => ({
                                                 ...base,
-                                                backgroundColor: '#f8fafc',
-                                                border: '1px solid #e2e8f0',
+                                                backgroundColor: 'var(--card-white)',
+                                                border: '1px solid var(--stroke)',
                                                 borderRadius: '0.75rem',
                                                 padding: '4px',
-                                                borderColor: state.isFocused ? '#4f46e5' : '#e2e8f0',
-                                                boxShadow: state.isFocused ? '0 0 0 1px #4f46e5' : 'none'
+                                                borderColor: state.isFocused ? 'var(--primary)' : 'var(--stroke)',
+                                                boxShadow: state.isFocused ? '0 0 0 1px var(--primary)' : 'none'
                                             })
                                         }}
                                     />
@@ -392,12 +392,12 @@ const ReservationForm = () => {
                                         styles={{
                                             control: (base, state) => ({
                                                 ...base,
-                                                backgroundColor: '#f8fafc',
-                                                border: '1px solid #e2e8f0',
+                                                backgroundColor: 'var(--card-white)',
+                                                border: '1px solid var(--stroke)',
                                                 borderRadius: '0.75rem',
                                                 padding: '4px',
-                                                borderColor: state.isFocused ? '#4f46e5' : '#e2e8f0',
-                                                boxShadow: state.isFocused ? '0 0 0 1px #4f46e5' : 'none'
+                                                borderColor: state.isFocused ? 'var(--primary)' : 'var(--stroke)',
+                                                boxShadow: state.isFocused ? '0 0 0 1px var(--primary)' : 'none'
                                             })
                                         }}
                                     />
@@ -450,7 +450,7 @@ const ReservationForm = () => {
                                     <div className="relative">
                                         <span className="absolute left-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
                                         <input 
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-emerald-600 bg-emerald-50/20 pl-12 text-sm font-extrabold focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-success-dark bg-success-bg/20 pl-12 text-sm font-extrabold focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200" 
                                             type="number" 
                                             value={formData.montant_paye}
                                             onChange={(e) => setFormData({...formData, montant_paye: e.target.value})}
@@ -558,7 +558,7 @@ const ReservationForm = () => {
                                 {step === 3 && (
                                     <div className="bg-white/10 p-4 rounded-xl mt-4">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Avance à régler (Avance Versée)</p>
-                                        <p className="text-xl font-bold text-emerald-450">
+                                        <p className="text-xl font-bold text-success-dark">
                                             {parseFloat(formData.montant_paye).toLocaleString()} DH
                                         </p>
                                     </div>
@@ -630,7 +630,7 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
         checkUnique(field, e.target.value);
     };
 
-    const fieldClass = (name) => `w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-slate-900 bg-slate-50/50 focus:bg-white outline-none transition-all ${uniqueErrors[name] ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500' : 'border-slate-200 focus:border-indigo-600'}`;
+    const fieldClass = (name) => `w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-slate-900 bg-slate-50/50 focus:bg-white outline-none transition-all ${uniqueErrors[name] ? 'border-danger bg-danger-bg/40 focus:border-danger' : 'border-slate-200 focus:border-primary'}`;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -658,7 +658,7 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
             <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl p-8 border border-slate-200">
                 <h3 className="text-xl font-extrabold text-slate-900 mb-6">Nouveau Client</h3>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {error && <div className="p-3 bg-rose-50 text-rose-700 text-xs rounded-xl border border-rose-100">{error}</div>}
+                    {error && <div className="p-3 bg-danger-bg text-danger-dark text-xs rounded-xl border border-danger-border">{error}</div>}
                     <div className="grid grid-cols-2 gap-4">
                         <input name="prenom" value={formData.prenom} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="Prénom" />
                         <input name="nom" value={formData.nom} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="Nom" />

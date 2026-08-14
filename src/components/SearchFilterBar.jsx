@@ -20,7 +20,7 @@ const SearchFilterBar = ({ placeholder, search, onSearchChange, options, filter,
                     <input
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 sm:text-sm shadow-sm transition-all"
+                        className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm shadow-sm transition-all"
                         placeholder={placeholder}
                         type="text"
                     />
@@ -34,7 +34,7 @@ const SearchFilterBar = ({ placeholder, search, onSearchChange, options, filter,
                             className="flex items-center justify-between gap-2.5 px-5 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-500/20 min-w-[7.5rem]"
                         >
                             <div className="flex items-center gap-2.5">
-                                <span className={`w-2 h-2 ${(current && current.dot) || 'bg-indigo-600'} rounded-full shadow-sm`}></span>
+                                <span className={`w-2 h-2 ${(current && current.dot) || 'bg-primary'} rounded-full shadow-sm`}></span>
                                 <span>{(current && current.label) || 'Tous'}</span>
                             </div>
                             <span className="material-symbols-outlined text-slate-400 text-base">expand_more</span>
@@ -47,9 +47,9 @@ const SearchFilterBar = ({ placeholder, search, onSearchChange, options, filter,
                                         <button
                                             key={String(opt.value)}
                                             onClick={() => handleSelect(opt.value)}
-                                            className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2.5 ${opt.value === filter ? 'text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                                            className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2.5 ${opt.value === filter ? 'text-primary font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
                                         >
-                                            <span className={`w-2 h-2 ${opt.dot || 'bg-indigo-600'} rounded-full`}></span>
+                                            <span className={`w-2 h-2 ${opt.dot || 'bg-primary'} rounded-full`}></span>
                                             {opt.label}
                                         </button>
                                     ))}

@@ -28,8 +28,8 @@ const formatKm = (odometer) => {
 };
 
 const STATUS = {
-    moving: { label: 'En mouvement', moving: true, color: '#16A34A', dotBg: '#16A34A', bg: '#DCFCE7', text: '#166534' },
-    stopped: { label: "À l'arrêt", moving: false, color: '#D97706', dotBg: '#D97706', bg: '#FEF3C7', text: '#92400E' },
+    moving: { label: 'En mouvement', moving: true, color: '#10B981', dotBg: '#10B981', bg: '#D1FAE5', text: '#047857' },
+    stopped: { label: "À l'arrêt", moving: false, color: '#F59E0B', dotBg: '#F59E0B', bg: '#FEF3C7', text: '#B45309' },
     offline: { label: 'Hors ligne', moving: false, color: '#94A3B8', dotBg: '#64748B', bg: '#F1F5F9', text: '#64748B' },
 };
 
@@ -230,11 +230,11 @@ const GpsTracking = () => {
             if (map.current && routeLayer.current) {
                 routeLayer.current.clearLayers();
                 if (points.length) {
-                    const line = L.polyline(points.map((p) => [p.latitude, p.longitude]), { color: '#2563EB', weight: 4, opacity: 0.75 });
+                    const line = L.polyline(points.map((p) => [p.latitude, p.longitude]), { color: '#1D4ED8', weight: 4, opacity: 0.75 });
                     routeLayer.current.addLayer(line);
                     map.current.fitBounds(line.getBounds(), { padding: [60, 60], maxZoom: 15 });
                     const last = points[points.length - 1];
-                    L.circleMarker([last.latitude, last.longitude], { radius: 6, color: '#2563EB', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(routeLayer.current);
+                    L.circleMarker([last.latitude, last.longitude], { radius: 6, color: '#1D4ED8', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(routeLayer.current);
                 }
             }
         } catch (error) {
@@ -380,7 +380,7 @@ const GpsTracking = () => {
             data-purpose="gps-tracking"
         >
             <style>{`
-                .leaflet-container { font-family: inherit; background: #eef2f9; }
+                .leaflet-container { font-family: inherit; background: var(--surface-hover); }
                 .gps-marker { background: transparent; border: none; }
                 .gps-marker-wrap { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
                 .gps-ping { position: absolute; inset: -4px; border-radius: 9999px; border-width: 3px; border-style: solid; opacity: .55; animation: gpsPing 1.6s cubic-bezier(0,0,.2,1) infinite; }
@@ -394,15 +394,15 @@ const GpsTracking = () => {
                 @keyframes pulse { 0% { transform: scale(.5); opacity: .5; } 100% { transform: scale(2); opacity: 0; } }
 
                 .veh-row { display: flex; align-items: center; gap: 11px; padding: 10px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
-                .veh-row:hover { background: var(--slate-bg); }
-                .veh-row.selected { background: var(--info-bg); border-color: #bcd2fb; }
+                .veh-row:hover { background: var(--surface-hover); }
+                .veh-row.selected { background: var(--primary-light); border-color: var(--primary-border); }
 
                 .thumb { width: 44px; height: 44px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
                 .stat-tile { border: 1px solid var(--stroke); border-radius: 8px; padding: 12px 14px; background: var(--card-white); }
 
                 .toggle-tab { padding: 7px 16px; border-radius: 9999px; font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--on-surface-variant); white-space: nowrap; }
-                .toggle-tab.active { background: var(--primary-container); color: #fff; }
+                .toggle-tab.active { background: var(--primary); color: #fff; }
 
                 details.tech summary { list-style: none; cursor: pointer; }
                 details.tech summary::-webkit-details-marker { display: none; }
@@ -434,12 +434,12 @@ const GpsTracking = () => {
                         <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>sensors</span>
                         <span className="text-[12.5px] font-bold" style={{ color: 'var(--on-surface)' }}>Dispositifs</span>
                     </button>
-                    <span className="badge" style={{ background: 'var(--success-bg)', color: '#166534' }}>
+                    <span className="badge" style={{ background: 'var(--success-bg)', color: 'var(--success-dark)' }}>
                         <span className="badge-dot pulse" style={{ background: 'var(--success)' }}></span>
                         {movingCount} en mouvement
                     </span>
-                    <span className="badge" style={{ background: '#F1F5F9', color: '#64748B' }}>
-                        <span className="badge-dot" style={{ background: '#64748B' }}></span>
+                    <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-muted)' }}>
+                        <span className="badge-dot" style={{ background: 'var(--text-muted)' }}></span>
                         {offlineCount} hors ligne
                     </span>
                 </div>
@@ -550,7 +550,7 @@ const GpsTracking = () => {
                                         </div>
 
                                         <div className="mx-5 mt-3 rounded-token overflow-hidden relative" style={{ border: '1px solid var(--stroke)' }}>
-                                            <div className="h-[120px] flex items-center justify-center" style={{ background: 'linear-gradient(180deg,#EEF1FD,#DCE3FA)' }}>
+                                            <div className="h-[120px] flex items-center justify-center" style={{ background: 'linear-gradient(180deg,var(--surface-active),var(--primary-light))' }}>
                                                 {resolveImage(selected.image) ? (
                                                     <img src={resolveImage(selected.image)} alt={selected.marque_name} className="w-full h-full object-cover" />
                                                 ) : (
@@ -658,7 +658,7 @@ const GpsTracking = () => {
                                                     onClick={dissociateSelectedVehicle}
                                                     disabled={dissociatingVehicle}
                                                     className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-                                                    style={{ background: 'var(--warning-bg)', border: '1px solid #FCD34D', color: 'var(--warning)' }}
+                            style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
                                                 >
                                                     <span className={`material-symbols-outlined text-[16px] ${dissociatingVehicle ? 'animate-spin' : ''}`}>
                                                         {dissociatingVehicle ? 'progress_activity' : 'link_off'}
@@ -721,7 +721,7 @@ const GpsTracking = () => {
                                                                     className="flex items-center justify-center gap-2 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
                                                                     style={
                                                                         meta.danger
-                                                                            ? { background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#B91C1C' }
+                                                                            ? { background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-dark)' }
                                                                             : { background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }
                                                                     }
                                                                 >
@@ -778,8 +778,8 @@ const GpsTracking = () => {
                     <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
                         <div className="card rounded-token shadow-l1 px-3 py-2 flex items-center gap-4 text-[11.5px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>
                             <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: 'var(--success)' }}></span>En mouvement</span>
-                            <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: '#D97706' }}></span>À l'arrêt</span>
-                            <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: '#64748B' }}></span>Hors ligne</span>
+                            <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: 'var(--warning)' }}></span>À l'arrêt</span>
+                            <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: 'var(--text-muted)' }}></span>Hors ligne</span>
                         </div>
                         <button
                             onClick={() => map.current?.setView(MOROCCO, 6)}
@@ -793,7 +793,7 @@ const GpsTracking = () => {
                     {!tracking && !loading && (
                         <div
                             className="absolute top-4 left-1/2 -translate-x-1/2 z-20 text-[12.5px] font-semibold px-4 py-2.5 rounded-token shadow-l1 whitespace-nowrap"
-                            style={{ background: 'var(--warning-bg)', border: '1px solid #FCD34D', color: 'var(--warning)' }}
+                            style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
                         >
                             Suivi GPS non configuré — connectez votre compte Traccar dans les Paramètres de l'agence.
                         </div>
@@ -855,7 +855,7 @@ const GpsTracking = () => {
                                 <div className="grid grid-cols-2 gap-2 items-end">
                                     <div>
                                         <label className="block text-[10.5px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                            ID / IMEI <span style={{ color: '#DC2626' }}>*</span>
+                                            ID / IMEI <span style={{ color: 'var(--danger)' }}>*</span>
                                         </label>
                                         <input
                                             className="input"
@@ -902,7 +902,7 @@ const GpsTracking = () => {
                                                 onClick={dissociateAllDevices}
                                                 disabled={associatingDeviceId != null || dissociatingVehicle}
                                                 className="text-[11px] font-bold px-3 py-1.5 rounded-token flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
-                                                style={{ background: 'var(--warning-bg)', border: '1px solid #FCD34D', color: 'var(--warning)' }}
+                                                style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
                                                 title="Dissocier tous les dispositifs des véhicules"
                                             >
                                                 <span className="material-symbols-outlined text-[13px]">link_off</span>
@@ -947,8 +947,8 @@ const GpsTracking = () => {
                                                             <p className="text-[13px] font-bold truncate" style={{ color: 'var(--on-surface)' }}>
                                                                 {d.name || `Dispositif #${d.id}`}
                                                             </p>
-                                                            <span className="badge" style={{ background: online ? 'var(--success-bg)' : '#F1F5F9', color: online ? '#166534' : '#64748B' }}>
-                                                                <span className="badge-dot" style={{ background: online ? 'var(--success)' : '#64748B' }}></span>
+                                                            <span className="badge" style={{ background: online ? 'var(--success-bg)' : 'var(--surface-hover)', color: online ? 'var(--success-dark)' : 'var(--text-muted)' }}>
+                                                                <span className="badge-dot" style={{ background: online ? 'var(--success)' : 'var(--text-muted)' }}></span>
                                                                 {online ? 'En ligne' : 'Hors ligne'}
                                                             </span>
                                                         </div>
@@ -959,8 +959,8 @@ const GpsTracking = () => {
                                                     <button
                                                         onClick={() => deleteDevice(d)}
                                                         disabled={deletingDeviceId === d.id}
-                                                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                                                        style={{ color: '#DC2626' }}
+                                                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-danger-bg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                                                        style={{ color: 'var(--danger)' }}
                                                         title="Supprimer le dispositif"
                                                     >
                                                         <span className={`material-symbols-outlined text-[17px] ${deletingDeviceId === d.id ? 'animate-spin' : ''}`}>
@@ -972,7 +972,7 @@ const GpsTracking = () => {
                                                 <div className="flex items-center gap-2 mt-2.5">
                                                     {associated ? (
                                                         <>
-                                                            <span className="flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: '#166534' }}>
+                                                            <span className="flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: 'var(--success-dark)' }}>
                                                                 <span className="material-symbols-outlined text-[13px]">link</span>
                                                                 Associé à {d.vehicle_matricule || `Véhicule #${d.vehicle_id}`}
                                                             </span>
@@ -980,7 +980,7 @@ const GpsTracking = () => {
                                                                 onClick={() => dissociateDevice(d)}
                                                                 disabled={associatingDeviceId === d.id}
                                                                 className="ml-auto text-[11px] font-bold px-3 py-1.5 rounded-token disabled:opacity-40 disabled:cursor-not-allowed"
-                                                                style={{ background: 'var(--warning-bg)', border: '1px solid #FCD34D', color: 'var(--warning)' }}
+                                                    style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
                                                             >
                                                                 Dissocier
                                                             </button>

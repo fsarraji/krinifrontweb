@@ -46,25 +46,25 @@ function resolveBox(id, value) {
     }
 }
 
-// Styles aligned with the Vantage Fleet design system (index.css tokens)
+// Styles aligned with the Kricar Agency design system (index.css tokens)
 const STYLES = {
     info: {
         bg: 'var(--info-bg)',
-        border: '#bfd7fb',
-        text: 'var(--primary-container)',
+        border: 'var(--info-border)',
+        text: 'var(--primary)',
         icon: 'info',
-        iconBg: 'var(--primary-container)',
-        btn: 'var(--primary-container)',
-        btnHover: '#1d4ed8',
+        iconBg: 'var(--primary)',
+        btn: 'var(--primary)',
+        btnHover: 'var(--primary-hover)',
     },
     success: {
         bg: 'var(--success-bg)',
-        border: '#bbf0cf',
-        text: 'var(--success)',
+        border: 'var(--success-border)',
+        text: 'var(--success-dark)',
         icon: 'check_circle',
         iconBg: 'var(--success)',
         btn: 'var(--success)',
-        btnHover: '#15803d',
+        btnHover: 'var(--success-dark)',
     },
     error: {
         bg: 'var(--error-bg)',
@@ -73,25 +73,25 @@ const STYLES = {
         icon: 'error',
         iconBg: 'var(--danger)',
         btn: 'var(--danger)',
-        btnHover: '#b91c1c',
+        btnHover: 'var(--danger-dark)',
     },
     warning: {
         bg: 'var(--warning-bg)',
-        border: '#fde68a',
-        text: 'var(--warning)',
+        border: 'var(--warning-border)',
+        text: 'var(--warning-dark)',
         icon: 'warning',
         iconBg: 'var(--warning)',
         btn: 'var(--warning)',
-        btnHover: '#b45309',
+        btnHover: 'var(--warning-dark)',
     },
     confirm: {
         bg: 'var(--info-bg)',
-        border: '#bfd7fb',
-        text: 'var(--primary-container)',
+        border: 'var(--info-border)',
+        text: 'var(--primary)',
         icon: 'help',
-        iconBg: 'var(--primary-container)',
-        btn: 'var(--primary-container)',
-        btnHover: '#1d4ed8',
+        iconBg: 'var(--primary)',
+        btn: 'var(--primary)',
+        btnHover: 'var(--primary-hover)',
     },
     danger: {
         bg: 'var(--error-bg)',
@@ -100,7 +100,7 @@ const STYLES = {
         icon: 'warning',
         iconBg: 'var(--danger)',
         btn: 'var(--danger)',
-        btnHover: '#b91c1c',
+        btnHover: 'var(--danger-dark)',
     },
 };
 

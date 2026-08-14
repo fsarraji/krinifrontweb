@@ -52,17 +52,18 @@ const Login = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-on-surface via-on-surface/40 to-transparent"></div>
                 <div className="relative z-10 flex flex-col justify-between p-12 w-full text-white">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white shadow-l1">
-                            <span className="material-symbols-outlined text-2xl">directions_car</span>
-                        </div>
-                        <span className="text-2xl font-extrabold tracking-tight">KRINI</span>
+                        <img src="/logo.svg" alt="Logo Kricar Agency" className="w-10 h-10 object-contain" />
+                        <span className="text-2xl font-extrabold tracking-tight">
+                            <span style={{ color: '#000000' }}>Kricar</span>{' '}
+                            <span style={{ color: 'var(--primary)' }}>Agency</span>
+                        </span>
                     </div>
                     <div className="max-w-md space-y-4">
                         <h2 className="text-display text-white">Le standard de précision pour la gestion de flotte.</h2>
                         <p className="text-surface-container-high text-body-md leading-relaxed">Plateforme intelligente dédiée aux gestionnaires modernes de parc automobile.</p>
                     </div>
                     <div className="text-surface-container-low text-label-sm font-bold uppercase tracking-widest">
-                        KRINI Flotte © 2026
+                        Kricar Agency © 2026
                     </div>
                 </div>
             </section>
@@ -73,10 +74,11 @@ const Login = () => {
                     {/* Header Section */}
                     <header className="space-y-2">
                         <div className="lg:hidden flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white shadow-l1">
-                                <span className="material-symbols-outlined text-2xl">directions_car</span>
-                            </div>
-                            <span className="text-2xl font-extrabold text-on-surface tracking-tight">KRINI</span>
+                            <img src="/logo.svg" alt="Logo Kricar Agency" className="w-10 h-10 object-contain" />
+                            <span className="text-2xl font-extrabold text-on-surface tracking-tight">
+                                <span style={{ color: '#000000' }}>Kricar</span>{' '}
+                                <span style={{ color: 'var(--primary)' }}>Agency</span>
+                            </span>
                         </div>
                         <p className="text-label-sm font-bold text-on-surface-variant uppercase tracking-widest">Autorisation</p>
                         <h1 className="text-headline-lg text-on-surface">Bienvenue</h1>

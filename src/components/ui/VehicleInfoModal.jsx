@@ -71,7 +71,7 @@ const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
                             <p className="font-extrabold text-lg text-on-surface">{vehicle.marque_name || vehicle.marque} {vehicle.modele_name || vehicle.modele}</p>
                             <p className="text-sm font-mono font-bold" style={{ color: 'var(--on-surface-variant)' }}>{vehicle.matricule}</p>
                             <div className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-label-sm font-semibold"
-                                style={{ background: vehicle.is_deleted ? 'var(--error-bg)' : vehicle.is_archived ? 'var(--slate-bg)' : 'var(--success-bg)', color: vehicle.is_deleted ? 'var(--danger)' : vehicle.is_archived ? 'var(--on-surface-variant)' : '#166534' }}>
+                                style={{ background: vehicle.is_deleted ? 'var(--error-bg)' : vehicle.is_archived ? 'var(--slate-bg)' : 'var(--success-bg)', color: vehicle.is_deleted ? 'var(--danger)' : vehicle.is_archived ? 'var(--on-surface-variant)' : 'var(--success-dark)' }}>
                                 <span className="material-symbols-outlined text-[14px]">{vehicle.is_deleted ? 'delete' : vehicle.is_archived ? 'archive' : 'check_circle'}</span>
                                 {statusInfo.label}
                             </div>

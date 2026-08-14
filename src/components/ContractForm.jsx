@@ -249,7 +249,7 @@ const ContractForm = () => {
     
         if (loading) return <div className="p-8 text-center font-bold" style={{ color: 'var(--primary-container)' }}>Initialisation du Fleet Concierge...</div>;
 
-        const fieldClass = (name) => `field transition-all duration-200 ${hasError(name) ? 'border-rose-400 bg-rose-50/40' : 'focus:bg-white'}`;
+        const fieldClass = (name) => `field transition-all duration-200 ${hasError(name) ? 'border-danger bg-danger-bg/40' : 'focus:bg-white'}`;
 
         const selectStyles = (name) => ({
             control: (base, state) => ({
@@ -258,10 +258,10 @@ const ContractForm = () => {
                 border: '1px solid',
                 borderRadius: '0.5rem',
                 padding: '4px',
-                borderColor: hasError(name) ? '#fb7185' : (state.isFocused ? '#2563eb' : '#e2e8f0'),
-                boxShadow: hasError(name) ? '0 0 0 1px #fb7185' : (state.isFocused ? '0 0 0 2px rgba(37,99,235,0.15)' : 'none'),
+                borderColor: hasError(name) ? 'var(--danger)' : (state.isFocused ? 'var(--primary)' : 'var(--stroke)'),
+                boxShadow: hasError(name) ? '0 0 0 1px var(--danger)' : (state.isFocused ? '0 0 0 2px rgba(29,78,216,0.15)' : 'none'),
             }),
-            placeholder: (base) => ({ ...base, color: '#94a3b8' }),
+            placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
         });
 
         const stepState = (num) => {
@@ -376,7 +376,7 @@ const ContractForm = () => {
                     {/* Left column */}
                     <div className="col-span-2 space-y-6">
                         {currentStep === 1 && (
-                            <div className={`card shadow-l1 p-8 ${hasError('vehicle') ? 'border-rose-400 ring-1 ring-rose-300' : ''}`}>
+                            <div className={`card shadow-l1 p-8 ${hasError('vehicle') ? 'border-danger ring-1 ring-danger/30' : ''}`}>
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="section-title mb-0">
                                         <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
@@ -428,7 +428,7 @@ const ContractForm = () => {
                         )}
 
                         {currentStep === 2 && (
-                            <div className={`card shadow-l1 p-8 ${hasError('client') ? 'border-rose-400 ring-1 ring-rose-300' : ''}`}>
+                            <div className={`card shadow-l1 p-8 ${hasError('client') ? 'border-danger ring-1 ring-danger/30' : ''}`}>
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="section-title mb-0">
                                         <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
@@ -760,10 +760,10 @@ const ContractForm = () => {
                         </div>
 
                         {currentStep === 4 && (
-                            <div className="card shadow-l1 p-5" style={{ background: 'var(--success-bg)', borderColor: '#bbf0cf' }}>
+                            <div className="card shadow-l1 p-5" style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}>
                                 <div className="flex items-start gap-3">
                                     <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--success)' }}>task_alt</span>
-                                    <p className="text-[12.5px] font-medium" style={{ color: '#166534' }}>
+                                    <p className="text-[12.5px] font-medium" style={{ color: 'var(--success-dark)' }}>
                                         Toutes les étapes précédentes sont complètes. Valide le contrat pour générer le PDF et activer la location.
                                     </p>
                                 </div>
@@ -847,7 +847,7 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
         checkUnique(field, e.target.value);
     };
 
-    const fieldClass = (name) => `field ${uniqueErrors[name] ? 'border-rose-400 bg-rose-50/40' : ''}`;
+    const fieldClass = (name) => `field ${uniqueErrors[name] ? 'border-danger bg-danger-bg/40' : ''}`;
 
     const handleSubmit = async (e) => {
         e.preventDefault();

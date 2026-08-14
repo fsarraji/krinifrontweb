@@ -41,28 +41,28 @@ export const ToastContainer = () => {
 
     const toastStyles = {
         success: {
-            bg: 'bg-emerald-600',
-            ring: 'ring-emerald-700/30',
+            bg: 'bg-success',
+            ring: 'ring-success-dark/30',
             icon: 'check_circle',
-            accent: 'bg-emerald-500',
+            accent: 'bg-success',
         },
         error: {
-            bg: 'bg-rose-600',
-            ring: 'ring-rose-700/30',
+            bg: 'bg-danger',
+            ring: 'ring-danger-dark/30',
             icon: 'error',
-            accent: 'bg-rose-500',
+            accent: 'bg-danger',
         },
         warning: {
-            bg: 'bg-amber-600',
-            ring: 'ring-amber-700/30',
+            bg: 'bg-warning',
+            ring: 'ring-warning-dark/30',
             icon: 'warning',
-            accent: 'bg-amber-500',
+            accent: 'bg-warning',
         },
         info: {
-            bg: 'bg-indigo-600',
-            ring: 'ring-indigo-700/30',
+            bg: 'bg-primary',
+            ring: 'ring-primary-deep/30',
             icon: 'info',
-            accent: 'bg-indigo-500',
+            accent: 'bg-primary',
         },
     };
 

@@ -61,7 +61,7 @@ const ClientInfoModal = ({ isOpen, client, onClose }) => {
                             <p className="font-extrabold text-lg text-on-surface">{fullName}</p>
                             <p className="text-sm font-medium" style={{ color: 'var(--on-surface-variant)' }}>{fmt(client.telephone)}</p>
                             <div className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-label-sm font-semibold"
-                                style={{ background: isDeleted ? 'var(--error-bg)' : client.liste_noire ? 'var(--error-bg)' : 'var(--success-bg)', color: isDeleted ? 'var(--danger)' : client.liste_noire ? 'var(--danger)' : '#166534' }}>
+                                style={{ background: isDeleted ? 'var(--error-bg)' : client.liste_noire ? 'var(--error-bg)' : 'var(--success-bg)', color: isDeleted ? 'var(--danger)' : client.liste_noire ? 'var(--danger)' : 'var(--success-dark)' }}>
                                 <span className="material-symbols-outlined text-[14px]">{isDeleted ? 'delete' : client.liste_noire ? 'block' : 'verified_user'}</span>
                                 {isDeleted ? 'Supprimé' : client.liste_noire ? 'Liste noire' : 'Actif'}
                             </div>

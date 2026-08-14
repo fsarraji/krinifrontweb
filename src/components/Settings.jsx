@@ -510,8 +510,8 @@ const Settings = () => {
                                 styles={{
                                     control: (base) => ({
                                         ...base,
-                                        backgroundColor: '#f8fafc',
-                                        borderColor: '#e2e8f0',
+                                        backgroundColor: 'var(--card-white)',
+                                        borderColor: 'var(--stroke)',
                                         borderRadius: '0.75rem',
                                         fontSize: '0.875rem',
                                         padding: '2px 4px',
@@ -519,13 +519,13 @@ const Settings = () => {
                                     }),
                                     multiValue: (base) => ({
                                         ...base,
-                                        backgroundColor: '#eff6ff',
+                                        backgroundColor: 'var(--surface-active)',
                                         borderRadius: '8px',
                                     }),
-                                    multiValueLabel: (base) => ({ ...base, color: '#1d4ed8', fontWeight: '600' }),
-                                    multiValueRemove: (base) => ({ ...base, color: '#1d4ed8', ':hover': { backgroundColor: '#dbeafe', color: '#1d4ed8' } }),
+                                    multiValueLabel: (base) => ({ ...base, color: 'var(--primary)', fontWeight: '600' }),
+                                    multiValueRemove: (base) => ({ ...base, color: 'var(--primary)', ':hover': { backgroundColor: 'var(--primary-light)', color: 'var(--primary)' } }),
                                     menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden', zIndex: 9999 }),
-                                    placeholder: (base) => ({ ...base, color: '#94a3b8' }),
+                                    placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
                                 }}
                             />
                         )}

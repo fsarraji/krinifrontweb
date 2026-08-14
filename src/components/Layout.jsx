@@ -69,7 +69,7 @@ const Layout = ({ children }) => {
             {/* Sidebar Sticky & Collapsible */}
             <aside
                 className={`sticky top-0 h-screen ${isCollapsed ? 'w-[80px]' : 'w-[280px]'} flex-shrink-0 flex flex-col justify-between transition-all duration-300 z-30`}
-                style={{ background: 'var(--slate-bg)', borderRight: '1px solid var(--stroke)' }}
+                style={{ background: 'var(--card-white)', borderRight: '1px solid var(--stroke)' }}
                 data-purpose="sidebar"
             >
                 {/* Floating Toggle Collapse Button */}
@@ -89,16 +89,16 @@ const Layout = ({ children }) => {
                         className={`h-[72px] flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-6'}`}
                         style={{ borderBottom: '1px solid var(--stroke)' }}
                     >
-                        <div
-                            className="w-9 h-9 rounded-token flex items-center justify-center flex-shrink-0"
-                            style={{ background: 'var(--primary-container)' }}
-                        >
-                            <span className="material-symbols-outlined text-[20px] text-white">directions_car</span>
-                        </div>
+                        <img
+                            src="/logo.svg"
+                            alt="Logo"
+                            className="w-9 h-9 object-contain flex-shrink-0"
+                        />
                         {!isCollapsed && (
                             <div className="overflow-hidden min-w-0">
-                                <h1 className="font-bold text-[15px] tracking-tight leading-none truncate" style={{ color: 'var(--on-surface)' }} title="KRINICAR">
-                                    KRINICAR
+                                <h1 className="font-bold text-[15px] tracking-tight leading-none truncate" title="Kricar Agency">
+                                    <span style={{ color: '#000000' }}>Kricar</span>{' '}
+                                    <span style={{ color: 'var(--primary)' }}>Agency</span>
                                 </h1>
                                 <p className="text-[10.5px] font-semibold uppercase tracking-wide mt-1 truncate" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
                                     {agencyName}
@@ -134,7 +134,12 @@ const Layout = ({ children }) => {
                                                 title={isCollapsed ? item.label : undefined}
                                                 className={`sidebar-link ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-0' : ''}`}
                                             >
-                                                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                                                <span
+                                                    className="material-symbols-outlined text-[20px]"
+                                                    style={isActive ? { color: 'var(--primary)' } : { color: 'var(--text-muted)' }}
+                                                >
+                                                    {item.icon}
+                                                </span>
                                                 {!isCollapsed && <span className="truncate">{item.label}</span>}
                                             </Link>
                                         );

@@ -133,11 +133,11 @@ const Dashboard = () => {
                 </div>
 
                 {/* Card 4: Alertes */}
-                <div className="card rounded-token p-6 shadow-l1" style={{ background: 'var(--error-bg)', borderColor: '#f3c9c4' }}>
+                <div className="card rounded-token p-6 shadow-l1" style={{ background: 'var(--error-bg)', borderColor: 'var(--danger-border)' }}>
                     <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: '#ffffff' }}>
                         <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--error-c)' }}>warning</span>
                     </div>
-                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-error-container)' }}>{totalAlerts}</p>
+                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--danger-dark)' }}>{totalAlerts}</p>
                     <p className="text-[12px] mt-1" style={{ color: 'var(--error-c)', opacity: 0.8 }}>Alertes échéance</p>
                     <p className="text-[12px] mt-3" style={{ color: 'var(--error-c)', opacity: 0.7 }}>Assurance · visite technique</p>
                 </div>
@@ -151,15 +151,9 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--stroke)' }}>
                         <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>Contrats & État Flotte Récents</h3>
                         <div className="flex items-center gap-2">
-                            <span className="badge" style={{ background: 'var(--success-bg)', color: '#166534' }}>
-                                <span className="badge-dot" style={{ background: 'var(--success)' }}></span>Disponible
-                            </span>
-                            <span className="badge" style={{ background: 'var(--info-bg)', color: '#1e40af' }}>
-                                <span className="badge-dot" style={{ background: 'var(--info)' }}></span>Louée
-                            </span>
-                            <span className="badge" style={{ background: 'var(--warning-bg)', color: '#92400e' }}>
-                                <span className="badge-dot" style={{ background: 'var(--warning)' }}></span>Maintenance
-                            </span>
+                            <StatusBadge status="Available" />
+                            <StatusBadge status="Rented" />
+                            <StatusBadge status="Maintenance" />
                         </div>
                     </div>
                     <table className="w-full text-left">

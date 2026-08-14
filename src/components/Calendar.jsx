@@ -193,9 +193,9 @@ const Calendar = () => {
                 <div className="overflow-x-auto">
                     <div className="min-w-max flex flex-col">
                         {/* Days Header */}
-                        <div className="flex sticky top-0 z-20 bg-[#f8fafc] border-b border-slate-200">
+                        <div className="flex sticky top-0 z-20 bg-app-bg border-b border-slate-200">
                             {/* Vehicle Column Header */}
-                            <div className="w-[245px] shrink-0 h-[54px] px-4 border-r border-slate-100 bg-[#f8fafc] sticky left-0 top-0 z-40 shadow-[4px_0_10px_-4px_rgba(16,24,40,0.10)] font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <div className="w-[245px] shrink-0 h-[54px] px-4 border-r border-slate-100 bg-app-bg sticky left-0 top-0 z-40 shadow-[4px_0_10px_-4px_rgba(16,24,40,0.10)] font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                 <span className="material-symbols-outlined text-base">directions_car</span>
                                 Véhicule
                             </div>
@@ -210,7 +210,7 @@ const Calendar = () => {
                                         <div
                                             key={day}
                                             style={{ width: `${dayWidth}px` }}
-                                            className={`relative h-[54px] flex flex-col items-center justify-center border-r border-slate-100 ${isWeekend ? 'bg-[#fff7f8]' : ''} ${isToday ? 'bg-[#f8f8ff]' : ''}`}
+                                            className={`relative h-[54px] flex flex-col items-center justify-center border-r border-slate-100 ${isWeekend ? 'bg-danger-bg/40' : ''} ${isToday ? 'bg-primary-light/30' : ''}`}
                                         >
                                             <p className={`text-[10px] font-bold ${isWeekend ? 'text-rose-500' : 'text-slate-400'}`}>{dayName}</p>
                                             <p className={`text-xs font-extrabold mt-0.5 ${

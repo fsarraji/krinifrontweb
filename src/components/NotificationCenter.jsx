@@ -40,7 +40,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                     subtitle: `${req.client_name || req.nom} — ${req.vehicle_name || 'Véhicule'}`,
                     date: req.created_at || req.date_sortie,
                     icon: 'event_note',
-                    color: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
+                    color: 'bg-primary-light text-primary-deep ring-primary-border/30',
                     link: '/reservations',
                 });
             });
@@ -55,7 +55,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                     subtitle: `${req.client_name || 'Client'} — ${req.vehicle_name || 'Véhicule'}`,
                     date: req.created_at || req.date_sortie,
                     icon: 'event_note',
-                    color: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
+                    color: 'bg-primary-light text-primary-deep ring-primary-border/30',
                     link: '/reservations',
                 });
             });
@@ -70,7 +70,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                     subtitle: `Matricule ${ins.matricule} — Expire le ${ins.date_assurance}`,
                     date: ins.date_assurance,
                     icon: 'verified_user',
-                    color: 'bg-rose-50 text-rose-700 ring-rose-100',
+                    color: 'bg-danger-bg text-danger-dark ring-danger-bg',
                     link: `/vehicles/edit/${ins.id}`,
                 });
             });
@@ -85,7 +85,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                     subtitle: `Matricule ${vis.matricule} — Date : ${vis.date_visite_technique}`,
                     date: vis.date_visite_technique,
                     icon: 'build',
-                    color: 'bg-amber-50 text-amber-700 ring-amber-100',
+                    color: 'bg-warning-bg text-warning-dark ring-warning-bg',
                     link: `/vehicles/edit/${vis.id}`,
                 });
             });
@@ -136,7 +136,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
+                        <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shadow-md shadow-primary-border/40">
                             <span className="material-symbols-outlined text-xl">notifications_active</span>
                         </div>
                         <div>
@@ -151,14 +151,14 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
 
                 {/* Web Push Banner */}
                 {pushPermission !== 'granted' && (
-                    <div className="bg-indigo-50 border-b border-indigo-100 p-4 flex items-center justify-between gap-3">
+                    <div className="bg-primary-light border-b border-primary-light p-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-indigo-600 text-lg">campaign</span>
-                            <p className="text-xs font-semibold text-indigo-900">Activer les notifications navigateur ?</p>
+                            <span className="material-symbols-outlined text-primary text-lg">campaign</span>
+                            <p className="text-xs font-semibold text-primary-deep">Activer les notifications navigateur ?</p>
                         </div>
                         <button
                             onClick={requestWebPush}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm transition-all"
+                            className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-lg text-xs shadow-sm transition-all"
                         >
                             Activer
                         </button>
@@ -190,7 +190,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                 {/* Notifications List */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-3">
                     {loading ? (
-                        <div className="text-center py-12 font-bold text-indigo-600">Chargement des notifications...</div>
+                        <div className="text-center py-12 font-bold text-primary">Chargement des notifications...</div>
                     ) : filteredItems.length === 0 ? (
                         <div className="py-16 text-center text-slate-400 font-medium flex flex-col items-center gap-2">
                             <span className="material-symbols-outlined text-4xl text-slate-300">notifications_off</span>
@@ -204,7 +204,7 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                                     onClose();
                                     navigate(item.link);
                                 }}
-                                className="bg-white border border-slate-200 hover:border-indigo-200 hover:shadow-md p-4 rounded-2xl transition-all cursor-pointer group flex items-start gap-3.5"
+                                className="bg-white border border-slate-200 hover:border-primary-border hover:shadow-md p-4 rounded-2xl transition-all cursor-pointer group flex items-start gap-3.5"
                             >
                                 <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center font-bold text-sm ring-1 shrink-0`}>
                                     <span className="material-symbols-outlined text-xl">{item.icon}</span>
@@ -218,10 +218,10 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
                                             </span>
                                         )}
                                     </div>
-                                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors mt-0.5">{item.title}</h4>
+                                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-primary transition-colors mt-0.5">{item.title}</h4>
                                     <p className="text-xs text-slate-500 font-medium mt-1 truncate">{item.subtitle}</p>
                                 </div>
-                                <span className="material-symbols-outlined text-slate-300 group-hover:text-indigo-600 transition-colors text-lg self-center">chevron_right</span>
+                                <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg self-center">chevron_right</span>
                             </div>
                         ))
                     )}

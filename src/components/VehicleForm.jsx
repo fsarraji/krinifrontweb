@@ -144,8 +144,8 @@ const VehicleForm = () => {
 
     const inputClass = (name) => `w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition-all duration-200 ${
         hasError(name)
-            ? 'border-rose-400 bg-rose-50/40 hover:border-rose-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10'
-            : 'border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10'
+            ? 'border-danger bg-danger-bg/40 hover:border-danger focus:border-danger focus:ring-4 focus:ring-danger/10'
+            : 'border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-4 focus:ring-primary/10'
     }`;
 
     const selectStyles = (name) => ({
@@ -156,16 +156,16 @@ const VehicleForm = () => {
             borderRadius: '0.75rem',
             padding: '5px 6px',
             minHeight: '46px',
-            borderColor: hasError(name) ? '#fb7185' : (state.isFocused ? '#3b82f6' : '#e2e8f0'),
-            boxShadow: hasError(name) ? '0 0 0 3px rgba(244,63,94,0.12)' : (state.isFocused ? '0 0 0 3px rgba(59,130,246,0.12)' : 'none'),
-            '&:hover': { borderColor: state.isFocused ? '#3b82f6' : '#94a3b8' },
+            borderColor: hasError(name) ? 'var(--danger)' : (state.isFocused ? 'var(--primary)' : 'var(--stroke)'),
+            boxShadow: hasError(name) ? '0 0 0 3px rgba(239,68,68,0.12)' : (state.isFocused ? '0 0 0 3px rgba(29,78,216,0.12)' : 'none'),
+            '&:hover': { borderColor: state.isFocused ? 'var(--primary)' : 'var(--text-disabled)' },
         }),
-        placeholder: (base) => ({ ...base, color: '#94a3b8' }),
+        placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
         menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden' }),
         option: (base, state) => ({
             ...base,
-            backgroundColor: state.isFocused ? '#eff6ff' : 'white',
-            color: state.isSelected ? '#1d4ed8' : '#1e293b',
+            backgroundColor: state.isFocused ? 'var(--surface-active)' : 'white',
+            color: state.isSelected ? 'var(--primary)' : 'var(--on-surface)',
             fontWeight: state.isSelected || state.isFocused ? '600' : '400',
             fontSize: '0.875rem',
             cursor: 'pointer',
@@ -634,8 +634,8 @@ const VehicleForm = () => {
                                     <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-slate-300">
                                         <input
                                             type="checkbox"
-                                            className="h-5 w-5 rounded border-slate-300 text-blue-600"
-                                            style={{ accentColor: '#2563eb' }}
+                                            className="h-5 w-5 rounded border-slate-300 text-primary"
+                                            style={{ accentColor: '#1D4ED8' }}
                                             name="chauffeur_disponible"
                                             checked={formData.chauffeur_disponible}
                                             onChange={handleChange}

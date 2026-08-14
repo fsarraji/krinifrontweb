@@ -51,7 +51,7 @@ const Pagination = ({
                     <select
                         value={pageSize}
                         onChange={e => { onPageSizeChange(Number(e.target.value)); onPageChange(1); }}
-                        className="text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                        className="text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                     >
                         {pageSizeOptions.map(s => (
                             <option key={s} value={s}>{s} / page</option>
@@ -81,7 +81,7 @@ const Pagination = ({
                             onClick={() => onPageChange(p)}
                             className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${
                                 p === currentPage
-                                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+                                    ? 'bg-primary text-white shadow-sm shadow-primary-border/40'
                                     : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
                             }`}
                         >

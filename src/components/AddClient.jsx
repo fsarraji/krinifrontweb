@@ -69,10 +69,10 @@ const AddClient = () => {
     };
 
     const steps = [
-        { num: 1, label: 'Informations', icon: 'person' },
-        { num: 2, label: 'Adresse', icon: 'home' },
-        { num: 3, label: 'Permis', icon: 'card_membership' },
-        { num: 4, label: 'Documents', icon: 'folder_open' },
+        { num: 1, label: 'Informations', icon: 'person', subtitle: 'Identité & contact' },
+        { num: 2, label: 'Adresse', icon: 'home', subtitle: 'Localisation' },
+        { num: 3, label: 'Permis', icon: 'card_membership', subtitle: 'Permis de conduire' },
+        { num: 4, label: 'Documents', icon: 'folder_open', subtitle: 'Pièces justificatives' },
     ];
 
     const requiredFields = {
@@ -227,110 +227,55 @@ const AddClient = () => {
                         Ajouter un client
                     </h1>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/clients')}
-                        className="px-5 py-2.5 rounded-lg text-[13px] font-semibold card shadow-l1"
-                        style={{ color: 'var(--on-surface-variant)' }}
-                    >
-                        Annuler
-                    </button>
-                    {currentStep > 1 && (
-                        <button
-                            type="button"
-                            onClick={handlePrev}
-                            className="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white"
-                            style={{ background: 'var(--secondary)' }}
-                        >
-                            Étape précédente
-                        </button>
-                    )}
-                    {currentStep < 4 ? (
-                        <button
-                            type="button"
-                            onClick={handleNext}
-                            className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2"
-                            style={{ background: 'var(--primary-container)' }}
-                        >
-                            Continuer
-                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={loading}
-                            className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2 disabled:opacity-60"
-                            style={{ background: 'var(--success)' }}
-                        >
-                            <span className="material-symbols-outlined text-[16px]">save</span>
-                            {loading ? 'Enregistrement...' : 'Enregistrer le client'}
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Stepper */}
-            <div className="flex items-center mb-8">
-                {steps.map((s, i) => {
-                    const state = stepState(s.num);
-                    return (
-                        <React.Fragment key={s.num}>
-                            {i > 0 && (
-                                <div
-                                    className="step-line mx-4"
-                                    style={currentStep >= s.num ? { background: 'var(--success)' } : {}}
-                                ></div>
-                            )}
-                            <div className="flex items-center gap-2.5">
-                                <div
-                                    className="step-dot text-white"
-                                    style={
-                                        state === 'done'
-                                            ? { background: 'var(--success)' }
-                                            : state === 'active'
-                                                ? { background: 'var(--primary-container)' }
-                                                : { background: 'var(--stroke)', color: 'var(--on-surface-variant)' }
-                                    }
-                                >
-                                    {state === 'done' ? (
-                                        <span className="material-symbols-outlined text-[18px]">check</span>
-                                    ) : (
-                                        s.num
-                                    )}
-                                </div>
-                                <span
-                                    className="text-[13px]"
-                                    style={
-                                        state === 'active'
-                                            ? { fontWeight: 700, color: 'var(--primary-container)' }
-                                            : { fontWeight: state === 'done' ? 600 : 500, color: state === 'done' ? 'var(--on-surface)' : 'var(--on-surface-variant)', opacity: state === 'idle' ? 0.6 : 1 }
-                                    }
-                                >
-                                    {s.label}
-                                </span>
-                            </div>
-                        </React.Fragment>
-                    );
-                })}
             </div>
 
             {error && (
-                <div className="mb-6 p-4 rounded-lg flex items-center gap-3 font-semibold text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
+                <div className="mb-6 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
                     <span className="material-symbols-outlined">error</span>
                     <p>{error}</p>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-6 items-start">
+            <form onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
+                {/* Stepper */}
+                <div className="grid grid-cols-2 gap-3 border-b border-slate-200 bg-white px-5 py-5 md:grid-cols-4">
+                    {steps.map((s) => {
+                        const state = stepState(s.num);
+                        return (
+                            <div key={s.num} className="flex items-center gap-3">
+                                <div
+                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                                        state === 'done'
+                                            ? 'bg-emerald-500 text-white'
+                                            : state === 'active'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-slate-100 text-slate-500'
+                                    }`}
+                                >
+                                    {state === 'done' ? '✓' : s.num}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className={`text-sm ${state === 'active' ? 'font-semibold text-blue-700' : state === 'done' ? 'text-slate-700' : 'text-slate-500'}`}>
+                                        {s.label}
+                                    </div>
+                                    <div className="hidden text-xs text-slate-400 sm:block">{s.subtitle}</div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div className="space-y-5 bg-slate-50/50 p-5">
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_390px]">
                 {/* Form panel */}
-                <div className="col-span-2 space-y-6">
+                <div className="space-y-5">
                     {currentStep === 1 && (
-                        <div className="card shadow-l1 p-8">
-                            <div className="section-title">
-                                <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Informations personnelles</h2>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                            <div className="mb-7 flex items-center gap-3">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                    <span className="material-symbols-outlined text-[18px]">person</span>
+                                </span>
+                                <h2 className="text-lg font-semibold">Informations personnelles</h2>
                             </div>
                             <div className="grid grid-cols-2 gap-5">
                                 <div>
@@ -469,10 +414,12 @@ const AddClient = () => {
                     )}
 
                     {currentStep === 2 && (
-                        <div className="card shadow-l1 p-8">
-                            <div className="section-title">
-                                <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Adresse</h2>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                            <div className="mb-7 flex items-center gap-3">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                    <span className="material-symbols-outlined text-[18px]">home</span>
+                                </span>
+                                <h2 className="text-lg font-semibold">Adresse</h2>
                             </div>
                             <div className="grid grid-cols-2 gap-5">
                                 <div className="col-span-2">
@@ -520,10 +467,12 @@ const AddClient = () => {
                     )}
 
                     {currentStep === 3 && (
-                        <div className="card shadow-l1 p-8">
-                            <div className="section-title">
-                                <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Permis de conduire</h2>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                            <div className="mb-7 flex items-center gap-3">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                    <span className="material-symbols-outlined text-[18px]">card_membership</span>
+                                </span>
+                                <h2 className="text-lg font-semibold">Permis de conduire</h2>
                             </div>
                             <div className="grid grid-cols-2 gap-5">
                                 <div>
@@ -572,10 +521,12 @@ const AddClient = () => {
 
                     {currentStep === 4 && (
                         <>
-                            <div className="card shadow-l1 p-8">
-                                <div className="section-title">
-                                    <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                    <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Documents d'identité</h2>
+                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
+                                <div className="mb-7 flex items-center gap-3">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                                        <span className="material-symbols-outlined text-[18px]">folder_open</span>
+                                    </span>
+                                    <h2 className="text-lg font-semibold">Documents d'identité</h2>
                                 </div>
                                 <div className="grid grid-cols-2 gap-5">
                                     <div>
@@ -601,54 +552,108 @@ const AddClient = () => {
                                 </div>
                             </div>
 
-                            <div className="card shadow-l1 p-6" style={{ background: 'var(--info-bg)', borderColor: '#bfd7fb' }}>
+                            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-soft">
                                 <div className="flex items-start gap-3">
-                                    <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--primary-container)' }}>info</span>
-                                    <p className="text-[12.5px] font-medium" style={{ color: '#1e3a8a' }}>
+                                    <span className="material-symbols-outlined text-[18px] mt-0.5 text-blue-600">info</span>
+                                    <p className="text-[12.5px] font-medium text-blue-700">
                                         Le dossier client sera automatiquement rattaché aux contrats et réservations créés à son nom.
                                     </p>
                                 </div>
                             </div>
                         </>
                     )}
-                </div>
+                    </div>
 
-                {/* Sidebar : summary */}
-                <div className="space-y-6">
-                    <div className="card shadow-l1 p-6">
-                        <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>Résumé</h3>
-                        <div className="space-y-3 text-[13px]">
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Nom complet</span>
-                                <span className="font-semibold">{formData.prenom || '—'} {formData.nom || ''}</span>
+                    {/* Sidebar : summary */}
+                    <div className="space-y-5">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
+                            <h3 className="mb-4 text-sm font-semibold text-slate-900">Résumé</h3>
+                            <div className="space-y-3 text-[13px]">
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Nom complet</span>
+                                    <span className="font-semibold text-slate-700">{formData.prenom || '—'} {formData.nom || ''}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">{cinLabelFor(formData.nationalite)}</span>
+                                    <span className="font-semibold text-slate-700">{formData.cin_passport || '—'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Téléphone</span>
+                                    <span className="font-semibold text-slate-700">{formData.telephone || '—'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">Ville</span>
+                                    <span className="font-semibold text-slate-700">{formData.ville || '—'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">N° de permis</span>
+                                    <span className="font-semibold text-slate-700">{formData.permis_conduite || '—'}</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{cinLabelFor(formData.nationalite)}</span>
-                                <span className="font-semibold">{formData.cin_passport || '—'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Téléphone</span>
-                                <span className="font-semibold">{formData.telephone || '—'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Ville</span>
-                                <span className="font-semibold">{formData.ville || '—'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>N° de permis</span>
-                                <span className="font-semibold">{formData.permis_conduite || '—'}</span>
+                            <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--stroke)' }}>
+                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">Progression</p>
+                                <div className="h-1.5 rounded-full overflow-hidden bg-slate-100">
+                                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(currentStep / 4) * 100}%`, background: '#1D4ED8' }}></div>
+                                </div>
+                                <p className="mt-2 text-[11px] font-semibold text-blue-700">Étape {currentStep} sur 4</p>
                             </div>
                         </div>
-                        <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--stroke)' }}>
-                            <p className="text-[11px] font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Progression</p>
-                            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--stroke)' }}>
-                                <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(currentStep / 4) * 100}%`, background: 'var(--primary-container)' }}></div>
-                            </div>
-                            <p className="text-[11px] mt-2 font-semibold" style={{ color: 'var(--primary-container)' }}>Étape {currentStep} sur 4</p>
-                        </div>
+                    </div>
                     </div>
                 </div>
             </form>
+
+            {/* Bottom security + actions */}
+            <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <span className="material-symbols-outlined">shield</span>
+                    </div>
+                    <div>
+                        <p className="text-sm font-semibold text-slate-700">Vos données sont sécurisées</p>
+                        <p className="text-xs text-slate-400">Nous protégeons vos informations avec le plus haut niveau de sécurité.</p>
+                    </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/clients')}
+                        className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                    >
+                        Annuler
+                    </button>
+                    {currentStep > 1 && (
+                        <button
+                            type="button"
+                            onClick={handlePrev}
+                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        >
+                            <span className="material-symbols-outlined text-[16px] mr-1">chevron_left</span>
+                            Précédent
+                        </button>
+                    )}
+                    {currentStep < 4 ? (
+                        <button
+                            type="button"
+                            onClick={handleNext}
+                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        >
+                            Suivant
+                            <span className="material-symbols-outlined text-[16px] ml-1">chevron_right</span>
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                        >
+                            <span className="material-symbols-outlined text-[16px] mr-1">check</span>
+                            {loading ? 'Enregistrement…' : 'Enregistrer le client'}
+                        </button>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

@@ -324,9 +324,9 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   <p className="label mb-1">Km au Départ</p>
                   <p className="text-xl font-headline font-bold text-on-surface">{contract.km_sortie?.toLocaleString()} <span className="text-xs font-medium" style={{ color: 'var(--on-surface-variant)' }}>KM</span></p>
                 </div>
-                <div className="p-3 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid #bfd7fb' }}>
-                  <p className="label mb-1" style={{ color: 'var(--primary-container)' }}>Distance Parcourue</p>
-                  <p className={`text-xl font-headline font-bold ${kmDiff >= 0 ? '' : 'text-red-600'}`} style={kmDiff >= 0 ? { color: 'var(--primary-container)' } : {}}>
+                <div className="p-3 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
+                  <p className="label mb-1" style={{ color: 'var(--primary)' }}>Distance Parcourue</p>
+                  <p className={`text-xl font-headline font-bold ${kmDiff >= 0 ? '' : 'text-red-600'}`} style={kmDiff >= 0 ? { color: 'var(--primary)' } : {}}>
                     {kmDiff >= 0 ? '+' : ''}{kmDiff.toLocaleString()} <span className="text-xs font-medium opacity-50">KM</span>
                   </p>
                   {agencySettings.km_extra_active && kmDiff > 0 && (
@@ -503,28 +503,28 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   <p className="label mb-0.5">Durée Initiale</p>
                   <p className="text-base font-headline font-bold text-on-surface">{contract.jours} J</p>
                 </div>
-                <div className="p-2.5 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid #bfd7fb' }}>
-                  <p className="label mb-0.5" style={{ color: 'var(--primary-container)' }}>Durée Réele</p>
-                  <p className="text-base font-headline font-bold" style={{ color: 'var(--primary-container)' }}>{recalculatedDays} J</p>
+                <div className="p-2.5 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
+                  <p className="label mb-0.5" style={{ color: 'var(--primary)' }}>Durée Réele</p>
+                  <p className="text-base font-headline font-bold" style={{ color: 'var(--primary)' }}>{recalculatedDays} J</p>
                 </div>
                 <div className="p-2.5 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
                   <p className="label mb-0.5">Sous-total Initial</p>
                   <p className="text-base font-headline font-bold text-on-surface line-through opacity-40">{contract.montant_total} DH</p>
                 </div>
-                <div className="p-2.5 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid #bfd7fb' }}>
-                  <p className="label mb-0.5" style={{ color: 'var(--primary-container)' }}>Sous-total Ajusté</p>
-                  <p className="text-lg font-headline font-black" style={{ color: 'var(--primary-container)' }}>{recalculatedTotal.toLocaleString()} DH</p>
+                <div className="p-2.5 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
+                  <p className="label mb-0.5" style={{ color: 'var(--primary)' }}>Sous-total Ajusté</p>
+                  <p className="text-lg font-headline font-black" style={{ color: 'var(--primary)' }}>{recalculatedTotal.toLocaleString()} DH</p>
                 </div>
               </div>
 
               {/* Km Overage */}
               {agencySettings.km_extra_active && kmSupplementaires > 0 && (
-                <div className="mt-3 p-3 rounded-lg" style={{ background: 'var(--warning-bg)', border: '1px solid #fde68a' }}>
-                  <p className="text-[11px] font-bold uppercase tracking-wide mb-1 flex items-center gap-1.5" style={{ color: 'var(--warning)' }}>
+                <div className="mt-3 p-3 rounded-lg" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)' }}>
+                  <p className="text-[11px] font-bold uppercase tracking-wide mb-1 flex items-center gap-1.5" style={{ color: 'var(--warning-dark)' }}>
                     <span className="material-symbols-outlined text-sm">speed</span>
                     Supplément Kilométrique
                   </p>
-                  <div className="space-y-0.5 text-xs" style={{ color: '#92400e' }}>
+                  <div className="space-y-0.5 text-xs" style={{ color: 'var(--warning-dark)' }}>
                     <p>Km inclus : {kmInclus.toLocaleString()} km ({agencySettings.km_par_jour} km/j × {recalculatedDays} j)</p>
                     <p>Km parcourus : {kmDiff.toLocaleString()} km</p>
                     <p className="font-bold">Dépassement : {kmSupplementaires.toLocaleString()} km × {tarifKmExtra} DH/km</p>
@@ -534,7 +534,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
               )}
 
               {agencySettings.km_extra_active && kmSupplementaires === 0 && kmDiff > 0 && (
-                <div className="mt-3 p-2.5 rounded-lg" style={{ background: 'var(--success-bg)', border: '1px solid #bbf0cf' }}>
+                <div className="mt-3 p-2.5 rounded-lg" style={{ background: 'var(--success-bg)', border: '1px solid var(--success-border)' }}>
                   <p className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'var(--success)' }}>
                     <span className="material-symbols-outlined text-sm">check_circle</span>
                     Kilométrage dans le forfait — Aucun supplément
