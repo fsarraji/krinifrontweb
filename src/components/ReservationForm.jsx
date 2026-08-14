@@ -34,6 +34,8 @@ const ReservationForm = () => {
 
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [showClientModal, setShowClientModal] = useState(false);
+    const [quote, setQuote] = useState(null);
+    const [quoteLoading, setQuoteLoading] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -90,6 +92,17 @@ const ReservationForm = () => {
         });
     };
 
+    useEffect(() => {
+        if (!formData.vehicle || !formData.date_sortie || !formData.date_retour_prevue) { setQuote(null); return; }
+        let cancelled = false;
+        setQuoteLoading(true);
+        api.get(`vehicles/${formData.vehicle}/price-quote/`, { params: { start: formData.date_sortie, end: formData.date_retour_prevue } })
+            .then((res) => { if (!cancelled) setQuote(res.data); })
+            .catch(() => { if (!cancelled) setQuote(null); })
+            .finally(() => { if (!cancelled) setQuoteLoading(false); });
+        return () => { cancelled = true; };
+    }, [formData.vehicle, formData.date_sortie, formData.date_retour_prevue]);
+
     const diffDays = () => {
         const start = new Date(formData.date_sortie);
         const end = new Date(formData.date_retour_prevue);
@@ -100,7 +113,7 @@ const ReservationForm = () => {
 
     const totalEstimate = () => {
         const days = diffDays();
-        const base = days * formData.prix_par_jour;
+        const base = quote && quote.total != null ? parseFloat(quote.total) : days * formData.prix_par_jour;
         const chauffeur = formData.chauffeur_service ? 50 * days : 0;
         return base + chauffeur;
     };
@@ -289,7 +302,7 @@ const ReservationForm = () => {
                                                 {vehicle.marque_name} {vehicle.modele_name}
                                             </h4>
                                             <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                <span className="text-[10px] px-2 py-1 rounded-md bg-slate-200 text-slate-700 font-mono font-bold uppercase tracking-wider">{vehicle.matricule}</span>
+                                                <span className="text-[10px] px-2 py-1 rounded-md bg-slate-200 text-slate-700 font-mono font-bold uppercase tracking-wider">{vehicle.matricule_actuel || vehicle.matricule}</span>
                                                 <span className="text-sm text-indigo-600 font-bold">{vehicle.prix_par_jour} DH/j</span>
                                             </div>
                                         </div>
@@ -526,7 +539,7 @@ const ReservationForm = () => {
                                         </div>
                                         <div>
                                             <p className="font-bold text-base">{selectedVehicle.marque_name} {selectedVehicle.modele_name}</p>
-                                            <p className="text-xs text-slate-400 font-mono">{selectedVehicle.matricule}</p>
+                                            <p className="text-xs text-slate-400 font-mono">{selectedVehicle.matricule_actuel || selectedVehicle.matricule}</p>
                                         </div>
                                     </div>
                                 )}
@@ -550,7 +563,10 @@ const ReservationForm = () => {
                                         </div>
                                         <div className="flex justify-between items-baseline py-2 border-b border-slate-800">
                                             <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Total Est.</p>
-                                            <p className="text-3xl font-extrabold text-indigo-400">{totalEstimate().toLocaleString()} DH</p>
+                                            <p className="text-3xl font-extrabold text-indigo-400 flex items-center gap-2">
+                                                {quoteLoading && <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>}
+                                                {totalEstimate().toLocaleString()} DH
+                                            </p>
                                         </div>
                                     </>
                                 )}

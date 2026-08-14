@@ -51,7 +51,7 @@ const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
                 <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center bg-white shrink-0">
                     <div>
                         <h2 className="text-xl font-extrabold font-headline text-on-surface">Fiche véhicule</h2>
-                        <p className="text-sm text-on-surface-variant mt-0.5">{vehicle.matricule} · {vehicle.marque_name || vehicle.marque} {vehicle.modele_name || vehicle.modele}</p>
+                        <p className="text-sm text-on-surface-variant mt-0.5">{vehicle.matricule_actuel || vehicle.matricule} · {vehicle.marque_name || vehicle.marque} {vehicle.modele_name || vehicle.modele}</p>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
                         <span className="material-symbols-outlined text-on-surface-variant">close</span>
@@ -69,7 +69,7 @@ const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
                         )}
                         <div className="flex-1 min-w-0">
                             <p className="font-extrabold text-lg text-on-surface">{vehicle.marque_name || vehicle.marque} {vehicle.modele_name || vehicle.modele}</p>
-                            <p className="text-sm font-mono font-bold" style={{ color: 'var(--on-surface-variant)' }}>{vehicle.matricule}</p>
+                            <p className="text-sm font-mono font-bold" style={{ color: 'var(--on-surface-variant)' }}>{vehicle.matricule_actuel || vehicle.matricule}</p>
                             <div className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-label-sm font-semibold"
                                 style={{ background: vehicle.is_deleted ? 'var(--error-bg)' : vehicle.is_archived ? 'var(--slate-bg)' : 'var(--success-bg)', color: vehicle.is_deleted ? 'var(--danger)' : vehicle.is_archived ? 'var(--on-surface-variant)' : 'var(--success-dark)' }}>
                                 <span className="material-symbols-outlined text-[14px]">{vehicle.is_deleted ? 'delete' : vehicle.is_archived ? 'archive' : 'check_circle'}</span>
@@ -89,10 +89,18 @@ const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
                         <Row icon="route" label="Km loué (contrats)" value={fmtNum(vehicle.km_loue, ' km')} />
                         <Row icon="palette" label="Couleur" value={fmt(vehicle.couleur)} />
                         <Row icon="build" label="Prochaine vidange" value={fmtNum(vehicle.prochain_vidange_km, ' km')} />
+                        <Row icon="power" label="Puissance fiscale" value={fmtNum(vehicle.puissance_fiscale, ' CV')} />
                         <Row icon="person" label="Chauffeur disponible" value={OUI_NON(vehicle.chauffeur_disponible)} />
                         <Row icon="satellite_alt" label="GPS / IMEI" value={fmt(vehicle.gps_imei)} />
                         <Row icon="sim_card" label="Carte SIM" value={fmt(vehicle.sim_number)} />
                         <Row icon="phone_in_talk" label="Opérateur" value={fmt(vehicle.sim_operator)} />
+                    </Section>
+
+                    <Section title="Circulation">
+                        <Row icon="badge" label="Matricule provisoire (WW)" value={fmt(vehicle.matricule)} />
+                        <Row icon="confirmation_number" label="Matricule définitif" value={fmt(vehicle.matricule_definitif)} />
+                        <Row icon="calendar_today" label="Mise en circulation" value={fmtDate(vehicle.date_mise_en_circulation)} />
+                        <Row icon="assignment_turned_in" label="Autorisation de circulation" value={fmtDate(vehicle.date_autorisation_circulation)} />
                     </Section>
 
                     <Section title="Informations financières">

@@ -15,6 +15,7 @@ const VehicleForm = () => {
 
     const [formData, setFormData] = useState({
         matricule: '',
+        matricule_definitif: '',
         marque: '',
         modele: '',
         annee: new Date().getFullYear(),
@@ -28,6 +29,10 @@ const VehicleForm = () => {
         date_visite_technique: '',
         prochain_vidange_km: 0,
         tarif_km_extra: '',
+        date_mise_en_circulation: '',
+        date_autorisation_circulation: '',
+        puissance_fiscale: '',
+        price_intervals: [],
     });
 
     const [brands, setBrands] = useState([]);
@@ -71,6 +76,7 @@ const VehicleForm = () => {
 
     const UNIQUE_FIELDS = {
         matricule: 'matricule',
+        matricule_definitif: 'matricule définitif',
     };
 
     const checkUnique = async (field, value) => {
@@ -209,6 +215,11 @@ const VehicleForm = () => {
                         ...data,
                         date_assurance: data.date_assurance || '',
                         date_visite_technique: data.date_visite_technique || '',
+                        date_mise_en_circulation: data.date_mise_en_circulation || '',
+                        date_autorisation_circulation: data.date_autorisation_circulation || '',
+                        puissance_fiscale: data.puissance_fiscale || '',
+                        matricule_definitif: data.matricule_definitif || '',
+                        price_intervals: Array.isArray(data.price_intervals) ? data.price_intervals : [],
                     });
                     if (data.image) {
                         setImagePreview(data.image);
@@ -246,10 +257,48 @@ const VehicleForm = () => {
         }
     };
 
+    const MONTHS = [
+        { value: 1, label: 'Janvier' },
+        { value: 2, label: 'Février' },
+        { value: 3, label: 'Mars' },
+        { value: 4, label: 'Avril' },
+        { value: 5, label: 'Mai' },
+        { value: 6, label: 'Juin' },
+        { value: 7, label: 'Juillet' },
+        { value: 8, label: 'Août' },
+        { value: 9, label: 'Septembre' },
+        { value: 10, label: 'Octobre' },
+        { value: 11, label: 'Novembre' },
+        { value: 12, label: 'Décembre' },
+    ];
+    const DAYS = Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
+
+    const addInterval = () => {
+        setFormData((prev) => ({
+            ...prev,
+            price_intervals: [...prev.price_intervals, { type: 'RECURRENT', prix: '', mois_debut: '', jour_debut: '', mois_fin: '', jour_fin: '', date_debut: '', date_fin: '' }],
+        }));
+    };
+
+    const updateInterval = (index, patch) => {
+        setFormData((prev) => {
+            const next = [...prev.price_intervals];
+            next[index] = { ...next[index], ...patch };
+            return { ...prev, price_intervals: next };
+        });
+    };
+
+    const removeInterval = (index) => {
+        setFormData((prev) => ({
+            ...prev,
+            price_intervals: prev.price_intervals.filter((_, i) => i !== index),
+        }));
+    };
+
     const performSubmit = async () => {
         setLoading(true);
         const data = new FormData();
-        const readOnlyFields = ['id', 'agency', 'marque_name', 'modele_name', 'agency_details', 'image'];
+        const readOnlyFields = ['id', 'agency', 'marque_name', 'modele_name', 'agency_details', 'image', 'price_intervals'];
         
         Object.keys(formData).forEach((key) => {
             if (!readOnlyFields.includes(key)) {
@@ -270,6 +319,28 @@ const VehicleForm = () => {
                 }
             }
         });
+        
+        // Périodes tarifaires saisonnières (envoyées en JSON pour le multipart)
+        if (Array.isArray(formData.price_intervals)) {
+            const intervals = formData.price_intervals
+                .map((item) => ({
+                    id: item.id ?? undefined,
+                    type: item.type || 'RECURRENT',
+                    prix: item.prix,
+                    date_debut: item.date_debut || null,
+                    date_fin: item.date_fin || null,
+                    mois_debut: item.mois_debut ?? null,
+                    jour_debut: item.jour_debut ?? null,
+                    mois_fin: item.mois_fin ?? null,
+                    jour_fin: item.jour_fin ?? null,
+                }))
+                .filter((item) => item.prix != null && item.prix !== '');
+            if (intervals.length > 0) {
+                data.append('price_intervals', JSON.stringify(intervals));
+            } else {
+                data.append('price_intervals', '[]');
+            }
+        }
         
         // Only append image if it's a new File object (not the existing URL string)
         if (image && image instanceof File) {
@@ -534,6 +605,51 @@ const VehicleForm = () => {
                                         </p>
                                     )}
                                 </label>
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Plaque définitive (optionnel)</span>
+                                    <input
+                                        name="matricule_definitif"
+                                        value={formData.matricule_definitif}
+                                        onChange={handleChange}
+                                        onBlur={handleBlurUnique('matricule_definitif')}
+                                        className={inputClass('matricule_definitif')}
+                                        type="text"
+                                        placeholder="Ex: 00000-A-50"
+                                    />
+                                    {checkingUnique['matricule_definitif'] && (
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+                                            <span className="material-symbols-outlined animate-spin text-[13px]">progress_activity</span>
+                                            Vérification de l'unicité…
+                                        </p>
+                                    )}
+                                    {fieldErrorMsg('matricule_definitif') && (
+                                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
+                                            <span className="material-symbols-outlined text-[13px]">error</span>
+                                            {fieldErrorMsg('matricule_definitif')}
+                                        </p>
+                                    )}
+                                    <p className="mt-1.5 text-[11px] text-slate-400">Saisie une fois la plaque 00000-lettre-00 reçue. Elle remplace la WW provisoire un mois après la mise en circulation.</p>
+                                </label>
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Date de mise en circulation</span>
+                                    <input
+                                        name="date_mise_en_circulation"
+                                        value={formData.date_mise_en_circulation}
+                                        onChange={handleChange}
+                                        className={inputClass('date_mise_en_circulation')}
+                                        type="date"
+                                    />
+                                </label>
+                                <label className="block">
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Date d'autorisation de circulation</span>
+                                    <input
+                                        name="date_autorisation_circulation"
+                                        value={formData.date_autorisation_circulation}
+                                        onChange={handleChange}
+                                        className={inputClass('date_autorisation_circulation')}
+                                        type="date"
+                                    />
+                                </label>
                             </div>
                         </div>
                     )}
@@ -599,6 +715,18 @@ const VehicleForm = () => {
                                             type="number"
                                         />
                                     </label>
+                                    <label className="block">
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Puissance fiscale (CV)</span>
+                                        <input
+                                            name="puissance_fiscale"
+                                            value={formData.puissance_fiscale}
+                                            onChange={handleChange}
+                                            className={inputClass('puissance_fiscale')}
+                                            type="number"
+                                            min="1"
+                                            placeholder="Ex: 8"
+                                        />
+                                    </label>
                                 </div>
                             </div>
                         </>
@@ -656,6 +784,137 @@ const VehicleForm = () => {
                                         placeholder="Laissez vide = utiliser le tarif agence (défaut)"
                                     />
                                     <p className="mt-2 text-xs text-slate-400">Si non renseigné, le tarif par défaut des Paramètres sera appliqué.</p>
+                                </div>
+                            </div>
+                            <div className="mt-7 border-t border-slate-200 pt-6">
+                                <div className="mb-4 flex items-center justify-between gap-3">
+                                    <div>
+                                        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Périodes tarifaires (saisonnières)</span>
+                                        <p className="text-xs text-slate-400">Prix journalier appliqué pendant certaines périodes de l'année. Le prix par défaut s'applique au reste de l'année.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={addInterval}
+                                        className="flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">add</span>
+                                        Ajouter une période
+                                    </button>
+                                </div>
+                                {formData.price_intervals.length === 0 && (
+                                    <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-400">
+                                        Aucune période saisonnière. Le tarif journalier défaut s'applique toute l'année.
+                                    </p>
+                                )}
+                                <div className="space-y-3">
+                                    {formData.price_intervals.map((interval, index) => (
+                                        <div key={index} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                                            <div className="mb-3 flex items-center justify-between">
+                                                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Période {index + 1}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeInterval(index)}
+                                                    className="flex items-center gap-1 text-[11px] font-semibold text-rose-500 transition hover:text-rose-700"
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                                                    Supprimer
+                                                </button>
+                                            </div>
+                                            <div className="grid gap-3 md:grid-cols-2">
+                                                <div>
+                                                    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</span>
+                                                    <Dropdown
+                                                        options={[
+                                                            { value: 'RECURRENT', label: 'Récurrent (chaque année)' },
+                                                            { value: 'ABSOLUTE', label: 'Absolu (dates précises)' },
+                                                        ]}
+                                                        value={interval.type}
+                                                        onChange={(v) => updateInterval(index, { type: v })}
+                                                    />
+                                                </div>
+                                                <label className="block">
+                                                    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Prix / jour (DH)</span>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={interval.prix}
+                                                        onChange={(e) => updateInterval(index, { prix: e.target.value })}
+                                                        className={inputClass('price_intervals')}
+                                                        placeholder="Ex: 400"
+                                                    />
+                                                </label>
+                                                {interval.type === 'RECURRENT' ? (
+                                                    <>
+                                                        <div>
+                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Début (mois / jour)</span>
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={interval.mois_debut}
+                                                                    onChange={(e) => updateInterval(index, { mois_debut: e.target.value })}
+                                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
+                                                                >
+                                                                    <option value="">Mois</option>
+                                                                    {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                                                                </select>
+                                                                <select
+                                                                    value={interval.jour_debut}
+                                                                    onChange={(e) => updateInterval(index, { jour_debut: e.target.value })}
+                                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
+                                                                >
+                                                                    <option value="">Jour</option>
+                                                                    {DAYS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Fin (mois / jour)</span>
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={interval.mois_fin}
+                                                                    onChange={(e) => updateInterval(index, { mois_fin: e.target.value })}
+                                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
+                                                                >
+                                                                    <option value="">Mois</option>
+                                                                    {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                                                                </select>
+                                                                <select
+                                                                    value={interval.jour_fin}
+                                                                    onChange={(e) => updateInterval(index, { jour_fin: e.target.value })}
+                                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
+                                                                >
+                                                                    <option value="">Jour</option>
+                                                                    {DAYS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[11px] text-slate-400 md:col-span-2">Peut chevaucher la fin d'année (ex : 15 décembre → 15 janvier).</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <label className="block">
+                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date de début</span>
+                                                            <input
+                                                                type="date"
+                                                                value={interval.date_debut}
+                                                                onChange={(e) => updateInterval(index, { date_debut: e.target.value })}
+                                                                className={inputClass('price_intervals')}
+                                                            />
+                                                        </label>
+                                                        <label className="block">
+                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date de fin</span>
+                                                            <input
+                                                                type="date"
+                                                                value={interval.date_fin}
+                                                                onChange={(e) => updateInterval(index, { date_fin: e.target.value })}
+                                                                className={inputClass('price_intervals')}
+                                                            />
+                                                        </label>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

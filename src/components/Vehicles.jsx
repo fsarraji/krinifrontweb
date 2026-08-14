@@ -365,7 +365,7 @@ const Vehicles = () => {
                                             </div>
                                         </td>
                                         <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                            {vehicle.matricule}
+                                            {vehicle.matricule_actuel || vehicle.matricule}
                                         </td>
                                         <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
                                             {vehicle.carburant}
@@ -435,7 +435,7 @@ const Vehicles = () => {
                                                     <h3 className="text-title-lg text-on-surface group-hover:text-primary transition-colors truncate">
                                                         {vehicle.marque_name} {vehicle.modele_name}
                                                     </h3>
-                                                    <p className="text-body-sm text-on-surface-variant font-medium">{vehicle.matricule}</p>
+                                                    <p className="text-body-sm text-on-surface-variant font-medium">{vehicle.matricule_actuel || vehicle.matricule}</p>
                                                 </div>
                                             </div>
                                             {vehicle.is_deleted ? (

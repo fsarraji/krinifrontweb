@@ -28,6 +28,8 @@ const ContractForm = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const [fieldErrors, setFieldErrors] = useState({});
     const [kmLoading, setKmLoading] = useState(false);
+    const [quote, setQuote] = useState(null);
+    const [quoteLoading, setQuoteLoading] = useState(false);
 
     const steps = [
         { num: 1, label: 'Véhicule', icon: 'directions_car' },
@@ -147,6 +149,22 @@ const ContractForm = () => {
         }
     };
 
+    useEffect(() => {
+        if (!formData.vehicle || !formData.date_sortie || !formData.date_retour_prevue) { setQuote(null); return; }
+        let cancelled = false;
+        setQuoteLoading(true);
+        const fmt = (d) => {
+            const date = new Date(d);
+            const tzoffset = date.getTimezoneOffset() * 60000;
+            return new Date(date.getTime() - tzoffset).toISOString().slice(0, 16);
+        };
+        api.get(`vehicles/${formData.vehicle}/price-quote/`, { params: { start: fmt(formData.date_sortie), end: fmt(formData.date_retour_prevue) } })
+            .then((res) => { if (!cancelled) setQuote(res.data); })
+            .catch(() => { if (!cancelled) setQuote(null); })
+            .finally(() => { if (!cancelled) setQuoteLoading(false); });
+        return () => { cancelled = true; };
+    }, [formData.vehicle, formData.date_sortie, formData.date_retour_prevue]);
+
     const handleVehicleSelect = (vehicle) => {
         setSelectedVehicle(vehicle);
             setFieldErrors((prev) => ({ ...prev, vehicle: false }));
@@ -190,7 +208,7 @@ const ContractForm = () => {
     
         const totalEstimate = () => {
             const days = diffDays();
-            const base = days * formData.prix_par_jour;
+            const base = quote && quote.total != null ? parseFloat(quote.total) : days * formData.prix_par_jour;
             const chauffeur = formData.chauffeur_service ? 50 * days : 0; // Exemple: 50 DH/jour pour le chauffeur
             return base + chauffeur;
         };
@@ -411,7 +429,7 @@ const ContractForm = () => {
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-bold text-[13px] truncate" style={{ color: 'var(--on-surface)' }}>{vehicle.marque_name} {vehicle.modele_name}</h4>
                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 font-mono font-bold uppercase tracking-wider">{vehicle.matricule}</span>
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 font-mono font-bold uppercase tracking-wider">{vehicle.matricule_actuel || vehicle.matricule}</span>
                                                     <span className="text-xs font-bold" style={{ color: 'var(--primary-container)' }}>{vehicle.prix_par_jour} DH/j</span>
                                                 </div>
                                             </div>
@@ -733,7 +751,7 @@ const ContractForm = () => {
                             <div className="space-y-3 text-[13px]">
                                 <div className="flex justify-between">
                                     <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Véhicule</span>
-                                    <span className="font-semibold">{selectedVehicle ? `${selectedVehicle.marque_name} ${selectedVehicle.modele_name}` : '—'}</span>
+                                    <span className="font-semibold">{selectedVehicle ? `${selectedVehicle.marque_name} ${selectedVehicle.modele_name}${selectedVehicle.matricule_actuel ? ` · ${selectedVehicle.matricule_actuel}` : ''}` : '—'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Client</span>
@@ -745,8 +763,16 @@ const ContractForm = () => {
                                 </div>
                                 <div className="flex justify-between">
                                     <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Prix / jour</span>
-                                    <span className="font-semibold">{parseFloat(formData.prix_par_jour || 0).toLocaleString()} DH</span>
+                                    <span className="font-semibold">{quote && quote.prix_moyen != null ? parseFloat(quote.prix_moyen).toLocaleString() : parseFloat(formData.prix_par_jour || 0).toLocaleString()} DH</span>
                                 </div>
+                                {quote && (
+                                    <div className="flex justify-between">
+                                        <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Tarification</span>
+                                        <span className="font-semibold text-[11px]" style={{ color: 'var(--primary-container)' }}>
+                                            {quoteLoading ? '…' : quote.detail?.length > 0 ? 'Saisonnière' : 'Standard'}
+                                        </span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between">
                                     <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Caution</span>
                                     <span className="font-semibold">{isCautionActive ? `${parseFloat(formData.caution || 0).toLocaleString()} DH` : '—'}</span>
@@ -755,7 +781,10 @@ const ContractForm = () => {
                             <div className="my-4 h-px" style={{ background: 'var(--stroke)' }}></div>
                             <div className="flex justify-between items-center">
                                 <span className="font-bold text-[14px]">Total</span>
-                                <span className="font-bold text-[20px]" style={{ color: 'var(--primary-container)' }}>{totalEstimate().toLocaleString()} DH</span>
+                                <span className="font-bold text-[20px] flex items-center gap-2" style={{ color: 'var(--primary-container)' }}>
+                                    {quoteLoading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
+                                    {totalEstimate().toLocaleString()} DH
+                                </span>
                             </div>
                         </div>
 
