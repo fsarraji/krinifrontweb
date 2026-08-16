@@ -90,7 +90,7 @@ const Layout = ({ children }) => {
                         style={{ borderBottom: '1px solid var(--stroke)' }}
                     >
                         <img
-                            src="/logo.svg"
+                            src="/logo.png"
                             alt="Logo"
                             className="w-9 h-9 object-contain flex-shrink-0"
                         />
