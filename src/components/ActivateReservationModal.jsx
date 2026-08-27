@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import api from '../api';
 import DamageSelector from './DamageSelector';
 import FuelGaugeSelector from './FuelGaugeSelector';
+import { VEHICLE_ACCESSORIES } from '../utils/vehicleAccessories';
 
 const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) => {
     const [loading, setLoading] = useState(false);
@@ -106,16 +107,7 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
                                 Accessoires Inclus
                             </h3>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                {[
-                                    { id: 'roue_secours', label: 'Roue Secours' },
-                                    { id: 'cric', label: 'Cric' },
-                                    { id: 'manivelle', label: 'Manivelle' },
-                                    { id: 'gilet', label: 'Gilet' },
-                                    { id: 'triangle', label: 'Triangle' },
-                                    { id: 'extincteur', label: 'Extincteur' },
-                                    { id: 'papiers', label: 'Papiers' },
-                                    { id: 'cles', label: 'Clés' },
-                                ].map(item => (
+                                {VEHICLE_ACCESSORIES.map(item => (
                                     <div 
                                         key={item.id}
                                         onClick={() => setFormData({...formData, [item.id]: !formData[item.id]})}

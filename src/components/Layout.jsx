@@ -6,14 +6,38 @@ import UserMenu from './ui/UserMenu';
 
 const Layout = ({ children }) => {
     const location = useLocation();
-    const [agencyName, setAgencyName] = useState("Frères Cherifi Car");
-    const [userRole, setUserRole] = useState("");
-    const [userName, setUserName] = useState("Fouad C.");
+    const [notificationCount, setNotificationCount] = useState(0);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-    const [notificationCount, setNotificationCount] = useState(3);
     const [isCollapsed, setIsCollapsed] = useState(() => {
         return localStorage.getItem('sidebar_collapsed') === 'true';
     });
+
+    const [session] = useState(() => {
+        const token = localStorage.getItem('access_token');
+        if (!token) return null;
+        try {
+            const decoded = jwtDecode(token);
+            return {
+                agencyName: decoded.agency_name,
+                userRole: decoded.role || "Admin",
+                userName: decoded.username
+            };
+        } catch (error) {
+            console.error("Erreur de lecture du token", error);
+            return null;
+        }
+    });
+
+    useEffect(() => {
+        if (session === null) {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+    }, [session]);
+
+    const agencyName = session?.agencyName || "Votre agence";
+    const userRole = session?.userRole || "";
+    const userName = session?.userName || "";
 
     const toggleCollapse = () => {
         setIsCollapsed(prev => {
@@ -22,22 +46,6 @@ const Layout = ({ children }) => {
             return next;
         });
     };
-
-    useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                setAgencyName(decoded.agency_name || "Frères Cherifi Car");
-                setUserRole(decoded.role || "Admin");
-                setUserName(decoded.username || "Fouad C.");
-            } catch (error) {
-                console.error("Erreur de lecture du token", error);
-                localStorage.clear();
-                window.location.href = '/login';
-            }
-        }
-    }, []);
 
     const navSections = [
         {

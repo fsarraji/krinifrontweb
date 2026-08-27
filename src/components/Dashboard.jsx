@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { jwtDecode } from 'jwt-decode';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [userRole, setUserRole] = useState("");
     const [data, setData] = useState({
         stats: { total_vehicles: 0, available_vehicles: 0, rented_vehicles: 0, active_contracts: 0, total_clients: 0, revenue_this_month: 0 },
         alerts: { insurance_expiring: [], visite_expiring: [] },
@@ -16,16 +14,6 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                setUserRole(decoded.role || "");
-            } catch (error) {
-                console.error("Erreur lecture token", error);
-            }
-        }
-
         const fetchDashboardData = async () => {
             try {
                 const response = await api.get('dashboard/');
@@ -52,10 +40,10 @@ const Dashboard = () => {
         );
     }
 
-    const totalFleet = data.stats.total_vehicles || 26;
-    const availableFleet = data.stats.available_vehicles || 18;
+    const totalFleet = data.stats.total_vehicles ?? 0;
+    const availableFleet = data.stats.available_vehicles ?? 0;
     const availPercent = totalFleet > 0 ? Math.round((availableFleet / totalFleet) * 100) : 0;
-    const activeContracts = data.stats.active_contracts || 14;
+    const activeContracts = data.stats.active_contracts ?? 0;
     const insuranceAlerts = data.alerts?.insurance_expiring || [];
     const visiteAlerts = data.alerts?.visite_expiring || [];
     const totalAlerts = insuranceAlerts.length + visiteAlerts.length;
@@ -66,7 +54,7 @@ const Dashboard = () => {
             <div className="flex items-end justify-between mb-8">
                 <div>
                     <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                        Aperçu temps réel — {data.stats.agency_name || "Frères Cherifi Car"}
+                        Aperçu temps réel — {data.stats.agency_name || "Votre agence"}
                     </p>
                     <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
                         Tableau de bord
@@ -93,15 +81,10 @@ const Dashboard = () => {
                         <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>payments</span>
                     </div>
                     <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>
-                        {(data.stats.revenue_this_month || 128400).toLocaleString()}{' '}
+                        {(data.stats.revenue_this_month ?? 0).toLocaleString()}{' '}
                         <span className="text-[14px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>DH</span>
                     </p>
                     <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Revenu du mois</p>
-                    <div className="flex items-center gap-1 mt-3">
-                        <span className="material-symbols-outlined text-[14px]" style={{ color: 'var(--success)' }}>trending_up</span>
-                        <span className="text-[12px] font-semibold" style={{ color: 'var(--success)' }}>+8,2%</span>
-                        <span className="text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>vs mois dernier</span>
-                    </div>
                 </div>
 
                 {/* Card 2: Disponibilité */}
@@ -126,10 +109,6 @@ const Dashboard = () => {
                     </div>
                     <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>{activeContracts}</p>
                     <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Contrats actifs</p>
-                    <div className="flex items-center gap-1 mt-3">
-                        <span className="text-[12px] font-semibold" style={{ color: 'var(--warning)' }}>3</span>
-                        <span className="text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>se terminent sous 48h</span>
-                    </div>
                 </div>
 
                 {/* Card 4: Alertes */}

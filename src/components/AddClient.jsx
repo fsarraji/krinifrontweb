@@ -4,6 +4,7 @@ import api from '../api';
 import { toast } from './Toast';
 import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstants';
 import { optimizeImageFile } from '../utils/imageUtils';
+import Stepper from './ui/Stepper';
 
 const AddClient = () => {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ const AddClient = () => {
         prenom: '',
         nom: '',
         cin_passport: '',
+        date_expiration_cin: '',
         email: '',
         telephone: '',
         adresse: '',
@@ -71,7 +73,7 @@ const AddClient = () => {
     const steps = [
         { num: 1, label: 'Informations', icon: 'person', subtitle: 'Identité & contact' },
         { num: 2, label: 'Adresse', icon: 'home', subtitle: 'Localisation' },
-        { num: 3, label: 'Permis', icon: 'card_membership', subtitle: 'Permis de conduire' },
+        { num: 3, label: 'Pièces d\'identité', icon: 'badge', subtitle: 'CIN & permis de conduire' },
         { num: 4, label: 'Documents', icon: 'folder_open', subtitle: 'Pièces justificatives' },
     ];
 
@@ -79,13 +81,13 @@ const AddClient = () => {
         1: [
             { key: 'prenom', label: 'Prénom', check: () => !formData.prenom },
             { key: 'nom', label: 'Nom', check: () => !formData.nom },
-            { key: 'cin_passport', label: 'CIN / Passeport', check: () => !formData.cin_passport },
             { key: 'telephone', label: 'Téléphone', check: () => !formData.telephone },
         ],
         2: [
             { key: 'adresse', label: 'Adresse', check: () => !formData.adresse },
         ],
         3: [
+            { key: 'cin_passport', label: 'CIN / Passeport', check: () => !formData.cin_passport },
             { key: 'permis_conduite', label: 'N° de permis', check: () => !formData.permis_conduite },
         ],
         4: [],
@@ -209,11 +211,6 @@ const AddClient = () => {
         }
     };
 
-    const stepState = (num) => {
-        if (currentStep > num) return 'done';
-        if (currentStep === num) return 'active';
-        return 'idle';
-    };
 
     return (
         <div className="w-full px-4 py-6">
@@ -238,46 +235,26 @@ const AddClient = () => {
 
             <form onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                 {/* Stepper */}
-                <div className="grid grid-cols-2 gap-3 border-b border-slate-200 bg-white px-5 py-5 md:grid-cols-4">
-                    {steps.map((s) => {
-                        const state = stepState(s.num);
-                        return (
-                            <div key={s.num} className="flex items-center gap-3">
-                                <div
-                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                                        state === 'done'
-                                            ? 'bg-emerald-500 text-white'
-                                            : state === 'active'
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-slate-100 text-slate-500'
-                                    }`}
-                                >
-                                    {state === 'done' ? '✓' : s.num}
-                                </div>
-                                <div className="min-w-0">
-                                    <div className={`text-sm ${state === 'active' ? 'font-semibold text-blue-700' : state === 'done' ? 'text-slate-700' : 'text-slate-500'}`}>
-                                        {s.label}
-                                    </div>
-                                    <div className="hidden text-xs text-slate-400 sm:block">{s.subtitle}</div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                <Stepper steps={steps} currentStep={currentStep} />
+
+                {/* Barre de progression */}
+                <div className="px-6 pt-5">
+                    <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Progression</span>
+                        <span className="text-[11px] font-bold text-blue-600">Étape {currentStep} sur {steps.length}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                            className="h-full rounded-full bg-blue-600 transition-all duration-500"
+                            style={{ width: `${(currentStep / steps.length) * 100}%` }}
+                        ></div>
+                    </div>
                 </div>
 
                 <div className="space-y-5 bg-slate-50/50 p-5">
-                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_390px]">
-                {/* Form panel */}
-                <div className="space-y-5">
-                    {currentStep === 1 && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                            <div className="mb-7 flex items-center gap-3">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                    <span className="material-symbols-outlined text-[18px]">person</span>
-                                </span>
-                                <h2 className="text-lg font-semibold">Informations personnelles</h2>
-                            </div>
-                            <div className="grid grid-cols-2 gap-5">
+                    <div className="space-y-5">
+                {currentStep === 1 && (
+                        <div className="grid grid-cols-2 gap-5">
                                 <div>
                                     <label className="label">Prénom</label>
                                     <input
@@ -311,25 +288,6 @@ const AddClient = () => {
                                         <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                             <span className="material-symbols-outlined text-[13px]">error</span>
                                             {fieldErrorMsg('nom')}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="label">{cinLabelFor(formData.nationalite)}</label>
-                                    <input
-                                        name="cin_passport"
-                                        value={formData.cin_passport}
-                                        onChange={handleChange}
-                                        onBlur={handleBlurUnique('cin_passport')}
-                                        required
-                                        className={inputClass('cin_passport')}
-                                        placeholder="ex. AB123456"
-                                        type="text"
-                                    />
-                                    {fieldErrorMsg('cin_passport') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('cin_passport')}
                                         </p>
                                     )}
                                 </div>
@@ -410,19 +368,11 @@ const AddClient = () => {
                                     )}
                                 </div>
                             </div>
-                        </div>
                     )}
 
                     {currentStep === 2 && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                            <div className="mb-7 flex items-center gap-3">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                    <span className="material-symbols-outlined text-[18px]">home</span>
-                                </span>
-                                <h2 className="text-lg font-semibold">Adresse</h2>
-                            </div>
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="col-span-2">
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="col-span-2">
                                     <label className="label">Adresse résidentielle</label>
                                     <textarea
                                         name="adresse"
@@ -463,18 +413,39 @@ const AddClient = () => {
                                     />
                                 </div>
                             </div>
-                        </div>
                     )}
 
                     {currentStep === 3 && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                            <div className="mb-7 flex items-center gap-3">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                    <span className="material-symbols-outlined text-[18px]">card_membership</span>
-                                </span>
-                                <h2 className="text-lg font-semibold">Permis de conduire</h2>
-                            </div>
-                            <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-2 gap-5">
+                                <div>
+                                    <label className="label">{cinLabelFor(formData.nationalite)}</label>
+                                    <input
+                                        name="cin_passport"
+                                        value={formData.cin_passport}
+                                        onChange={handleChange}
+                                        onBlur={handleBlurUnique('cin_passport')}
+                                        required
+                                        className={inputClass('cin_passport')}
+                                        placeholder="ex. AB123456"
+                                        type="text"
+                                    />
+                                    {fieldErrorMsg('cin_passport') && (
+                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
+                                            <span className="material-symbols-outlined text-[13px]">error</span>
+                                            {fieldErrorMsg('cin_passport')}
+                                        </p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="label">Expiration {cinLabelFor(formData.nationalite)}</label>
+                                    <input
+                                        name="date_expiration_cin"
+                                        value={formData.date_expiration_cin}
+                                        onChange={handleChange}
+                                        className={inputClass('date_expiration_cin')}
+                                        type="date"
+                                    />
+                                </div>
                                 <div>
                                     <label className="label">N° de permis</label>
                                     <input
@@ -516,19 +487,11 @@ const AddClient = () => {
                                     ></textarea>
                                 </div>
                             </div>
-                        </div>
                     )}
 
                     {currentStep === 4 && (
                         <>
-                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                                <div className="mb-7 flex items-center gap-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                        <span className="material-symbols-outlined text-[18px]">folder_open</span>
-                                    </span>
-                                    <h2 className="text-lg font-semibold">Documents d'identité</h2>
-                                </div>
-                                <div className="grid grid-cols-2 gap-5">
+                            <div className="grid grid-cols-2 gap-5">
                                     <div>
                                         <label className="label">Scan {cinLabelFor(formData.nationalite)}</label>
                                         <label className="dropzone p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
@@ -550,7 +513,6 @@ const AddClient = () => {
                                         </label>
                                     </div>
                                 </div>
-                            </div>
 
                             <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-soft">
                                 <div className="flex items-start gap-3">
@@ -562,43 +524,6 @@ const AddClient = () => {
                             </div>
                         </>
                     )}
-                    </div>
-
-                    {/* Sidebar : summary */}
-                    <div className="space-y-5">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
-                            <h3 className="mb-4 text-sm font-semibold text-slate-900">Résumé</h3>
-                            <div className="space-y-3 text-[13px]">
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Nom complet</span>
-                                    <span className="font-semibold text-slate-700">{formData.prenom || '—'} {formData.nom || ''}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">{cinLabelFor(formData.nationalite)}</span>
-                                    <span className="font-semibold text-slate-700">{formData.cin_passport || '—'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Téléphone</span>
-                                    <span className="font-semibold text-slate-700">{formData.telephone || '—'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Ville</span>
-                                    <span className="font-semibold text-slate-700">{formData.ville || '—'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">N° de permis</span>
-                                    <span className="font-semibold text-slate-700">{formData.permis_conduite || '—'}</span>
-                                </div>
-                            </div>
-                            <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--stroke)' }}>
-                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">Progression</p>
-                                <div className="h-1.5 rounded-full overflow-hidden bg-slate-100">
-                                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(currentStep / 4) * 100}%`, background: '#1D4ED8' }}></div>
-                                </div>
-                                <p className="mt-2 text-[11px] font-semibold text-blue-700">Étape {currentStep} sur 4</p>
-                            </div>
-                        </div>
-                    </div>
                     </div>
                 </div>
             </form>

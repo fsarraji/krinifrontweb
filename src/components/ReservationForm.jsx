@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api, { fetchAllPages } from '../api';
-import { jwtDecode } from 'jwt-decode';
 import { toast } from './Toast';
+import AddClientModal from './AddClientModal';
+import { getRole } from '../utils/userRole';
 
 const ReservationForm = () => {
     const navigate = useNavigate();
@@ -22,7 +23,9 @@ const ReservationForm = () => {
         client: '',
         deuxieme_chauffeur: '',
         date_sortie: new Date().toISOString().split('T')[0],
+        heure_sortie: '09:00',
         date_retour_prevue: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        heure_retour: '09:00',
         prix_par_jour: 0,
         montant_paye: 0,
         caution: 1500,
@@ -38,15 +41,7 @@ const ReservationForm = () => {
     const [quoteLoading, setQuoteLoading] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                setUserRole(decoded.role || '');
-            } catch (err) {
-                console.error("Token decode error:", err);
-            }
-        }
+        setUserRole(getRole());
         
         const fetchInitialData = async () => {
             try {
@@ -96,12 +91,12 @@ const ReservationForm = () => {
         if (!formData.vehicle || !formData.date_sortie || !formData.date_retour_prevue) { setQuote(null); return; }
         let cancelled = false;
         setQuoteLoading(true);
-        api.get(`vehicles/${formData.vehicle}/price-quote/`, { params: { start: formData.date_sortie, end: formData.date_retour_prevue } })
+        api.get(`vehicles/${formData.vehicle}/price-quote/`, { params: { start: `${formData.date_sortie}T${formData.heure_sortie || '09:00'}`, end: `${formData.date_retour_prevue}T${formData.heure_retour || '09:00'}` } })
             .then((res) => { if (!cancelled) setQuote(res.data); })
             .catch(() => { if (!cancelled) setQuote(null); })
             .finally(() => { if (!cancelled) setQuoteLoading(false); });
         return () => { cancelled = true; };
-    }, [formData.vehicle, formData.date_sortie, formData.date_retour_prevue]);
+    }, [formData.vehicle, formData.date_sortie, formData.date_retour_prevue, formData.heure_sortie, formData.heure_retour]);
 
     const diffDays = () => {
         const start = new Date(formData.date_sortie);
@@ -121,8 +116,8 @@ const ReservationForm = () => {
     const checkAvailability = async () => {
         setLoading(true);
         try {
-            const startStr = `${formData.date_sortie}T09:00:00`;
-            const endStr = `${formData.date_retour_prevue}T09:00:00`;
+            const startStr = `${formData.date_sortie}T${formData.heure_sortie || '09:00'}`;
+            const endStr = `${formData.date_retour_prevue}T${formData.heure_retour || '09:00'}`;
             const res = await api.get(`vehicles/available_cars/?start_date=${startStr}&end_date=${endStr}`);
             setVehicles(res.data);
             setStep(2);
@@ -143,8 +138,8 @@ const ReservationForm = () => {
                 montant_total: totalEstimate(),
                 km_sortie: selectedVehicle?.kilometrage || 0,
                 carburant_sortie: '2/8',
-                date_sortie: `${formData.date_sortie}T09:00:00Z`,
-                date_retour_prevue: `${formData.date_retour_prevue}T09:00:00Z`,
+                date_sortie: `${formData.date_sortie}T${formData.heure_sortie || '09:00'}:00Z`,
+                date_retour_prevue: `${formData.date_retour_prevue}T${formData.heure_retour || '09:00'}:00Z`,
             };
             await api.post('contracts/', dataToSubmit);
             toast.success('Réservation créée avec succès.');
@@ -218,17 +213,26 @@ const ReservationForm = () => {
                 </div>
             </div>
 
+            {/* Barre de progression */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Progression</span>
+                    <span className="text-[11px] font-bold text-indigo-600">Étape {step} sur 3</span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                        className="h-full rounded-full bg-indigo-600 transition-all duration-500"
+                        style={{ width: `${(step / 3) * 100}%` }}
+                    ></div>
+                </div>
+            </div>
+
             {/* Main Content Area */}
-            <div className="grid grid-cols-12 gap-6 pb-20">
-                {/* Center Column for Process */}
-                <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+            <div className="pb-20">
+                <div className="flex flex-col gap-6">
                     {/* STEP 1: Dates */}
                     {step === 1 && (
-                        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className="material-symbols-outlined text-indigo-600 text-3xl">calendar_month</span>
-                                <h3 className="text-xl font-extrabold text-slate-900">Choix de la Période</h3>
-                            </div>
+                        <div>
                             <p className="text-slate-500 mb-8 text-sm">Veuillez sélectionner la date de début et de fin de la réservation. Le système recherchera les véhicules disponibles pendant cette période précise.</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -240,6 +244,13 @@ const ReservationForm = () => {
                                         value={formData.date_sortie}
                                         onChange={(e) => setFormData({...formData, date_sortie: e.target.value})}
                                     />
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mt-3 mb-2">Heure de Départ</label>
+                                    <input 
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
+                                        type="time"
+                                        value={formData.heure_sortie}
+                                        onChange={(e) => setFormData({...formData, heure_sortie: e.target.value})}
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Retour Prévu</label>
@@ -249,6 +260,13 @@ const ReservationForm = () => {
                                         min={formData.date_sortie}
                                         value={formData.date_retour_prevue}
                                         onChange={(e) => setFormData({...formData, date_retour_prevue: e.target.value})}
+                                    />
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mt-3 mb-2">Heure de Retour</label>
+                                    <input 
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
+                                        type="time"
+                                        value={formData.heure_retour}
+                                        onChange={(e) => setFormData({...formData, heure_retour: e.target.value})}
                                     />
                                 </div>
                             </div>
@@ -265,12 +283,8 @@ const ReservationForm = () => {
                     )}
                      {/* STEP 2: Vehicle */}
                     {step === 2 && (
-                        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <div>
                             <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-indigo-600 text-3xl">directions_car</span>
-                                    <h3 className="text-xl font-extrabold text-slate-900">Véhicules Disponibles</h3>
-                                </div>
                                 <div className="relative">
                                     <input 
                                         className="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200 w-64" 
@@ -340,12 +354,9 @@ const ReservationForm = () => {
 
                     {/* STEP 3: Client & Preferences */}
                     {step === 3 && (
-                        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-indigo-600 text-3xl">person</span>
-                                    <h3 className="text-xl font-extrabold text-slate-900">Informations Client</h3>
-                                </div>
+                                <div />
                                 <button 
                                     onClick={() => setShowClientModal(true)}
                                     className="text-xs font-bold text-indigo-700 bg-indigo-50/50 hover:bg-indigo-50 ring-1 ring-indigo-100 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
@@ -517,72 +528,6 @@ const ReservationForm = () => {
                         </div>
                     )}
                 </div>
-
-                {/* Right Column: Reservation Summary Card */}
-                <div className="col-span-12 lg:col-span-4 hidden lg:block">
-                    <div className="sticky top-12">
-                        <div className="bg-slate-950 text-white p-8 rounded-2xl shadow-xl border border-slate-800 relative overflow-hidden" style={{ minHeight: '300px' }}>
-                            {/* Decorative background */}
-                            <div className="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                            
-                            <h3 className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-8 border-b border-slate-800 pb-4">Résumé de Réservation</h3>
-                            
-                            <div className="space-y-6 relative z-10">
-                                {step >= 2 && selectedVehicle && (
-                                    <div className="flex gap-4 animate-in fade-in duration-500">
-                                        <div className="w-16 h-16 bg-white/10 rounded-xl flex items-center justify-center overflow-hidden border border-slate-800">
-                                            {selectedVehicle.image ? (
-                                                <img src={selectedVehicle.image} alt="car" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span className="material-symbols-outlined text-white/50">directions_car</span>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-base">{selectedVehicle.marque_name} {selectedVehicle.modele_name}</p>
-                                            <p className="text-xs text-slate-400 font-mono">{selectedVehicle.matricule_actuel || selectedVehicle.matricule}</p>
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                <div className="py-4 border-y border-slate-800">
-                                    <div className="flex items-center gap-4 text-sm font-medium mb-3">
-                                        <span className="material-symbols-outlined text-indigo-400">flight_takeoff</span>
-                                        <span className="text-slate-200">{formData.date_sortie}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm font-medium">
-                                        <span className="material-symbols-outlined text-indigo-400">flight_land</span>
-                                        <span className="text-slate-200">{formData.date_retour_prevue}</span>
-                                    </div>
-                                </div>
-                                
-                                {step >= 2 && selectedVehicle && (
-                                    <>
-                                        <div className="flex justify-between items-baseline pt-2">
-                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Durée</p>
-                                            <p className="text-lg font-bold">{diffDays()} Jours</p>
-                                        </div>
-                                        <div className="flex justify-between items-baseline py-2 border-b border-slate-800">
-                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Total Est.</p>
-                                            <p className="text-3xl font-extrabold text-indigo-400 flex items-center gap-2">
-                                                {quoteLoading && <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>}
-                                                {totalEstimate().toLocaleString()} DH
-                                            </p>
-                                        </div>
-                                    </>
-                                )}
-                                
-                                {step === 3 && (
-                                    <div className="bg-white/10 p-4 rounded-xl mt-4">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Avance à régler (Avance Versée)</p>
-                                        <p className="text-xl font-bold text-success-dark">
-                                            {parseFloat(formData.montant_paye).toLocaleString()} DH
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
             
             {/* Add Client Modal */}
@@ -594,111 +539,6 @@ const ReservationForm = () => {
                     setFormData(prev => ({ ...prev, client: newClient.id }));
                 }}
             />
-        </div>
-    );
-};
-
-const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
-    const [formData, setFormData] = useState({
-        prenom: '', nom: '', cin_passport: '', email: '',
-        telephone: '', adresse: '', permis_conduite: '',
-        date_delivrance_permis: '', remarques: ''
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [uniqueErrors, setUniqueErrors] = useState({});
-
-    const UNIQUE_FIELDS = {
-        cin_passport: 'CIN/passeport',
-        email: 'email',
-        telephone: 'téléphone',
-        permis_conduite: 'permis de conduire',
-    };
-
-    const handleChange = (e) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-        if (UNIQUE_FIELDS[e.target.name]) {
-            setUniqueErrors(prev => ({ ...prev, [e.target.name]: false }));
-        }
-    };
-
-    const checkUnique = async (field, value) => {
-        if (!value || !value.trim()) {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-            return;
-        }
-        try {
-            const res = await api.get('clients/check-unique/', {
-                params: { field, value: value.trim() }
-            });
-            setUniqueErrors(prev => ({
-                ...prev,
-                [field]: res.data.available === false
-                    ? `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`
-                    : false
-            }));
-        } catch (err) {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-        }
-    };
-
-    const handleBlurUnique = (field) => (e) => {
-        checkUnique(field, e.target.value);
-    };
-
-    const fieldClass = (name) => `w-full px-4 py-2.5 rounded-xl border text-sm font-medium text-slate-900 bg-slate-50/50 focus:bg-white outline-none transition-all ${uniqueErrors[name] ? 'border-danger bg-danger-bg/40 focus:border-danger' : 'border-slate-200 focus:border-primary'}`;
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const duplicates = Object.keys(UNIQUE_FIELDS).filter(k => uniqueErrors[k]);
-        if (duplicates.length > 0) {
-            setError(`Corrigez d'abord les champs en double : ${duplicates.map(k => UNIQUE_FIELDS[k]).join(', ')}`);
-            return;
-        }
-        setLoading(true);
-        try {
-            const response = await api.post('clients/', formData);
-            onClientCreated(response.data);
-            onClose();
-        } catch (err) {
-            setError(err.response?.data ? JSON.stringify(err.response.data) : "Erreur");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl p-8 border border-slate-200">
-                <h3 className="text-xl font-extrabold text-slate-900 mb-6">Nouveau Client</h3>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {error && <div className="p-3 bg-danger-bg text-danger-dark text-xs rounded-xl border border-danger-border">{error}</div>}
-                    <div className="grid grid-cols-2 gap-4">
-                        <input name="prenom" value={formData.prenom} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="Prénom" />
-                        <input name="nom" value={formData.nom} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-indigo-600 focus:bg-white outline-none transition-all" placeholder="Nom" />
-                        <input name="cin_passport" value={formData.cin_passport} onChange={handleChange} onBlur={handleBlurUnique('cin_passport')} required className={fieldClass('cin_passport')} placeholder="CIN/Passeport" />
-                        {uniqueErrors.cin_passport && (
-                            <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                <span className="material-symbols-outlined text-[13px]">error</span>
-                                {uniqueErrors.cin_passport}
-                            </p>
-                        )}
-                        <input name="telephone" value={formData.telephone} onChange={handleChange} onBlur={handleBlurUnique('telephone')} required className={fieldClass('telephone')} placeholder="Téléphone" />
-                        {uniqueErrors.telephone && (
-                            <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                <span className="material-symbols-outlined text-[13px]">error</span>
-                                {uniqueErrors.telephone}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex gap-4">
-                        <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors font-bold text-sm flex-1">Annuler</button>
-                        <button type="submit" disabled={loading} className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200/50 hover:bg-indigo-700 transition-all text-sm flex-1">{loading ? 'Création...' : 'Créer'}</button>
-                    </div>
-                </form>
-            </div>
         </div>
     );
 };

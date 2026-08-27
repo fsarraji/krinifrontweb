@@ -3,12 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api, { fetchAllPages } from '../api';
-import { jwtDecode } from 'jwt-decode';
 import DamageSelector from './DamageSelector';
 import FuelGaugeSelector from './FuelGaugeSelector';
 import { toast } from './Toast';
 import DatePicker from './ui/DatePicker';
+import Stepper from './ui/Stepper';
+import AddClientModal from './AddClientModal';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
+import { getRole } from '../utils/userRole';
 
 const getLocalDatetime = (date) => {
     const tzoffset = date.getTimezoneOffset() * 60000;
@@ -84,15 +86,7 @@ const ContractForm = () => {
     };
 
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                setUserRole(decoded.role || '');
-            } catch (err) {
-                console.error("Token decode error:", err);
-            }
-        }
+        setUserRole(getRole());
 
         const fetchData = async () => {
             try {
@@ -282,11 +276,6 @@ const ContractForm = () => {
             placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
         });
 
-        const stepState = (num) => {
-            if (currentStep > num) return 'done';
-            if (currentStep === num) return 'active';
-            return 'idle';
-        };
 
         const selectedClient = clients.find(c => c.id == formData.client);
 
@@ -346,60 +335,14 @@ const ContractForm = () => {
                 </div>
 
                 {/* Stepper */}
-                <div className="flex items-center mb-8">
-                    {steps.map((s, i) => {
-                        const state = stepState(s.num);
-                        return (
-                            <React.Fragment key={s.num}>
-                                {i > 0 && (
-                                    <div
-                                        className="step-line mx-4"
-                                        style={currentStep >= s.num ? { background: 'var(--success)' } : {}}
-                                    ></div>
-                                )}
-                                <div className="flex items-center gap-2.5">
-                                    <div
-                                        className="step-dot text-white"
-                                        style={
-                                            state === 'done'
-                                                ? { background: 'var(--success)' }
-                                                : state === 'active'
-                                                    ? { background: 'var(--primary-container)' }
-                                                    : { background: 'var(--stroke)', color: 'var(--on-surface-variant)' }
-                                        }
-                                    >
-                                        {state === 'done' ? (
-                                            <span className="material-symbols-outlined text-[18px]">check</span>
-                                        ) : (
-                                            s.num
-                                        )}
-                                    </div>
-                                    <span
-                                        className="text-[13px]"
-                                        style={
-                                            state === 'active'
-                                                ? { fontWeight: 700, color: 'var(--primary-container)' }
-                                                : { fontWeight: state === 'done' ? 600 : 500, color: state === 'done' ? 'var(--on-surface)' : 'var(--on-surface-variant)', opacity: state === 'idle' ? 0.6 : 1 }
-                                        }
-                                    >
-                                        {s.label}
-                                    </span>
-                                </div>
-                            </React.Fragment>
-                        );
-                    })}
-                </div>
+                <Stepper steps={steps} currentStep={currentStep} />
 
                 <div className="grid grid-cols-3 gap-6 items-start pb-10">
                     {/* Left column */}
                     <div className="col-span-2 space-y-6">
                         {currentStep === 1 && (
-                            <div className={`card shadow-l1 p-8 ${hasError('vehicle') ? 'border-danger ring-1 ring-danger/30' : ''}`}>
+                            <div className={hasError('vehicle') ? 'border-danger ring-1 ring-danger/30 rounded-xl' : ''}>
                                 <div className="flex items-center justify-between mb-6">
-                                    <div className="section-title mb-0">
-                                        <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                        <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Sélection du Véhicule</h2>
-                                    </div>
                                     <div className="relative">
                                         <span className="material-symbols-outlined absolute left-3 top-3 text-slate-400 text-[16px]">search</span>
                                         <input
@@ -446,12 +389,8 @@ const ContractForm = () => {
                         )}
 
                         {currentStep === 2 && (
-                            <div className={`card shadow-l1 p-8 ${hasError('client') ? 'border-danger ring-1 ring-danger/30' : ''}`}>
+                            <div className={hasError('client') ? 'border-danger ring-1 ring-danger/30 rounded-xl' : ''}>
                                 <div className="flex items-center justify-between mb-6">
-                                    <div className="section-title mb-0">
-                                        <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                        <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Informations Client</h2>
-                                    </div>
                                     <button
                                         type="button"
                                         onClick={() => setShowClientModal(true)}
@@ -523,43 +462,32 @@ const ContractForm = () => {
 
                         {currentStep === 3 && (
                             <>
-                                <div className="card shadow-l1 p-8">
-                                    <div className="section-title">
-                                        <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                        <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Période de Location</h2>
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="label">Date et Heure de Départ</label>
+                                        <DatePicker
+                                            className={fieldClass('date_sortie')}
+                                            value={formData.date_sortie}
+                                            onChange={(v) => setFormData({...formData, date_sortie: v})}
+                                            min={getLocalDatetime(new Date()).slice(0, 10)}
+                                            disabledRanges={unavailableRanges}
+                                            placeholder="Choisir la date de départ"
+                                        />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-5">
-                                        <div>
-                                            <label className="label">Date et Heure de Départ</label>
-                                            <DatePicker
-                                                className={fieldClass('date_sortie')}
-                                                value={formData.date_sortie}
-                                                onChange={(v) => setFormData({...formData, date_sortie: v})}
-                                                min={getLocalDatetime(new Date()).slice(0, 10)}
-                                                disabledRanges={unavailableRanges}
-                                                placeholder="Choisir la date de départ"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="label">Date et Heure de Retour Prévu</label>
-                                            <DatePicker
-                                                className={fieldClass('date_retour_prevue')}
-                                                value={formData.date_retour_prevue}
-                                                onChange={(v) => setFormData({...formData, date_retour_prevue: v})}
-                                                min={formData.date_sortie ? formData.date_sortie.slice(0, 10) : getLocalDatetime(new Date()).slice(0, 10)}
-                                                disabledRanges={unavailableRanges}
-                                                placeholder="Choisir la date de retour"
-                                            />
-                                        </div>
+                                    <div>
+                                        <label className="label">Date et Heure de Retour Prévu</label>
+                                        <DatePicker
+                                            className={fieldClass('date_retour_prevue')}
+                                            value={formData.date_retour_prevue}
+                                            onChange={(v) => setFormData({...formData, date_retour_prevue: v})}
+                                            min={formData.date_sortie ? formData.date_sortie.slice(0, 10) : getLocalDatetime(new Date()).slice(0, 10)}
+                                            disabledRanges={unavailableRanges}
+                                            placeholder="Choisir la date de retour"
+                                        />
                                     </div>
                                 </div>
 
-                                <div className="card shadow-l1 p-8">
-                                    <div className="section-title">
-                                        <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                        <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Préférences & Caution</h2>
-                                    </div>
-                                    <div className="space-y-5">
+                                <div className="space-y-5">
                                         <div className="check-item justify-between">
                                             <div>
                                                 <p className="text-sm font-bold" style={{ color: 'var(--on-surface)' }}>Service Chauffeur</p>
@@ -630,116 +558,97 @@ const ContractForm = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                             </>
                         )}
 
                         {currentStep === 4 && (
                             <>
-                                <div className="card shadow-l1 p-8">
-                                    <div className="section-title">
-                                        <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                        <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>État de sortie du véhicule</h2>
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div>
+                                        <label className="label mb-3">Niveau de carburant au départ</label>
+                                        <FuelGaugeSelector
+                                            value={formData.carburant_sortie}
+                                            onChange={(val) => setFormData({...formData, carburant_sortie: val})}
+                                        />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-8">
-                                        <div>
-                                            <label className="label mb-3">Niveau de carburant au départ</label>
-                                            <FuelGaugeSelector
-                                                value={formData.carburant_sortie}
-                                                onChange={(val) => setFormData({...formData, carburant_sortie: val})}
+                                    <div>
+                                        <label className="label mb-3">Kilométrage de sortie</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                className="field flex-1"
+                                                type="number"
+                                                value={formData.km_sortie}
+                                                onChange={(e) => setFormData({...formData, km_sortie: e.target.value})}
                                             />
-                                        </div>
-                                        <div>
-                                            <label className="label mb-3">Kilométrage de sortie</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    className="field flex-1"
-                                                    type="number"
-                                                    value={formData.km_sortie}
-                                                    onChange={(e) => setFormData({...formData, km_sortie: e.target.value})}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={fetchGpsKm}
-                                                    disabled={kmLoading || !selectedVehicle}
-                                                    title="Remplir avec le kilométrage GPS (Traccar)"
-                                                    className="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
-                                                    style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
-                                                >
-                                                    <span className={`material-symbols-outlined text-[16px] ${kmLoading ? 'animate-spin' : ''}`}>
-                                                        {kmLoading ? 'progress_activity' : 'satellite_alt'}
-                                                    </span>
-                                                    GPS
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <label className="label mt-7 mb-3">Dégâts constatés au départ (cliquer sur le schéma)</label>
-                                    <DamageSelector
-                                        damages={formData.damages}
-                                        onChange={(newDamages) => setFormData({...formData, damages: newDamages})}
-                                        type="DEPART"
-                                    />
-
-                                    <div className="mt-4">
-                                        <label className="label mb-2">Observation générale (optionnel)</label>
-                                        <textarea
-                                            className="field resize-none"
-                                            placeholder="Note supplémentaire sur l'état général..."
-                                            rows="2"
-                                            value={formData.degats_depart}
-                                            onChange={(e) => setFormData({...formData, degats_depart: e.target.value})}
-                                        ></textarea>
-                                    </div>
-                                </div>
-
-                                <div className="card shadow-l1 p-8">
-                                    <div className="section-title">
-                                        <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                        <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Équipements fournis</h2>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-3">
-                                        {[
-                                            { id: 'roue_secours', label: 'Roue secours' },
-                                            { id: 'cric', label: 'Cric' },
-                                            { id: 'manivelle', label: 'Manivelle' },
-                                            { id: 'gilet', label: 'Gilet' },
-                                            { id: 'triangle', label: 'Triangle' },
-                                            { id: 'extincteur', label: 'Extincteur' },
-                                            { id: 'papiers', label: 'Papiers' },
-                                            { id: 'cles', label: 'Clés' },
-                                        ].map(item => (
-                                            <label
-                                                key={item.id}
-                                                className={`check-item ${formData[item.id] ? 'on' : ''}`}
+                                            <button
+                                                type="button"
+                                                onClick={fetchGpsKm}
+                                                disabled={kmLoading || !selectedVehicle}
+                                                title="Remplir avec le kilométrage GPS (Traccar)"
+                                                className="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
+                                                style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
                                             >
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4"
-                                                    style={{ accentColor: 'var(--success)' }}
-                                                    checked={formData[item.id]}
-                                                    onChange={() => setFormData({...formData, [item.id]: !formData[item.id]})}
-                                                />
-                                                <span className="text-[12.5px] font-semibold">{item.label}</span>
-                                            </label>
-                                        ))}
+                                                <span className={`material-symbols-outlined text-[16px] ${kmLoading ? 'animate-spin' : ''}`}>
+                                                    {kmLoading ? 'progress_activity' : 'satellite_alt'}
+                                                </span>
+                                                GPS
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="card shadow-l1 p-8">
-                                    <div className="section-title">
-                                        <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                                        <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Notes internes</h2>
-                                    </div>
+                                <label className="label mt-7 mb-3">Dégâts constatés au départ (cliquer sur le schéma)</label>
+                                <DamageSelector
+                                    damages={formData.damages}
+                                    onChange={(newDamages) => setFormData({...formData, damages: newDamages})}
+                                    type="DEPART"
+                                />
+
+                                <div className="mt-4">
+                                    <label className="label mb-2">Observation générale (optionnel)</label>
                                     <textarea
                                         className="field resize-none"
-                                        placeholder="Entrez toute condition supplémentaire, notes sur l'état, ou demandes client..."
-                                        rows="3"
-                                        value={formData.notes}
-                                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                                        placeholder="Note supplémentaire sur l'état général..."
+                                        rows="2"
+                                        value={formData.degats_depart}
+                                        onChange={(e) => setFormData({...formData, degats_depart: e.target.value})}
                                     ></textarea>
                                 </div>
+
+                                <div className="grid grid-cols-4 gap-3">
+                                    {[
+                                        { id: 'roue_secours', label: 'Roue secours' },
+                                        { id: 'cric', label: 'Cric' },
+                                        { id: 'manivelle', label: 'Manivelle' },
+                                        { id: 'gilet', label: 'Gilet' },
+                                        { id: 'triangle', label: 'Triangle' },
+                                        { id: 'extincteur', label: 'Extincteur' },
+                                        { id: 'papiers', label: 'Papiers' },
+                                        { id: 'cles', label: 'Clés' },
+                                    ].map(item => (
+                                        <label
+                                            key={item.id}
+                                            className={`check-item ${formData[item.id] ? 'on' : ''}`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4"
+                                                style={{ accentColor: 'var(--success)' }}
+                                                checked={formData[item.id]}
+                                                onChange={() => setFormData({...formData, [item.id]: !formData[item.id]})}
+                                            />
+                                            <span className="text-[12.5px] font-semibold">{item.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <textarea
+                                    className="field resize-none"
+                                    placeholder="Entrez toute condition supplémentaire, notes sur l'état, ou demandes client..."
+                                    rows="3"
+                                    value={formData.notes}
+                                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                                ></textarea>
                             </>
                         )}
                     </div>
@@ -820,158 +729,5 @@ const ContractForm = () => {
             </div>
         );
     };
-
-const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
-    const [formData, setFormData] = useState({
-        prenom: '',
-        nom: '',
-        cin_passport: '',
-        email: '',
-        telephone: '',
-        adresse: '',
-        permis_conduite: '',
-        date_delivrance_permis: '',
-        remarques: ''
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [uniqueErrors, setUniqueErrors] = useState({});
-
-    const UNIQUE_FIELDS = {
-        cin_passport: 'CIN/passeport',
-        email: 'email',
-        telephone: 'téléphone',
-        permis_conduite: 'permis de conduire',
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (UNIQUE_FIELDS[name]) {
-            setUniqueErrors(prev => ({ ...prev, [name]: false }));
-        }
-    };
-
-    const checkUnique = async (field, value) => {
-        if (!value || !value.trim()) {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-            return;
-        }
-        try {
-            const res = await api.get('clients/check-unique/', {
-                params: { field, value: value.trim() }
-            });
-            setUniqueErrors(prev => ({
-                ...prev,
-                [field]: res.data.available === false
-                    ? `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`
-                    : false
-            }));
-        } catch (err) {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-        }
-    };
-
-    const handleBlurUnique = (field) => (e) => {
-        checkUnique(field, e.target.value);
-    };
-
-    const fieldClass = (name) => `field ${uniqueErrors[name] ? 'border-danger bg-danger-bg/40' : ''}`;
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const duplicates = Object.keys(UNIQUE_FIELDS).filter(k => uniqueErrors[k]);
-        if (duplicates.length > 0) {
-            setError(`Corrigez d'abord les champs en double : ${duplicates.map(k => UNIQUE_FIELDS[k]).join(', ')}`);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await api.post('clients/', formData);
-            onClientCreated(response.data);
-            onClose();
-            // Reset form
-            setFormData({
-                prenom: '', nom: '', cin_passport: '', email: '',
-                telephone: '', adresse: '', permis_conduite: '',
-                date_delivrance_permis: '', remarques: ''
-            });
-            setUniqueErrors({});
-        } catch (err) {
-            console.error("Error creating client:", err);
-            setError(err.response?.data ? JSON.stringify(err.response.data) : "Une erreur est survenue.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden border border-stroke">
-                <div className="p-6 flex items-center justify-between" style={{ borderBottom: '1px solid var(--stroke)' }}>
-                    <h3 className="text-lg font-bold" style={{ color: 'var(--on-surface)' }}>Nouveau Client Rapide</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                        <span className="material-symbols-outlined" style={{ color: 'var(--on-surface-variant)' }}>close</span>
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                    {error && <div className="p-3 text-xs rounded-lg" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>{error}</div>}
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="label mb-2">Prénom</label>
-                            <input name="prenom" value={formData.prenom} onChange={handleChange} required className="field" placeholder="ex. Adam" />
-                        </div>
-                        <div>
-                            <label className="label mb-2">Nom</label>
-                            <input name="nom" value={formData.nom} onChange={handleChange} required className="field" placeholder="ex. Bennett" />
-                        </div>
-                        <div>
-                            <label className="label mb-2">CIN / Passeport</label>
-                            <input name="cin_passport" value={formData.cin_passport} onChange={handleChange} onBlur={handleBlurUnique('cin_passport')} required className={fieldClass('cin_passport')} placeholder="ex. AB123456" />
-                            {uniqueErrors.cin_passport && (
-                                <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                    <span className="material-symbols-outlined text-[13px]">error</span>
-                                    {uniqueErrors.cin_passport}
-                                </p>
-                            )}
-                        </div>
-                        <div>
-                            <label className="label mb-2">Téléphone</label>
-                            <input name="telephone" value={formData.telephone} onChange={handleChange} onBlur={handleBlurUnique('telephone')} required className={fieldClass('telephone')} placeholder="+212 6..." />
-                            {uniqueErrors.telephone && (
-                                <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                    <span className="material-symbols-outlined text-[13px]">error</span>
-                                    {uniqueErrors.telephone}
-                                </p>
-                            )}
-                        </div>
-                        <div className="col-span-2">
-                            <label className="label mb-2">Permis de Conduire</label>
-                            <input name="permis_conduite" value={formData.permis_conduite} onChange={handleChange} onBlur={handleBlurUnique('permis_conduite')} required className={fieldClass('permis_conduite')} placeholder="Numéro de permis" />
-                            {uniqueErrors.permis_conduite && (
-                                <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                    <span className="material-symbols-outlined text-[13px]">error</span>
-                                    {uniqueErrors.permis_conduite}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4 pt-4">
-                        <button type="button" onClick={onClose} className="flex-1 px-4 py-3 rounded-lg border font-bold text-sm card" style={{ color: 'var(--on-surface-variant)' }}>Annuler</button>
-                        <button type="submit" disabled={loading} className="flex-[2] px-4 py-3 rounded-lg text-white font-bold text-sm disabled:opacity-50" style={{ background: 'var(--primary-container)' }}>
-                            {loading ? 'Création...' : 'Créer et Sélectionner'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};
 
 export default ContractForm;

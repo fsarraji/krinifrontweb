@@ -9,13 +9,7 @@ import { SkeletonCards, SkeletonTable } from './Skeleton';
 import { toast } from './Toast';
 import StatusBadge from './ui/StatusBadge';
 
-const AVATAR_COLORS = [
-    'bg-info-bg text-primary ring-info-bg',
-    'bg-purple-50 text-purple-700 ring-purple-100',
-    'bg-warning-bg text-warning ring-warning-bg',
-    'bg-danger-bg text-danger ring-danger-bg',
-    'bg-success-bg text-success ring-success-bg',
-];
+import { AVATAR_COLORS } from '../utils/avatarColors';
 
 const Contracts = () => {
     const navigate = useNavigate();
@@ -167,7 +161,7 @@ const Contracts = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[13px] card hover:bg-slate-50 transition-colors shadow-l1"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[13px] hover:bg-slate-50 transition-colors"
                         title="Exporter en CSV (Excel)"
                         style={{ color: 'var(--on-surface)' }}
                     >
@@ -187,7 +181,7 @@ const Contracts = () => {
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-3 gap-6 mb-8">
-                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
+                <div className="p-5 flex items-center gap-4">
                     <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--info-bg)' }}>
                         <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>car_rental</span>
                     </div>
@@ -198,7 +192,7 @@ const Contracts = () => {
                     <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--success)', background: 'var(--success-bg)' }}>+12%</span>
                 </div>
 
-                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
+                <div className="p-5 flex items-center gap-4">
                     <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--secondary-container)' }}>
                         <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--secondary)' }}>payments</span>
                     </div>
@@ -209,7 +203,7 @@ const Contracts = () => {
                     <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--success)', background: 'var(--success-bg)' }}>+5.4%</span>
                 </div>
 
-                <div className="rounded-token p-5 shadow-l1 flex items-center gap-4" style={{ background: 'var(--primary-container)' }}>
+                <div className="p-5 flex items-center gap-4" style={{ background: 'var(--primary-container)' }}>
                     <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-white/20">
                         <span className="material-symbols-outlined text-[20px] text-white">signature</span>
                     </div>
@@ -234,7 +228,7 @@ const Contracts = () => {
             </div>
 
             {/* Contracts Table */}
-            <div className="card rounded-token overflow-hidden shadow-l1">
+            <div className="overflow-hidden">
                 <div className="overflow-x-auto w-full">
                     <table className="w-full text-left">
                         <thead>

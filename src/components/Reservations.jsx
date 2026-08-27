@@ -7,19 +7,13 @@ import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import StatusBadge from './ui/StatusBadge';
 
+import { AVATAR_COLORS } from '../utils/avatarColors';
+
 const REQUEST_FILTER_OPTIONS = [
     { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
     { value: 'PENDING', label: 'En attente', dot: 'bg-warning' },
     { value: 'CONFIRMED', label: 'Confirmée', dot: 'bg-success' },
     { value: 'CANCELLED', label: 'Annulée', dot: 'bg-danger' },
-];
-
-const AVATAR_COLORS = [
-    'bg-info-bg text-primary ring-info-bg',
-    'bg-purple-50 text-purple-700 ring-purple-100',
-    'bg-warning-bg text-warning ring-warning-bg',
-    'bg-danger-bg text-danger ring-danger-bg',
-    'bg-success-bg text-success ring-success-bg',
 ];
 
 const Reservations = () => {

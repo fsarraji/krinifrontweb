@@ -29,7 +29,10 @@ const Dropdown = ({
             isDisabled={isDisabled}
             className={className}
             classNamePrefix={classNamePrefix}
+            menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+            menuPosition="fixed"
             styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                 control: (base, state) => ({
                     ...base,
                     backgroundColor: 'var(--card-white)',

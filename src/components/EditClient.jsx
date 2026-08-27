@@ -262,12 +262,7 @@ const EditClient = () => {
                 {/* Left Column: Form Sections */}
                 <form id="client-form" onSubmit={handleSubmit} className="col-span-2 space-y-6">
                     {/* Section 1: Personal Information */}
-                    <div className="card shadow-l1 p-8">
-                        <div className="section-title">
-                            <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                            <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Informations personnelles</h2>
-                        </div>
-                        <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-2 gap-5">
                             <div>
                                 <label className="label">Prénom</label>
                                 <input name="prenom" value={formData.prenom || ''} onChange={handleChange} className={fieldClass('prenom')} type="text" />
@@ -371,15 +366,9 @@ const EditClient = () => {
                                 )}
                             </div>
                         </div>
-                    </div>
 
                     {/* Section 2: Identity Documents */}
-                    <div className="card shadow-l1 p-8">
-                        <div className="section-title">
-                            <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                            <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Documents d'identité</h2>
-                        </div>
-                        <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-2 gap-5">
                             {/* Drivers License */}
                             <div>
                                 <div className="flex items-center gap-2 mb-5">
@@ -449,15 +438,9 @@ const EditClient = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
 
                     {/* Section 3: Rental History */}
-                    <div className="card shadow-l1 p-8">
-                        <div className="section-title">
-                            <div className="w-1.5 h-6 rounded-full" style={{ background: 'var(--primary-container)' }}></div>
-                            <h2 className="font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>Historique des locations</h2>
-                        </div>
-                        <div className="overflow-x-auto">
+                    <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
@@ -503,7 +486,6 @@ const EditClient = () => {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
                 </form>
 
                 {/* Right Column: Sidebar */}

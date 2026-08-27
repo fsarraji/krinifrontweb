@@ -6,58 +6,20 @@ import Pagination from './Pagination';
 import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
-import DropdownMenu from './ui/DropdownMenu';
+import MenuButton from './ui/MenuButton';
 import ClientInfoModal from './ui/ClientInfoModal';
 import { messageBox } from './MessageBox';
 import { toast } from './Toast';
 
 const PAGE_SIZE_DEFAULT = 10;
 
-const AVATAR_COLORS = [
-    'bg-info-bg text-primary ring-info-bg',
-    'bg-purple-50 text-purple-700 ring-purple-100',
-    'bg-warning-bg text-warning ring-warning-bg',
-    'bg-danger-bg text-danger ring-danger-bg',
-    'bg-success-bg text-success ring-success-bg',
-];
+import { AVATAR_COLORS } from '../utils/avatarColors';
+import { getRole } from '../utils/userRole';
 
 const getInitials = (prenom, nom) => {
     const first = (prenom || '').charAt(0) || '';
     const second = (nom || '').charAt(0) || '';
     return (first + second).toUpperCase() || '?';
-};
-
-const getRole = () => {
-    try {
-        const token = localStorage.getItem('access_token');
-        if (!token) return '';
-        return JSON.parse(atob(token.split('.')[1]))?.role || '';
-    } catch {
-        return '';
-    }
-};
-
-const MenuButton = ({ client, items, menuId, setMenuId }) => {
-    const btnRef = useRef(null);
-    return (
-        <div className="inline-block">
-            <button
-                ref={btnRef}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === client.id ? null : client.id); }}
-                className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                style={{ color: 'var(--on-surface-variant)' }}
-                title="Options"
-            >
-                <span className="material-symbols-outlined text-[18px]">more_vert</span>
-            </button>
-            <DropdownMenu
-                open={menuId === client.id}
-                onClose={() => setMenuId(null)}
-                items={items}
-                anchor={btnRef.current}
-            />
-        </div>
-    );
 };
 
 const Clients = () => {
@@ -171,6 +133,7 @@ const Clients = () => {
                 { key: 'telephone', label: 'Téléphone' },
                 { key: 'email', label: 'Email' },
                 { key: 'cin_passport', label: 'CIN / Passeport' },
+                { key: 'date_expiration_cin', label: 'Expiration CIN' },
                 { key: 'permis_conduite', label: 'Permis de conduire' },
                 { key: 'nationalite', label: 'Nationalité' },
                 { key: 'sexe', label: 'Sexe' },
@@ -423,7 +386,7 @@ const Clients = () => {
                                             </td>
                                             <td className="px-6 text-right">
                                                 <div className="flex items-center justify-end gap-1">
-                                                    <MenuButton client={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
+                                                    <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
                                                 </div>
                                             </td>
                                         </tr>
@@ -491,7 +454,7 @@ const Clients = () => {
                                                 Gérer la fiche <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
-                                        <MenuButton client={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
                                     </div>
                                 </div>
                             );

@@ -16,38 +16,8 @@ import { toast } from './Toast';
 
 const PAGE_SIZE_DEFAULT = 10;
 
-const getRole = () => {
-    try {
-        const token = localStorage.getItem('access_token');
-        if (!token) return '';
-        return JSON.parse(atob(token.split('.')[1]))?.role || '';
-    } catch {
-        return '';
-    }
-};
-
-const MenuButton = ({ vehicle, items, menuId, setMenuId }) => {
-    const btnRef = useRef(null);
-    return (
-        <div className="inline-block">
-            <button
-                ref={btnRef}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === vehicle.id ? null : vehicle.id); }}
-                className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                style={{ color: 'var(--on-surface-variant)' }}
-                title="Options"
-            >
-                <span className="material-symbols-outlined text-[18px]">more_vert</span>
-            </button>
-            <DropdownMenu
-                open={menuId === vehicle.id}
-                onClose={() => setMenuId(null)}
-                items={items}
-                anchor={btnRef.current}
-            />
-        </div>
-    );
-};
+import { getRole } from '../utils/userRole';
+import MenuButton from './ui/MenuButton';
 
 const Vehicles = () => {
     const navigate = useNavigate();
@@ -387,7 +357,7 @@ const Vehicles = () => {
                                         </td>
                                         <td className="px-6 text-right">
                                             <div className="flex items-center justify-end gap-1">
-                                                <MenuButton vehicle={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
+                                                <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
                                             </div>
                                         </td>
                                     </tr>
@@ -484,7 +454,7 @@ const Vehicles = () => {
                                                 Gérer le véhicule <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
-                                        <MenuButton vehicle={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
                                     </div>
                                 </div>
                             ))}

@@ -5,6 +5,7 @@ import DamageSelector from './DamageSelector';
 import Dropdown from './Dropdown';
 import axios from 'axios';
 import { toast } from './Toast';
+import { ACCESSORY_LABELS } from '../utils/vehicleAccessories';
 
 const STEPS = [
   { id: 1, label: 'Dates & Kilométrage', icon: 'speed' },
@@ -12,17 +13,6 @@ const STEPS = [
   { id: 3, label: 'Dégâts au retour', icon: 'car_crash' },
   { id: 4, label: 'Règlement & Facture', icon: 'payments' },
 ];
-
-const ACCESSORY_LABELS = {
-  roue_secours: { label: 'Roue de secours', icon: 'tire_repair' },
-  cric:         { label: 'Cric',             icon: 'build' },
-  manivelle:    { label: 'Manivelle',        icon: 'settings' },
-  gilet:        { label: 'Gilet réfléchissant', icon: 'accessibility_new' },
-  triangle:     { label: 'Triangle de sécurité', icon: 'warning' },
-  extincteur:   { label: 'Extincteur',       icon: 'fire_extinguisher' },
-  papiers:      { label: 'Papiers du véh.',  icon: 'description' },
-  cles:         { label: 'Clés',             icon: 'key' },
-};
 
 const nowLocalISO = () => {
   const d = new Date();

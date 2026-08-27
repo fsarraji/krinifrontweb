@@ -512,14 +512,7 @@ const VehicleForm = () => {
                         {/* Form panel */}
                         <div className="space-y-5">
                     {currentStep === 1 && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                            <div className="mb-7 flex items-center gap-3">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                    <span className="material-symbols-outlined text-[18px]">directions_car</span>
-                                </span>
-                                <h2 className="text-lg font-semibold">Identification</h2>
-                            </div>
-                            <div className="grid gap-6 md:grid-cols-2">
+                        <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Immatriculation (matricule)</span>
                                     <input
@@ -651,19 +644,11 @@ const VehicleForm = () => {
                                     />
                                 </label>
                             </div>
-                        </div>
                     )}
 
                     {currentStep === 2 && (
                         <>
-                            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                                <div className="mb-7 flex items-center gap-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                        <span className="material-symbols-outlined text-[18px]">settings_input_component</span>
-                                    </span>
-                                    <h2 className="text-lg font-semibold">Spécifications techniques</h2>
-                                </div>
-                                <div className="grid gap-6 md:grid-cols-2">
+                            <div className="grid gap-6 md:grid-cols-2">
                                     <label className="block">
                                         <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Couleur</span>
                                         <input
@@ -728,18 +713,11 @@ const VehicleForm = () => {
                                         />
                                     </label>
                                 </div>
-                            </div>
                         </>
                     )}
 
                     {currentStep === 3 && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                            <div className="mb-7 flex items-center gap-3">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                    <span className="material-symbols-outlined text-[18px]">payments</span>
-                                </span>
-                                <h2 className="text-lg font-semibold">Tarification</h2>
-                            </div>
+                        <>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Prix journalier (DH)</span>
@@ -917,17 +895,11 @@ const VehicleForm = () => {
                                     ))}
                                 </div>
                             </div>
-                        </div>
+                        </>
                     )}
 
                     {currentStep === 4 && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
-                            <div className="mb-7 flex items-center gap-3">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
-                                    <span className="material-symbols-outlined text-[18px]">verified_user</span>
-                                </span>
-                                <h2 className="text-lg font-semibold">Validité & Statut</h2>
-                            </div>
+                        <>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Expiration assurance</span>
@@ -987,7 +959,7 @@ const VehicleForm = () => {
                                     })}
                                 </div>
                             </div>
-                        </div>
+                        </>
                     )}
                         </div>
 

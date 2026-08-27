@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { toast } from './Toast';
 
-const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => {
+const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -100,9 +100,9 @@ const NotificationCenter = ({ isCollapsed, isOpen, onClose, onCountChange }) => 
     }, [onCountChange]);
 
     useEffect(() => {
-        if (!isOpen) return;
         fetchNotifications();
         // Refresh notifications every 60 seconds only while the panel is open
+        if (!isOpen) return;
         const interval = setInterval(fetchNotifications, 60000);
         return () => clearInterval(interval);
     }, [isOpen, fetchNotifications]);
