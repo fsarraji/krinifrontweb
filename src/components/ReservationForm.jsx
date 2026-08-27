@@ -5,6 +5,7 @@ import Dropdown from './Dropdown';
 import api, { fetchAllPages } from '../api';
 import { toast } from './Toast';
 import AddClientModal from './AddClientModal';
+import DatePicker from './ui/DatePicker';
 import { getRole } from '../utils/userRole';
 
 const ReservationForm = () => {
@@ -22,10 +23,8 @@ const ReservationForm = () => {
         vehicle: '',
         client: '',
         deuxieme_chauffeur: '',
-        date_sortie: new Date().toISOString().split('T')[0],
-        heure_sortie: '09:00',
-        date_retour_prevue: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        heure_retour: '09:00',
+        date_sortie: new Date().toISOString().slice(0, 16),
+        date_retour_prevue: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
         prix_par_jour: 0,
         montant_paye: 0,
         caution: 1500,
@@ -91,12 +90,12 @@ const ReservationForm = () => {
         if (!formData.vehicle || !formData.date_sortie || !formData.date_retour_prevue) { setQuote(null); return; }
         let cancelled = false;
         setQuoteLoading(true);
-        api.get(`vehicles/${formData.vehicle}/price-quote/`, { params: { start: `${formData.date_sortie}T${formData.heure_sortie || '09:00'}`, end: `${formData.date_retour_prevue}T${formData.heure_retour || '09:00'}` } })
+        api.get(`vehicles/${formData.vehicle}/price-quote/`, { params: { start: formData.date_sortie, end: formData.date_retour_prevue } })
             .then((res) => { if (!cancelled) setQuote(res.data); })
             .catch(() => { if (!cancelled) setQuote(null); })
             .finally(() => { if (!cancelled) setQuoteLoading(false); });
         return () => { cancelled = true; };
-    }, [formData.vehicle, formData.date_sortie, formData.date_retour_prevue, formData.heure_sortie, formData.heure_retour]);
+    }, [formData.vehicle, formData.date_sortie, formData.date_retour_prevue]);
 
     const diffDays = () => {
         const start = new Date(formData.date_sortie);
@@ -116,9 +115,7 @@ const ReservationForm = () => {
     const checkAvailability = async () => {
         setLoading(true);
         try {
-            const startStr = `${formData.date_sortie}T${formData.heure_sortie || '09:00'}`;
-            const endStr = `${formData.date_retour_prevue}T${formData.heure_retour || '09:00'}`;
-            const res = await api.get(`vehicles/available_cars/?start_date=${startStr}&end_date=${endStr}`);
+            const res = await api.get(`vehicles/available_cars/?start_date=${formData.date_sortie}&end_date=${formData.date_retour_prevue}`);
             setVehicles(res.data);
             setStep(2);
         } catch (error) {
@@ -138,8 +135,8 @@ const ReservationForm = () => {
                 montant_total: totalEstimate(),
                 km_sortie: selectedVehicle?.kilometrage || 0,
                 carburant_sortie: '2/8',
-                date_sortie: `${formData.date_sortie}T${formData.heure_sortie || '09:00'}:00Z`,
-                date_retour_prevue: `${formData.date_retour_prevue}T${formData.heure_retour || '09:00'}:00Z`,
+                date_sortie: `${formData.date_sortie}:00Z`,
+                date_retour_prevue: `${formData.date_retour_prevue}:00Z`,
             };
             await api.post('contracts/', dataToSubmit);
             toast.success('Réservation créée avec succès.');
@@ -237,36 +234,22 @@ const ReservationForm = () => {
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Date de Départ</label>
-                                    <input 
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                        type="date"
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Date et Heure de Départ</label>
+                                    <DatePicker
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200"
                                         value={formData.date_sortie}
-                                        onChange={(e) => setFormData({...formData, date_sortie: e.target.value})}
-                                    />
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mt-3 mb-2">Heure de Départ</label>
-                                    <input 
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                        type="time"
-                                        value={formData.heure_sortie}
-                                        onChange={(e) => setFormData({...formData, heure_sortie: e.target.value})}
+                                        onChange={(v) => setFormData({...formData, date_sortie: v})}
+                                        placeholder="Choisir la date de départ"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Retour Prévu</label>
-                                    <input 
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                        type="date"
-                                        min={formData.date_sortie}
+                                    <DatePicker
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200"
                                         value={formData.date_retour_prevue}
-                                        onChange={(e) => setFormData({...formData, date_retour_prevue: e.target.value})}
-                                    />
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mt-3 mb-2">Heure de Retour</label>
-                                    <input 
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-350 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200" 
-                                        type="time"
-                                        value={formData.heure_retour}
-                                        onChange={(e) => setFormData({...formData, heure_retour: e.target.value})}
+                                        onChange={(v) => setFormData({...formData, date_retour_prevue: v})}
+                                        min={formData.date_sortie ? formData.date_sortie.slice(0, 10) : null}
+                                        placeholder="Choisir la date de retour"
                                     />
                                 </div>
                             </div>
