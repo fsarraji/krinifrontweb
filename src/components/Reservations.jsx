@@ -6,6 +6,10 @@ import Pagination from './Pagination';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import StatusBadge from './ui/StatusBadge';
+import PageHeader from './ui/PageHeader';
+import Button from './ui/Button';
+import Spinner from './ui/Spinner';
+import { getRole } from '../utils/userRole';
 
 import { AVATAR_COLORS } from '../utils/avatarColors';
 
@@ -13,6 +17,7 @@ const REQUEST_FILTER_OPTIONS = [
     { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
     { value: 'PENDING', label: 'En attente', dot: 'bg-warning' },
     { value: 'CONFIRMED', label: 'Confirmée', dot: 'bg-success' },
+    { value: 'RESERVE', label: 'Réservation (Contrat)', dot: 'bg-info' },
     { value: 'CANCELLED', label: 'Annulée', dot: 'bg-danger' },
 ];
 
@@ -21,6 +26,7 @@ const Reservations = () => {
     const [tab, setTab] = useState('reservations');
     const [requests, setRequests] = useState([]);
     const [clientReservations, setClientReservations] = useState([]);
+    const [contractReservations, setContractReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busyId, setBusyId] = useState(null);
     const [search, setSearch] = useState('');
@@ -30,25 +36,34 @@ const Reservations = () => {
     const [reservationPageSize, setReservationPageSize] = useState(10);
     const [requestPage, setRequestPage] = useState(1);
     const [requestPageSize, setRequestPageSize] = useState(10);
+    const [reloadKey, setReloadKey] = useState(0);
+    const [role] = useState(getRole());
 
-    const fetchAll = async () => {
-        try {
-            const [requests, reservations] = await Promise.all([
-                fetchAllPages('booking-requests/'),
-                fetchAllPages('reservations/'),
-            ]);
-            setRequests(Array.isArray(requests) ? requests : []);
-            setClientReservations(Array.isArray(reservations) ? reservations : []);
-            setLoading(false);
-        } catch (error) {
-            console.error('Erreur lors de la récupération des réservations', error);
-            setLoading(false);
-        }
-    };
+    const isManager = role === 'OWNER' || role === 'SUPERADMIN';
 
     useEffect(() => {
-        fetchAll();
-    }, []);
+        let cancelled = false;
+        (async () => {
+            try {
+                const [requests, reservations, reserveContracts] = await Promise.all([
+                    fetchAllPages('booking-requests/'),
+                    fetchAllPages('reservations/'),
+                    fetchAllPages('contracts/', { statut: 'RESERVE' }),
+                ]);
+                if (cancelled) return;
+                setRequests(Array.isArray(requests) ? requests : []);
+                setClientReservations(Array.isArray(reservations) ? reservations : []);
+                setContractReservations(Array.isArray(reserveContracts) ? reserveContracts : []);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des réservations', error);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [reloadKey]);
+
+    const fetchAll = () => setReloadKey((k) => k + 1);
 
     const handleConfirm = (request) => {
         messageBox.confirm('Confirmer cette demande de réservation ? Un contrat (Réservé) sera généré.', 'Confirmation', {
@@ -101,11 +116,53 @@ const Reservations = () => {
         });
     };
 
-    const reservations = clientReservations.map(r => ({ ...r, kind: 'reservation' }));
-    const allRequests = [
-        ...requests.map(r => ({ ...r, kind: 'booking' })),
-        ...clientReservations.map(r => ({ ...r, kind: 'reservation' })),
-    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const handleCancel = (item) => {
+        const isContract = item.kind === 'contract';
+        const label = isContract ? 'annuler cette réservation (contrat Réservé) ?' : 'annuler cette réservation ?';
+        messageBox.confirm(`Voulez-vous ${label}`, 'Annuler la réservation', {
+            confirmText: 'Annuler',
+            destructive: true,
+            onConfirm: async () => {
+                setBusyId(`${item.kind}-${item.id}`);
+                try {
+                    await api.post(
+                        isContract ? `contracts/${item.id}/cancel/` : `reservations/${item.id}/cancel/`,
+                        {}
+                    );
+                    toast.success(isContract ? 'Réservation (contrat) annulée.' : 'Réservation annulée.');
+                    fetchAll();
+                } catch (error) {
+                    console.error("Erreur lors de l'annulation", error);
+                    toast.error(error.response?.data?.detail || "Erreur lors de l'annulation de la réservation.");
+                } finally {
+                    setBusyId(null);
+                }
+            }
+        });
+    };
+
+    const reservationItems = clientReservations.map(r => ({
+        ...r,
+        kind: 'reservation',
+        displayName: r.client_name || '—',
+    }));
+    const contractItems = contractReservations.map(c => ({
+        ...c,
+        kind: 'contract',
+        displayName: [c.client_prenom, c.client_name].filter(Boolean).join(' ') || '—',
+    }));
+    const bookingItems = requests.map(r => ({
+        ...r,
+        kind: 'booking',
+        displayName: r.client_name || [r.prenom, r.nom].filter(Boolean).join(' ') || '—',
+    }));
+
+    const allReservations = [...reservationItems, ...contractItems].sort(
+        (a, b) => new Date(b.created_at || b.date_creation) - new Date(a.created_at || a.date_creation)
+    );
+    const allRequests = [...bookingItems, ...reservationItems].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
     const pendingRequests = allRequests.filter(r => r.statut === 'PENDING');
 
     const matchesSearch = (obj, fields) => {
@@ -116,11 +173,11 @@ const Reservations = () => {
 
     const visibleRequests = allRequests.filter(r =>
         (requestFilter === 'ALL' || r.statut === requestFilter) &&
-        matchesSearch(r, [r.client_name, r.vehicle_name, r.nom, r.prenom])
+        matchesSearch(r, [r.displayName, r.vehicle_name])
     );
-    const visibleReservations = reservations.filter(r =>
+    const visibleReservations = allReservations.filter(r =>
         (reservationFilter === 'ALL' || r.statut === reservationFilter) &&
-        matchesSearch(r, [r.client_name, r.vehicle_name])
+        matchesSearch(r, [r.displayName, r.vehicle_name])
     );
 
     const paginatedRequests = visibleRequests.slice((requestPage - 1) * requestPageSize, requestPage * requestPageSize);
@@ -134,7 +191,6 @@ const Reservations = () => {
         return (first + second).toUpperCase() || name.charAt(0).toUpperCase();
     };
 
-    const requestName = (r) => r.client_name || [r.prenom, r.nom].filter(Boolean).join(' ') || '—';
     const requestDates = (r) => r.formatted_dates?.range || (
         r.date_sortie ? `${String(r.date_sortie).slice(0, 10)} → ${String(r.date_retour_prevue || '').slice(0, 10)}` : '—'
     );
@@ -143,19 +199,24 @@ const Reservations = () => {
         const busy = busyId === `${request.kind}-${request.id}`;
         const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
         const isReservation = request.kind === 'reservation';
+        const isContract = request.kind === 'contract';
         return (
             <tr key={`${request.kind}-${request.id}`} className="row hover:bg-slate-50/50 transition-colors group">
                 <td className="px-6 font-semibold">
                     <div className="flex items-center gap-3.5">
                         <div className={`avatar ${avatarClass}`}>
-                            {initialsFor(requestName(request))}
+                            {initialsFor(request.displayName)}
                         </div>
                         <div>
-                            <div className="font-semibold">{requestName(request)}</div>
+                            <div className="font-semibold">{request.displayName}</div>
                             <div className="text-[12px] mt-0.5 flex items-center gap-1.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
-                                <span>#RES-{request.id.toString().padStart(5, '0')}</span>
-                                {isReservation && (
+                                <span>#{isContract ? `CTR-${request.id.toString().padStart(5, '0')}` : `RES-${request.id.toString().padStart(5, '0')}`}</span>
+                                {isContract ? (
+                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ background: 'var(--primary-bg)', color: 'var(--primary)' }}>Agence</span>
+                                ) : isReservation ? (
                                     <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>Compte client</span>
+                                ) : (
+                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>Demande</span>
                                 )}
                             </div>
                         </div>
@@ -168,50 +229,40 @@ const Reservations = () => {
                     <StatusBadge status={request.statut} />
                 </td>
                 <td className="px-6 text-right">
-                    {request.statut === 'PENDING' && (
-                        <div className="flex items-center justify-end gap-2">
-                            <button
-                                onClick={() => handleRefuse(request)}
-                                disabled={busy}
-                                className="px-3 py-1.5 rounded-token text-[13px] font-bold disabled:opacity-50 transition-colors"
-                                style={{ color: 'var(--error-c)', background: 'var(--error-bg)' }}
-                            >
-                                Refuser
-                            </button>
-                            <button
-                                onClick={() => handleConfirm(request)}
-                                disabled={busy}
-                                className="px-3 py-1.5 rounded-token text-[13px] font-bold text-white disabled:opacity-50 transition-colors hover:opacity-90"
-                                style={{ background: 'var(--primary-container)' }}
-                            >
-                                {busy ? '...' : 'Confirmer'}
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                        {request.statut === 'PENDING' && (
+                            <>
+                                <Button size="sm" variant="danger" disabled={busy} onClick={() => handleRefuse(request)}>
+                                    Refuser
+                                </Button>
+                                <Button size="sm" disabled={busy} loading={busy} onClick={() => handleConfirm(request)}>
+                                    Confirmer
+                                </Button>
+                            </>
+                        )}
+                        {(request.statut === 'CONFIRMED' || request.statut === 'RESERVE') && isManager && (
+                            <Button size="sm" variant="danger" disabled={busy} loading={busy} onClick={() => handleCancel(request)}>
+                                Annuler
+                            </Button>
+                        )}
+                    </div>
                 </td>
             </tr>
         );
     };
 
-    if (loading) return <div className="flex justify-center items-center h-64 text-on-surface-variant font-semibold">Chargement des réservations...</div>;
+    if (loading) return <div className="flex justify-center items-center h-64"><Spinner size={26} /></div>;
 
     return (
         <div className="flex flex-col h-full">
             {/* Editorial Header */}
-            <header className="flex items-end justify-between mb-8">
-                <div>
-                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Opérations de Flotte</p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>Réservations</h2>
-                </div>
-                <button
-                    onClick={() => navigate('/reservations/new')}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white hover:opacity-90 transition-opacity"
-                    style={{ background: 'var(--primary-container)' }}
-                >
-                    <span className="material-symbols-outlined text-[18px]">add</span>
-                    Nouvelle Réservation
-                </button>
-            </header>
+            <PageHeader
+                eyebrow="Opérations de Flotte"
+                title="Réservations"
+                actions={(
+                    <Button icon="add" onClick={() => navigate('/reservations/new')}>Nouvelle Réservation</Button>
+                )}
+            />
 
             {/* Filters & Search */}
             <div className="flex flex-col gap-5 mb-6">
@@ -228,7 +279,7 @@ const Reservations = () => {
                     >
                         Réservations
                         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>
-                            {reservations.length}
+                            {allReservations.length}
                         </span>
                     </button>
                     <button
