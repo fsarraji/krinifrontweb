@@ -22,6 +22,11 @@ const EditContract = () => {
   const [formData, setFormData] = useState({
     statut: ''
   });
+  const [showProlongModal, setShowProlongModal] = useState(false);
+  const [prolongDate, setProlongDate] = useState('');
+  const [prolongQuote, setProlongQuote] = useState(null);
+  const [prolongSubmitting, setProlongSubmitting] = useState(false);
+  const [prolongError, setProlongError] = useState('');
 
   // Fetch contract and payments
   useEffect(() => {
@@ -75,6 +80,55 @@ const EditContract = () => {
     }
   };
 
+  const toLocalDatetime = (iso) => {
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const openProlongModal = () => {
+    setProlongDate('');
+    setProlongQuote(null);
+    setProlongError('');
+    setShowProlongModal(true);
+  };
+
+  const fetchProlongQuote = async (value) => {
+    setProlongDate(value);
+    setProlongError('');
+    setProlongQuote(null);
+    if (!value || !contract) return;
+    try {
+      const fmt = (v) => `${v.slice(0, 10)}T${v.slice(11, 16)}:00`;
+      const { data } = await api.get(`vehicles/${contract.vehicle}/price-quote/`, {
+        params: { start: fmt(contract.date_sortie), end: fmt(value) }
+      });
+      setProlongQuote(data);
+    } catch {
+      setProlongError('Impossible de calculer le devis.');
+    }
+  };
+
+  const handleProlong = async (e) => {
+    e.preventDefault();
+    if (!prolongDate) { setProlongError('Veuillez choisir une nouvelle date de retour.'); return; }
+    setProlongSubmitting(true);
+    setProlongError('');
+    try {
+      await api.post(`contracts/${id}/prolong/`, {
+        date_retour_prevue: `${prolongDate.slice(0, 10)}T${prolongDate.slice(11, 16)}:00`
+      });
+      toast.success('Contrat prolongé avec succès.');
+      const { data } = await api.get(`contracts/${id}/`);
+      setContract(data);
+      setShowProlongModal(false);
+    } catch (err) {
+      setProlongError(err?.response?.data?.detail || 'Erreur lors de la prolongation du contrat.');
+    } finally {
+      setProlongSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-screen text-primary font-bold">Chargement du contrat…</div>;
   if (!contract) return <div className="flex items-center justify-center h-screen text-error font-bold">Contrat non trouvé.</div>;
 
@@ -95,7 +149,7 @@ const EditContract = () => {
           </button>
           <button
             onClick={handleSave}
-            className="px-8 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors"
+            className="px-8 py-2.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary-deep transition-colors"
           >
             Enregistrer
           </button>
@@ -152,30 +206,30 @@ const EditContract = () => {
                 <p className="font-semibold">{contract.formatted_dates?.end || contract.date_fin}</p>
               </div>
             </div>
-            <button className="mt-4 w-full py-2.5 rounded-xl border border-primary/10 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/5 transition-colors">
-              Prolonger le contrat
-            </button>
-          </div>
+            {contract.statut === 'EN_COURS' && (
+              <button
+                onClick={openProlongModal}
+                className="mt-4 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-primary/15 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">schedule</span> Prolonger le contrat
+              </button>
+            )}
+            </div>
 
           {/* Payments Section */}
           <div>
             <div className="flex justify-between items-center mb-4">
               <div />
-              <div className="flex gap-2">
-                <button className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 rounded text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
-                  <span className="material-symbols-outlined text-xs">receipt</span> Facture
-                </button>
-                <button onClick={() => setShowPaymentModal(true)} className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 transition-colors">
+              <button onClick={() => setShowPaymentModal(true)} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded text-xs font-bold hover:bg-primary-deep transition-colors">
                   <span className="material-symbols-outlined text-xs">add</span> Ajouter
                 </button>
-              </div>
             </div>
             {/* Progress Bar */}
             <div className="flex items-center gap-4 mb-4">
               <div className="flex-1 w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                <div className="h-full bg-indigo-600" style={{ width: `${contract.montant_total ? (contract.montant_paye / contract.montant_total) * 100 : 0}%` }}></div>
+                <div className="h-full bg-primary" style={{ width: `${contract.montant_total ? (contract.montant_paye / contract.montant_total) * 100 : 0}%` }}></div>
               </div>
-              <span className="text-sm font-medium text-indigo-600">
+              <span className="text-sm font-medium text-primary">
                 {contract.montant_total ? ((contract.montant_paye / contract.montant_total) * 100).toFixed(0) : 0}%
               </span>
             </div>
@@ -211,7 +265,7 @@ const EditContract = () => {
                           {pay.reference || '-'}
                           {pay.notes && <span className="block text-xs text-slate-400">{pay.notes}</span>}
                         </td>
-                        <td className="px-4 py-2 text-right font-bold text-green-600 whitespace-nowrap">
+                        <td className="px-4 py-2 text-right font-bold text-success whitespace-nowrap">
                           +{parseFloat(pay.amount).toLocaleString()} DH
                         </td>
                       </tr>
@@ -230,7 +284,7 @@ const EditContract = () => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-slate-100">
               <h3 className="text-xl font-bold text-primary flex items-center gap-2">
-                <span className="material-symbols-outlined text-green-600">attach_money</span> Ajouter un paiement
+                <span className="material-symbols-outlined text-success">attach_money</span> Ajouter un paiement
               </h3>
               <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                 <span className="material-symbols-outlined">close</span>
@@ -244,7 +298,7 @@ const EditContract = () => {
                   required
                   min="1"
                   step="0.01"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
                   placeholder="Ex: 1500"
                   value={paymentFormData.amount}
                   onChange={e => setPaymentFormData({ ...paymentFormData, amount: e.target.value })}
@@ -267,7 +321,7 @@ const EditContract = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Référence (optionnel)</label>
                 <input
                   type="text"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
                   placeholder="N° Chèque ou Réf Virement"
                   value={paymentFormData.reference}
                   onChange={e => setPaymentFormData({ ...paymentFormData, reference: e.target.value })}
@@ -277,7 +331,7 @@ const EditContract = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Notes</label>
                 <textarea
                   rows={2}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
                   placeholder="Détails supplémentaires..."
                   value={paymentFormData.notes}
                   onChange={e => setPaymentFormData({ ...paymentFormData, notes: e.target.value })}
@@ -287,8 +341,89 @@ const EditContract = () => {
                 <button type="button" onClick={() => setShowPaymentModal(false)} className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
                   Annuler
                 </button>
-                <button type="submit" className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors">
+                <button type="submit" className="flex-1 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-deep transition-colors">
                   Valider le paiement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Prolong Contract Modal */}
+      {showProlongModal && contract && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-primary flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">schedule</span> Prolonger le contrat
+              </h3>
+              <button onClick={() => setShowProlongModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleProlong} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                  <p className="text-slate-400 font-bold uppercase tracking-wider mb-1">Retour actuel</p>
+                  <p className="font-bold text-slate-800">{contract.formatted_dates?.retour || contract.formatted_dates?.end || ''}</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3">
+                  <p className="text-slate-400 font-bold uppercase tracking-wider mb-1">Jours actuel</p>
+                  <p className="font-bold text-slate-800">{contract.jours} jours</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Nouvelle date de retour <span className="text-error">*</span></label>
+                <input
+                  type="datetime-local"
+                  required
+                  min={contract.date_retour_prevue ? toLocalDatetime(contract.date_retour_prevue) : ''}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary"
+                  value={prolongDate}
+                  onChange={(e) => fetchProlongQuote(e.target.value)}
+                />
+                <p className="mt-1 text-[11px] text-slate-400">La nouvelle date doit être après le retour actuel.</p>
+              </div>
+
+              {prolongQuote && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 grid grid-cols-3 gap-3 text-center text-xs">
+                  <div>
+                    <p className="text-slate-400 font-bold uppercase tracking-wider">Jours</p>
+                    <p className="text-lg font-extrabold text-primary">{prolongQuote.jours}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 font-bold uppercase tracking-wider">Prix / jour</p>
+                    <p className="text-lg font-extrabold text-primary">{parseFloat(prolongQuote.prix_moyen).toLocaleString()} DH</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-400 font-bold uppercase tracking-wider">Total</p>
+                    <p className="text-lg font-extrabold text-primary">{parseFloat(prolongQuote.total).toLocaleString()} DH</p>
+                  </div>
+                </div>
+              )}
+
+              {prolongError && (
+                <div className="text-xs font-semibold text-error bg-error/10 border border-error/20 rounded-lg px-4 py-3">
+                  {prolongError}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowProlongModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={prolongSubmitting}
+                  className="flex-1 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-deep transition-colors disabled:opacity-60"
+                >
+                  {prolongSubmitting ? 'Prolongation…' : 'Prolonger'}
                 </button>
               </div>
             </form>
