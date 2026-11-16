@@ -21,6 +21,8 @@ const PAGE_SIZE_DEFAULT = 10;
 
 import { getRole } from '../utils/userRole';
 import MenuButton from './ui/MenuButton';
+import Table from './ui/Table';
+import { formatMoney, formatNumber } from '../utils/formatters';
 
 const Vehicles = () => {
     const navigate = useNavigate();
@@ -100,7 +102,7 @@ const Vehicles = () => {
         { key: 'kilometrage', label: 'Kilométrage (km)' },
         { key: 'carburant', label: 'Carburant' },
         { key: 'statut', label: 'Statut' },
-        { key: 'prix_par_jour', label: 'Prix/Jour (DH)' },
+        { key: 'prix_par_jour', label: 'Prix/Jour (MAD)' },
     ];
 
     const handleDelete = (v) => {
@@ -195,11 +197,11 @@ const Vehicles = () => {
             />
 
             {/* KPI Cards Row */}
-            <div className="grid grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
                 <MetricCard icon="directions_car" iconBg="bg-info-bg" iconColor="text-info" value={totalFleet} label="Flotte Totale" />
                 <MetricCard icon="key" iconBg="bg-success-bg" iconColor="text-success" value={rentedCount} label="Actuellement Loués" />
                 <MetricCard icon="build" iconBg="bg-warning-bg" iconColor="text-warning" value={maintenanceCount} label="En Maintenance" />
-                <MetricCard icon="payments" iconBg="bg-secondary-container" iconColor="text-secondary" value={avgDailyRate} unit="DH" label="Tarif Moyen / Jour" />
+                <MetricCard icon="payments" iconBg="bg-secondary-container" iconColor="text-secondary" value={avgDailyRate} unit="MAD" label="Tarif Moyen / Jour" />
             </div>
 
             {/* Search Filter Bar & View Switcher */}
@@ -247,80 +249,59 @@ const Vehicles = () => {
             {/* Data Table / Grid */}
             <div className="card rounded-token overflow-hidden shadow-l1">
                 {viewMode === 'table' ? (
-                    <div className="overflow-x-auto w-full">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr style={{ background: 'var(--slate-bg)' }}>
-                                    <th className="px-6 py-4">Véhicule</th>
-                                    <th className="px-6 py-4">Matricule</th>
-                                    <th className="px-6 py-4">Carburant</th>
-                                    <th className="px-6 py-4">Km</th>
-                                    <th className="px-6 py-4">Statut</th>
-                                    <th className="px-6 py-4 text-right">Tarif / jour</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
-                                {paginatedVehicles.map((vehicle) => (
-                                    <tr key={vehicle.id} className="row hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 font-semibold">
-                                            <div className="flex items-center gap-3">
-                                                {vehicle.image ? (
-                                                    <img
-                                                        src={resolveImage(vehicle.image)}
-                                                        alt={`${vehicle.marque_name} ${vehicle.modele_name}`}
-                                                        className="w-10 h-10 rounded-lg object-cover border border-stroke"
-                                                        onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                                                    />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>
-                                                        {vehicle.marque_name?.slice(0, 2).toUpperCase() || 'VE'}
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <span className="font-semibold" style={{ color: 'var(--on-surface)' }}>{vehicle.marque_name} {vehicle.modele_name}</span>
-                                                    <span className="ml-1.5 font-normal text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{vehicle.annee}</span>
-                                                </div>
+                    <Table
+                        className="!border-0 !rounded-none"
+                        caption="Liste des véhicules"
+                        rows={paginatedVehicles}
+                        emptyTitle="Aucun véhicule ne correspond aux critères."
+                        columns={[
+                            {
+                                key: 'modele_name', label: 'Véhicule',
+                                render: (_, vehicle) => (
+                                    <div className="flex items-center gap-3">
+                                        {vehicle.image ? (
+                                            <img
+                                                src={resolveImage(vehicle.image)}
+                                                alt={`${vehicle.marque_name} ${vehicle.modele_name}`}
+                                                className="w-10 h-10 rounded-lg object-cover border border-stroke"
+                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs bg-info-bg text-info">
+                                                {vehicle.marque_name?.slice(0, 2).toUpperCase() || 'VE'}
                                             </div>
-                                        </td>
-                                        <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                            {vehicle.matricule_actuel || vehicle.matricule}
-                                        </td>
-                                        <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                            {vehicle.carburant}
-                                        </td>
-                                        <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                            {vehicle.kilometrage ? parseInt(vehicle.kilometrage).toLocaleString() : 0} km
-                                        </td>
-                                        <td className="px-6">
-                                            {vehicle.is_deleted ? (
-                                                <StatusBadge variant="danger" label="Supprimé" />
-                                            ) : vehicle.is_archived ? (
-                                                <StatusBadge variant="neutral" label="Archivé" />
-                                            ) : (
-                                                <StatusBadge status={vehicle.statut} />
-                                            )}
-                                        </td>
-                                        <td className="px-6 text-right font-semibold">
-                                            {vehicle.prix_par_jour} DH
-                                        </td>
-                                        <td className="px-6 text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filteredVehicles.length === 0 && (
-                                    <tr className="row">
-                                        <td colSpan="7" className="px-6 text-center text-slate-400">
-                                            Aucun véhicule ne correspond aux critères.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                        )}
+                                        <div>
+                                            <span className="font-semibold text-on-surface">{vehicle.marque_name} {vehicle.modele_name}</span>
+                                            <span className="ml-1.5 font-normal text-label-sm text-text-muted">{vehicle.annee}</span>
+                                        </div>
+                                    </div>
+                                ),
+                            },
+                            { key: 'matricule', label: 'Matricule', className: 'text-on-surface-variant', render: (_, v) => v.matricule_actuel || v.matricule },
+                            { key: 'carburant', label: 'Carburant', className: 'text-on-surface-variant' },
+                            { key: 'kilometrage', label: 'Km', className: 'text-on-surface-variant', render: (v) => `${formatNumber(v ? parseInt(v, 10) : 0)} km` },
+                            {
+                                key: 'statut', label: 'Statut',
+                                render: (_, vehicle) => (vehicle.is_deleted ? (
+                                    <StatusBadge variant="danger" label="Supprimé" />
+                                ) : vehicle.is_archived ? (
+                                    <StatusBadge variant="neutral" label="Archivé" />
+                                ) : (
+                                    <StatusBadge status={vehicle.statut} />
+                                )),
+                            },
+                            { key: 'prix_par_jour', label: 'Tarif / jour', align: 'right', className: 'font-semibold', render: (v) => formatMoney(v) },
+                            {
+                                key: 'actions', label: 'Actions', align: 'right',
+                                render: (_, vehicle) => (
+                                    <div className="flex items-center justify-end gap-1">
+                                        <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
+                                    </div>
+                                ),
+                            },
+                        ]}
+                    />
                 ) : (
                     /* Grid View */
                     filteredVehicles.length === 0 ? (
@@ -377,7 +358,7 @@ const Vehicles = () => {
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm">speed</span> Kilométrage:
                                                 </span>
-                                                <span className="font-mono font-semibold text-on-surface">{vehicle.kilometrage ? parseInt(vehicle.kilometrage).toLocaleString() : 0} km</span>
+                                                <span className="font-mono font-semibold text-on-surface">{formatNumber(vehicle.kilometrage ? parseInt(vehicle.kilometrage, 10) : 0)} km</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
@@ -389,7 +370,7 @@ const Vehicles = () => {
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm">payments</span> Tarif / jour:
                                                 </span>
-                                                <span className="font-bold text-on-surface">{vehicle.prix_par_jour} DH</span>
+                                                <span className="font-bold text-on-surface">{formatMoney(vehicle.prix_par_jour)}</span>
                                             </div>
                                         </div>
                                     </div>

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import Button from './ui/Button';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { toast } from './Toast';
@@ -8,6 +10,7 @@ import { optimizeImageFile } from '../utils/imageUtils';
 import Stepper from './ui/Stepper';
 
 const AddClient = () => {
+    const { formProps, markClean } = useUnsavedChanges();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         prenom: '',
@@ -173,6 +176,7 @@ const AddClient = () => {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Client créé avec succès.');
+            markClean();
             navigate('/clients');
         } catch (err) {
             console.error("Error creating client:", err);
@@ -203,7 +207,7 @@ const AddClient = () => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
+            <form {...formProps} onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                 {/* Stepper */}
                 <Stepper steps={steps} currentStep={currentStep} />
 
@@ -224,7 +228,7 @@ const AddClient = () => {
                 <div className="space-y-5 bg-slate-50/50 p-5">
                     <div className="space-y-5">
                 {currentStep === 1 && (
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
                                     <label className="label">Prénom</label>
                                     <input
@@ -319,7 +323,7 @@ const AddClient = () => {
                                         </p>
                                     )}
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                     <label className="label">Adresse Email</label>
                                     <input
                                         name="email"
@@ -341,8 +345,8 @@ const AddClient = () => {
                     )}
 
                     {currentStep === 2 && (
-                        <div className="grid grid-cols-2 gap-5">
-                            <div className="col-span-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div className="sm:col-span-2">
                                     <label className="label">Adresse résidentielle</label>
                                     <textarea
                                         name="adresse"
@@ -386,7 +390,7 @@ const AddClient = () => {
                     )}
 
                     {currentStep === 3 && (
-                        <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
                                     <label className="label">{cinLabelFor(formData.nationalite)}</label>
                                     <input
@@ -445,7 +449,7 @@ const AddClient = () => {
                                         type="date"
                                     />
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                     <label className="label">Remarques</label>
                                     <textarea
                                         name="remarques"
@@ -461,7 +465,7 @@ const AddClient = () => {
 
                     {currentStep === 4 && (
                         <>
-                            <div className="grid grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div>
                                         <label className="label">Scan {cinLabelFor(formData.nationalite)}</label>
                                         <label className="dropzone p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
@@ -510,42 +514,19 @@ const AddClient = () => {
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/clients')}
-                        className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                    >
-                        Annuler
-                    </button>
+                    <Button variant="ghost" onClick={() => navigate('/clients')}>Annuler</Button>
                     {currentStep > 1 && (
-                        <button
-                            type="button"
-                            onClick={handlePrev}
-                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        >
-                            <span className="material-symbols-outlined text-[16px] mr-1">chevron_left</span>
-                            Précédent
-                        </button>
+                        <Button variant="outline" icon="chevron_left" onClick={handlePrev}>Précédent</Button>
                     )}
                     {currentStep < 4 ? (
-                        <button
-                            type="button"
-                            onClick={handleNext}
-                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        >
+                        <Button onClick={handleNext}>
                             Suivant
-                            <span className="material-symbols-outlined text-[16px] ml-1">chevron_right</span>
-                        </button>
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">chevron_right</span>
+                        </Button>
                     ) : (
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={loading}
-                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        >
-                            <span className="material-symbols-outlined text-[16px] mr-1">check</span>
+                        <Button icon="check" loading={loading} onClick={handleSubmit}>
                             {loading ? 'Enregistrement…' : 'Enregistrer le client'}
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>

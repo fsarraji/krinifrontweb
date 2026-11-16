@@ -6,6 +6,8 @@ import StatusBadge from './ui/StatusBadge';
 import PageHeader from './ui/PageHeader';
 import Button from './ui/Button';
 import MetricCard from './ui/MetricCard';
+import Table from './ui/Table';
+import { formatMoney, formatNumber } from '../utils/formatters';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -63,13 +65,13 @@ const Dashboard = () => {
             />
 
             {/* Metric cards : 4 colonnes strictes comme krini_vantage_fleet.html */}
-            <div className="grid grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
                 <MetricCard
                     icon="payments"
                     iconBg="bg-info-bg"
                     iconColor="text-info"
-                    value={(data.stats.revenue_this_month ?? 0).toLocaleString('fr-FR')}
-                    unit="DH"
+                    value={formatNumber(data.stats.revenue_this_month ?? 0)}
+                    unit="MAD"
                     label="Revenu du mois"
                 />
                 <MetricCard
@@ -102,10 +104,10 @@ const Dashboard = () => {
             </div>
 
             {/* Grid 3 colonnes : Fleet table (2 col) + Échéances (1 col) */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
                 {/* Fleet table */}
-                <div className="col-span-2 card rounded-token overflow-hidden shadow-l1">
+                <div className="xl:col-span-2 card rounded-token overflow-hidden shadow-l1">
                     <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--stroke)' }}>
                         <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>Contrats & État Flotte Récents</h3>
                         <div className="flex items-center gap-2">
@@ -114,43 +116,19 @@ const Dashboard = () => {
                             <StatusBadge status="Maintenance" />
                         </div>
                     </div>
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-3">Client</th>
-                                <th className="px-6 py-3">Véhicule</th>
-                                <th className="px-6 py-3">Durée</th>
-                                <th className="px-6 py-3">Statut</th>
-                                <th className="px-6 py-3 text-right">Montant</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
-                            {data.recent_contracts.map((contract) => (
-                                <tr key={contract.id} className="row hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 font-semibold">
-                                        {contract.client__nom} {contract.client__prenom}
-                                    </td>
-                                    <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                        {contract.vehicle__marque} {contract.vehicle__modele}
-                                    </td>
-                                    <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                        {contract.jours} Jours
-                                    </td>
-                                    <td className="px-6">
-                                        <StatusBadge status={contract.statut} />
-                                    </td>
-                                    <td className="px-6 text-right font-semibold">
-                                        {contract.montant_total} DH
-                                    </td>
-                                </tr>
-                            ))}
-                            {data.recent_contracts.length === 0 && (
-                                <tr className="row">
-                                    <td colSpan="5" className="px-6 text-center text-slate-400">Aucun contrat récent.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                    <Table
+                        className="!border-0 !rounded-none"
+                        caption="Contrats récents"
+                        rows={data.recent_contracts}
+                        emptyTitle="Aucun contrat récent."
+                        columns={[
+                            { key: 'client__nom', label: 'Client', className: 'font-semibold', render: (_, c) => `${c.client__nom} ${c.client__prenom}` },
+                            { key: 'vehicle__modele', label: 'Véhicule', className: 'text-on-surface-variant', render: (_, c) => `${c.vehicle__marque} ${c.vehicle__modele}` },
+                            { key: 'jours', label: 'Durée', className: 'text-on-surface-variant', render: (v) => `${v} Jours` },
+                            { key: 'statut', label: 'Statut', render: (v) => <StatusBadge status={v} /> },
+                            { key: 'montant_total', label: 'Montant', align: 'right', className: 'font-semibold', render: (v) => formatMoney(v) },
+                        ]}
+                    />
                 </div>
 
                 {/* Alerts Box */}

@@ -4,19 +4,19 @@ import 'leaflet/dist/leaflet.css';
 import api, { fetchAllPages } from '../api';
 import { resolveImage } from '../imageUrl';
 import { toast } from './Toast';
+import { formatDate, formatDateTime, formatNumber } from '../utils/formatters';
 import { messageBox } from './MessageBox';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 
 const REFRESH_MS = 15000;
 const MOROCCO = [31.63, -7.98];
 
-const FR = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
 
 const formatTime = (iso) => {
     if (!iso) return '—';
     try {
         const d = new Date(iso);
-        return isNaN(d) ? '—' : d.toLocaleString('fr-FR', FR);
+        return isNaN(d) ? '—' : formatDateTime(iso);
     } catch {
         return '—';
     }
@@ -25,7 +25,7 @@ const formatTime = (iso) => {
 // Traccar renvoie l'odomètre en mètres (attribute odometer / totalDistance).
 const formatKm = (odometer) => {
     if (odometer == null) return '--';
-    return `${Math.round(odometer / 1000).toLocaleString('fr-FR')}`;
+    return formatNumber(Math.round(odometer / 1000));
 };
 
 const STATUS = {
@@ -371,7 +371,7 @@ const GpsTracking = () => {
     const movingCount = vehicles.filter((v) => deriveStatus(v).moving).length;
     const offlineCount = vehicles.length - movingCount;
 
-    const dateLabel = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const dateLabel = formatDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long' });
     const subtitle = `${dateLabel.charAt(0).toUpperCase()}${dateLabel.slice(1)} — Position en temps réel`;
 
     return (
@@ -422,7 +422,7 @@ const GpsTracking = () => {
                         <button
                             onClick={() => setFleetOpen(true)}
                             className="card rounded-token shadow-l1 w-10 h-10 flex items-center justify-center hover:opacity-80"
-                            title="Afficher la flotte"
+                            title="Afficher la flotte" aria-label="Afficher la flotte"
                         >
                             <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)' }}>format_list_bulleted</span>
                         </button>
@@ -430,7 +430,7 @@ const GpsTracking = () => {
                     <button
                         onClick={openDevices}
                         className="card rounded-token shadow-l1 h-10 px-4 flex items-center gap-2 hover:opacity-80"
-                        title="Gérer les dispositifs GPS (ajouter, supprimer, associer)"
+                        title="Gérer les dispositifs GPS (ajouter, supprimer, associer)" aria-label="Gérer les dispositifs GPS (ajouter, supprimer, associer)"
                     >
                         <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>sensors</span>
                         <span className="text-[12.5px] font-bold" style={{ color: 'var(--on-surface)' }}>Dispositifs</span>
@@ -464,7 +464,7 @@ const GpsTracking = () => {
                                     onClick={() => setFleetOpen(false)}
                                     className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
                                     style={{ color: 'var(--on-surface-variant)' }}
-                                    title="Réduire la liste"
+                                    title="Réduire la liste" aria-label="Réduire la liste"
                                 >
                                     <span className="material-symbols-outlined text-base">chevron_left</span>
                                 </button>
@@ -668,7 +668,7 @@ const GpsTracking = () => {
                                                 </button>
                                             )}
 
-                                            {routeLoading && <p className="text-[12px] mt-4" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Chargement de l'historique…</p>}
+                                            {routeLoading && <p className="text-[12px] mt-4 text-text-muted" role="status">Chargement de l'historique…</p>}
                                             {route && !routeLoading && (
                                                 <p className="text-[12px] font-semibold mt-4" style={{ color: 'var(--primary-container)' }}>
                                                     Trajet des dernières 24h affiché sur la carte ({route.length} points)
@@ -785,7 +785,7 @@ const GpsTracking = () => {
                         <button
                             onClick={() => map.current?.setView(MOROCCO, 6)}
                             className="card rounded-token shadow-l1 w-9 h-9 flex items-center justify-center hover:opacity-80"
-                            title="Recentrer sur le Maroc"
+                            title="Recentrer sur le Maroc" aria-label="Recentrer sur le Maroc"
                         >
                             <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--on-surface-variant)' }}>my_location</span>
                         </button>
@@ -825,12 +825,17 @@ const GpsTracking = () => {
             {/* Modal de gestion des dispositifs GPS */}
             {devicesOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                    style={{ background: 'rgba(15,23,42,.55)', backdropFilter: 'blur(2px)' }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/55 backdrop-blur-[2px]"
                     onClick={() => setDevicesOpen(false)}
+                    onKeyDown={(e) => e.key === 'Escape' && setDevicesOpen(false)}
                 >
                     <div
-                        className="card rounded-token shadow-l2 w-full max-w-2xl overflow-hidden flex flex-col max-h-[88vh]"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Dispositifs GPS"
+                        tabIndex={-1}
+                        ref={(el) => el && el.focus()}
+                        className="card rounded-token shadow-l2 w-full max-w-2xl overflow-hidden flex flex-col max-h-[88vh] outline-none"
                         style={{ background: 'var(--card-white)' }}
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -844,7 +849,7 @@ const GpsTracking = () => {
                                 onClick={() => setDevicesOpen(false)}
                                 className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
                                 style={{ color: 'var(--on-surface-variant)' }}
-                                title="Fermer"
+                                title="Fermer" aria-label="Fermer"
                             >
                                 <span className="material-symbols-outlined text-[18px]">close</span>
                             </button>
@@ -904,7 +909,7 @@ const GpsTracking = () => {
                                                 disabled={associatingDeviceId != null || dissociatingVehicle}
                                                 className="text-[11px] font-bold px-3 py-1.5 rounded-token flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                                                 style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
-                                                title="Dissocier tous les dispositifs des véhicules"
+                                                title="Dissocier tous les dispositifs des véhicules" aria-label="Dissocier tous les dispositifs des véhicules"
                                             >
                                                 <span className="material-symbols-outlined text-[13px]">link_off</span>
                                                 Tout dissocier
@@ -914,7 +919,7 @@ const GpsTracking = () => {
                                             onClick={loadDevices}
                                             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
                                             style={{ color: 'var(--on-surface-variant)' }}
-                                            title="Actualiser"
+                                            title="Actualiser" aria-label="Actualiser"
                                         >
                                             <span className={`material-symbols-outlined text-[15px] ${devicesLoading ? 'animate-spin' : ''}`}>refresh</span>
                                         </button>
@@ -962,7 +967,7 @@ const GpsTracking = () => {
                                                         disabled={deletingDeviceId === d.id}
                                                         className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-danger-bg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                                                         style={{ color: 'var(--danger)' }}
-                                                        title="Supprimer le dispositif"
+                                                        title="Supprimer le dispositif" aria-label="Supprimer le dispositif"
                                                     >
                                                         <span className={`material-symbols-outlined text-[17px] ${deletingDeviceId === d.id ? 'animate-spin' : ''}`}>
                                                             {deletingDeviceId === d.id ? 'progress_activity' : 'delete'}

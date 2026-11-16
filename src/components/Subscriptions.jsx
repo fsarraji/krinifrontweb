@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../api';
+import { formatMoney } from '../utils/formatters';
 import useFetchAll from '../hooks/useFetchAll';
 import Dropdown from './Dropdown';
 import { toast } from './Toast';
@@ -188,7 +189,7 @@ const Subscriptions = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <p className="text-sm font-bold text-on-surface">{Number(sub.price).toLocaleString('fr-MA', { minimumFractionDigits: 2 })} DH</p>
+                                        <p className="text-sm font-bold text-on-surface">{formatMoney(sub.price)}</p>
                                     </td>
                                     <td className="px-6 py-5">
                                         <p className="text-sm font-medium">{sub.start_date}</p>
@@ -207,7 +208,7 @@ const Subscriptions = () => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-5 text-right">
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                                        <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity justify-end">
                                             <Button variant="ghost" iconOnly icon="edit" aria-label="Modifier" onClick={() => openModal(sub)} />
                                             <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label="Supprimer" onClick={() => handleDelete(sub.id)} />
                                         </div>
@@ -248,7 +249,7 @@ const Subscriptions = () => {
                                 onChange={(v) => setField('plan', v)}
                             />
                         </Field>
-                        <Field label="Prix mensuel (DH)" required>
+                        <Field label="Prix mensuel (MAD)" required>
                             <input
                                 className="field w-full"
                                 type="number"

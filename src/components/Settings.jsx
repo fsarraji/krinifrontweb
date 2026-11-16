@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import api from '../api';
+import { formatMoney } from '../utils/formatters';
 import { jwtDecode } from 'jwt-decode';
 import { optimizeImageFile } from '../utils/imageUtils';
 
@@ -354,9 +355,9 @@ const Settings = () => {
                         </div>
 
                         <div className={`transition-all duration-300 ${!settings.caution_active ? 'opacity-40 pointer-events-none' : ''}`}>
-                            <label className={fieldLabel}>Montant de la caution (DH)</label>
+                            <label className={fieldLabel}>Montant de la caution (MAD)</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">DH</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">MAD</span>
                                 <input
                                     type="number" min="0" step="100"
                                     value={settings.caution_montant}
@@ -416,9 +417,9 @@ const Settings = () => {
                                 <p className="text-xs text-slate-400 mt-1.5 ml-1">Défaut recommandé : 250 km/jour</p>
                             </div>
                             <div>
-                                <label className={fieldLabel}>Tarif par km supplémentaire (DH)</label>
+                                <label className={fieldLabel}>Tarif par km supplémentaire (MAD)</label>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">DH</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">MAD</span>
                                     <input
                                         type="number" min="0" step="0.5"
                                         value={settings.km_tarif_extra_defaut}
@@ -442,7 +443,7 @@ const Settings = () => {
                                     <p>• Km inclus : {settings.km_par_jour} km/j × 3 jours = <strong>{settings.km_par_jour * 3} km</strong></p>
                                     <p>• Km parcourus : 900 km</p>
                                     {900 > settings.km_par_jour * 3 ? (
-                                        <p className="text-orange-600 font-bold">• Dépassement : {900 - settings.km_par_jour * 3} km × {settings.km_tarif_extra_defaut} DH = <strong>{((900 - settings.km_par_jour * 3) * settings.km_tarif_extra_defaut).toFixed(2)} DH de supplément</strong></p>
+                                        <p className="text-orange-600 font-bold">• Dépassement : {900 - settings.km_par_jour * 3} km × {settings.km_tarif_extra_defaut} MAD = <strong>{formatMoney((900 - settings.km_par_jour * 3) * settings.km_tarif_extra_defaut)} de supplément</strong></p>
                                     ) : (
                                         <p className="text-success font-bold">• Aucun dépassement — inclus dans le forfait ✓</p>
                                     )}

@@ -9,6 +9,8 @@ import StatusBadge from './ui/StatusBadge';
 import PageHeader from './ui/PageHeader';
 import Button from './ui/Button';
 import Spinner from './ui/Spinner';
+import Table from './ui/Table';
+import { formatMoney } from '../utils/formatters';
 import { getRole } from '../utils/userRole';
 
 import { AVATAR_COLORS } from '../utils/avatarColors';
@@ -195,61 +197,57 @@ const Reservations = () => {
         r.date_sortie ? `${String(r.date_sortie).slice(0, 10)} → ${String(r.date_retour_prevue || '').slice(0, 10)}` : '—'
     );
 
-    const renderRow = (request, i) => {
-        const busy = busyId === `${request.kind}-${request.id}`;
-        const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
-        const isReservation = request.kind === 'reservation';
-        const isContract = request.kind === 'contract';
-        return (
-            <tr key={`${request.kind}-${request.id}`} className="row hover:bg-slate-50/50 transition-colors group">
-                <td className="px-6 font-semibold">
+    const tagFor = (request) => {
+        if (request.kind === 'contract') return { label: 'Agence', cls: 'bg-primary-light text-primary' };
+        if (request.kind === 'reservation') return { label: 'Compte client', cls: 'bg-info-bg text-info-dark' };
+        return { label: 'Demande', cls: 'bg-warning-bg text-warning-dark' };
+    };
+
+    const buildColumns = (pageRows) => [
+        {
+            key: 'displayName', label: 'Client',
+            render: (_, request) => {
+                const i = Math.max(0, pageRows.findIndex((x) => x.kind === request.kind && x.id === request.id));
+                const isContract = request.kind === 'contract';
+                const tag = tagFor(request);
+                return (
                     <div className="flex items-center gap-3.5">
-                        <div className={`avatar ${avatarClass}`}>
-                            {initialsFor(request.displayName)}
-                        </div>
+                        <div className={`avatar ${AVATAR_COLORS[i % AVATAR_COLORS.length]}`}>{initialsFor(request.displayName)}</div>
                         <div>
                             <div className="font-semibold">{request.displayName}</div>
-                            <div className="text-[12px] mt-0.5 flex items-center gap-1.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
+                            <div className="text-label-sm font-normal text-text-muted mt-0.5 flex items-center gap-1.5">
                                 <span>#{isContract ? `CTR-${request.id.toString().padStart(5, '0')}` : `RES-${request.id.toString().padStart(5, '0')}`}</span>
-                                {isContract ? (
-                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ background: 'var(--primary-bg)', color: 'var(--primary)' }}>Agence</span>
-                                ) : isReservation ? (
-                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>Compte client</span>
-                                ) : (
-                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>Demande</span>
-                                )}
+                                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${tag.cls}`}>{tag.label}</span>
                             </div>
                         </div>
                     </div>
-                </td>
-                <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>{request.vehicle_name}</td>
-                <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>{requestDates(request)}</td>
-                <td className="px-6 font-bold">{request.prix_par_jour ? `${request.prix_par_jour} DH` : '—'}</td>
-                <td className="px-6">
-                    <StatusBadge status={request.statut} />
-                </td>
-                <td className="px-6 text-right">
+                );
+            },
+        },
+        { key: 'vehicle_name', label: 'Véhicule', className: 'text-on-surface-variant' },
+        { key: 'dates', label: 'Dates', className: 'text-on-surface-variant', render: (_, r) => requestDates(r) },
+        { key: 'prix_par_jour', label: 'Prix / Jour', render: (v) => (v ? <strong>{formatMoney(v)}</strong> : '—') },
+        { key: 'statut', label: 'Statut', render: (v) => <StatusBadge status={v} /> },
+        {
+            key: 'actions', label: 'Actions', align: 'right',
+            render: (_, request) => {
+                const busy = busyId === `${request.kind}-${request.id}`;
+                return (
                     <div className="flex items-center justify-end gap-2">
                         {request.statut === 'PENDING' && (
                             <>
-                                <Button size="sm" variant="danger" disabled={busy} onClick={() => handleRefuse(request)}>
-                                    Refuser
-                                </Button>
-                                <Button size="sm" disabled={busy} loading={busy} onClick={() => handleConfirm(request)}>
-                                    Confirmer
-                                </Button>
+                                <Button size="sm" variant="danger" disabled={busy} onClick={() => handleRefuse(request)}>Refuser</Button>
+                                <Button size="sm" disabled={busy} loading={busy} onClick={() => handleConfirm(request)}>Confirmer</Button>
                             </>
                         )}
                         {(request.statut === 'CONFIRMED' || request.statut === 'RESERVE') && isManager && (
-                            <Button size="sm" variant="danger" disabled={busy} loading={busy} onClick={() => handleCancel(request)}>
-                                Annuler
-                            </Button>
+                            <Button size="sm" variant="danger" disabled={busy} loading={busy} onClick={() => handleCancel(request)}>Annuler</Button>
                         )}
                     </div>
-                </td>
-            </tr>
-        );
-    };
+                );
+            },
+        },
+    ];
 
     if (loading) return <div className="flex justify-center items-center h-64"><Spinner size={26} /></div>;
 
@@ -313,30 +311,14 @@ const Reservations = () => {
 
             {/* Data Table */}
             <div className="card rounded-token overflow-hidden shadow-l1">
-                <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-4">Client</th>
-                                <th className="px-6 py-4">Véhicule</th>
-                                <th className="px-6 py-4">Dates</th>
-                                <th className="px-6 py-4">Prix / Jour</th>
-                                <th className="px-6 py-4">Statut</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
-                            {tab === 'demandes' ? paginatedRequests.map(renderRow) : paginatedReservations.map(renderRow)}
-                            {(tab === 'demandes' ? visibleRequests.length : visibleReservations.length) === 0 && (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-10 text-center" style={{ color: 'var(--on-surface-variant)' }}>
-                                        {tab === 'demandes' ? 'Aucune demande de réservation client.' : 'Aucune réservation.'}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <Table
+                    className="!border-0 !rounded-none"
+                    caption={tab === 'demandes' ? 'Demandes de réservation' : 'Réservations'}
+                    rowKey="rowId"
+                    rows={(tab === 'demandes' ? paginatedRequests : paginatedReservations).map((r) => ({ ...r, rowId: `${r.kind}-${r.id}` }))}
+                    columns={buildColumns(tab === 'demandes' ? paginatedRequests : paginatedReservations)}
+                    emptyTitle={tab === 'demandes' ? 'Aucune demande de réservation client.' : 'Aucune réservation.'}
+                />
                 <Pagination
                     currentPage={tab === 'demandes' ? requestPage : reservationPage}
                     totalItems={tab === 'demandes' ? visibleRequests.length : visibleReservations.length}

@@ -15,6 +15,7 @@ import MetricCard from './ui/MetricCard';
 import ExportButton from './ui/ExportButton';
 import EmptyState from './ui/EmptyState';
 import Spinner from './ui/Spinner';
+import Table from './ui/Table';
 
 const PAGE_SIZE_DEFAULT = 10;
 
@@ -228,7 +229,7 @@ const Clients = () => {
             />
 
             {/* KPI Cards Row */}
-            <div className="grid grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
                 <MetricCard icon="group" iconBg="bg-info-bg" iconColor="text-info" value={totalCount} label="Total Clients" />
                 <MetricCard icon="verified_user" iconBg="bg-success-bg" iconColor="text-success" value={activeCount} label="Clients Éligibles" />
                 <MetricCard icon="block" tone="danger" value={blacklistedCount} label="Liste Noire" />
@@ -284,70 +285,58 @@ const Clients = () => {
                 ) : clients.length === 0 ? (
                     <EmptyState icon="person_off" title="Aucun client trouvé dans l'annuaire." />
                 ) : viewMode === 'table' ? (
-                    <div className="overflow-x-auto flex-1">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr style={{ background: 'var(--slate-bg)' }}>
-                                    <th className="px-6 py-4">Client</th>
-                                    <th className="px-6 py-4">Téléphone & Email</th>
-                                    <th className="px-6 py-4">CIN / Passeport</th>
-                                    <th className="px-6 py-4">Permis</th>
-                                    <th className="px-6 py-4">Statut</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-[14px]" style={{ color: 'var(--on-surface)' }}>
-                                {clients.map((client, i) => {
-                                    const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
+                    <Table
+                        className="!border-0 !rounded-none flex-1"
+                        caption="Annuaire des clients"
+                        rows={clients}
+                        columns={[
+                            {
+                                key: 'nom', label: 'Client',
+                                render: (_, client) => {
+                                    const i = clients.indexOf(client);
                                     return (
-                                        <tr key={client.id} className="row hover:bg-slate-50/50 transition-colors group">
-                                            <td className="px-6 font-semibold">
-                                                <div className="flex items-center gap-3.5">
-                                                    <div className={`avatar ${client.is_deleted ? 'bg-slate-100 text-slate-500 ring-slate-100' : avatarClass}`}>
-                                                        {getInitials(client.prenom, client.nom)}
-                                                    </div>
-                                                    <div>
-                                                        <Link
-                                                            to={`/clients/edit/${client.id}`}
-                                                            className="font-semibold hover:underline"
-                                                            style={{ color: 'var(--on-surface)' }}
-                                                        >
-                                                            {client.prenom} {client.nom}
-                                                        </Link>
-                                                        {(client.ville || client.pays) && (
-                                                            <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{client.ville}{client.pays ? `, ${client.pays}` : ''}</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                                <div className="text-[14px] font-medium">{client.telephone}</div>
-                                                {client.email ? (
-                                                    <div className="text-[12px] truncate max-w-[200px]" style={{ opacity: 0.7 }}>{client.email}</div>
-                                                ) : (
-                                                    <div className="text-[12px] italic" style={{ opacity: 0.4 }}>Pas d'email</div>
+                                        <div className="flex items-center gap-3.5">
+                                            <div className={`avatar ${client.is_deleted ? 'bg-slate-100 text-slate-500 ring-slate-100' : AVATAR_COLORS[i % AVATAR_COLORS.length]}`}>
+                                                {getInitials(client.prenom, client.nom)}
+                                            </div>
+                                            <div>
+                                                <Link to={`/clients/edit/${client.id}`} className="font-semibold text-on-surface hover:underline">
+                                                    {client.prenom} {client.nom}
+                                                </Link>
+                                                {(client.ville || client.pays) && (
+                                                    <p className="text-label-sm font-normal text-text-muted mt-0.5">{client.ville}{client.pays ? `, ${client.pays}` : ''}</p>
                                                 )}
-                                            </td>
-                                            <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                                <span className="font-mono text-[12px] font-bold">{client.cin_passport}</span>
-                                            </td>
-                                            <td className="px-6" style={{ color: 'var(--on-surface-variant)' }}>
-                                                <span className="font-mono text-[12px]">{client.permis_conduite || '—'}</span>
-                                            </td>
-                                            <td className="px-6">
-                                                <ClientStatus client={client} />
-                                            </td>
-                                            <td className="px-6 text-right">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
-                                                </div>
-                                            </td>
-                                        </tr>
+                                            </div>
+                                        </div>
                                     );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                                },
+                            },
+                            {
+                                key: 'telephone', label: 'Téléphone & Email', className: 'text-on-surface-variant',
+                                render: (v, client) => (
+                                    <>
+                                        <div className="font-medium">{v}</div>
+                                        {client.email ? (
+                                            <div className="text-label-sm truncate max-w-[200px] opacity-70">{client.email}</div>
+                                        ) : (
+                                            <div className="text-label-sm italic opacity-50">Pas d'email</div>
+                                        )}
+                                    </>
+                                ),
+                            },
+                            { key: 'cin_passport', label: 'CIN / Passeport', className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm font-bold">{v}</span> },
+                            { key: 'permis_conduite', label: 'Permis', className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm">{v || '—'}</span> },
+                            { key: 'statut', label: 'Statut', render: (_, client) => <ClientStatus client={client} /> },
+                            {
+                                key: 'actions', label: 'Actions', align: 'right',
+                                render: (_, client) => (
+                                    <div className="flex items-center justify-end gap-1">
+                                        <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
+                                    </div>
+                                ),
+                            },
+                        ]}
+                    />
                 ) : (
                     /* Grid View */
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

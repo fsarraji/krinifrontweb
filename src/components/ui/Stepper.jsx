@@ -15,7 +15,7 @@ const Stepper = ({ steps, currentStep, onStepClick }) => {
     };
 
     return (
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-8 overflow-x-auto no-scrollbar">
             {steps.map((s, i) => {
                 const state = stepState(s.num);
                 const clickable = !!onStepClick;
@@ -23,7 +23,7 @@ const Stepper = ({ steps, currentStep, onStepClick }) => {
                     <React.Fragment key={s.num}>
                         {i > 0 && (
                             <div
-                                className="step-line mx-4"
+                                className="step-line mx-2 sm:mx-4 min-w-3"
                                 style={currentStep >= s.num ? { background: 'var(--success)' } : {}}
                             ></div>
                         )}
@@ -31,7 +31,7 @@ const Stepper = ({ steps, currentStep, onStepClick }) => {
                             type="button"
                             onClick={clickable ? () => onStepClick(s.num) : undefined}
                             disabled={!clickable}
-                            className="flex items-center gap-2.5"
+                            className="flex items-center gap-2.5 shrink-0"
                             style={{ cursor: clickable ? 'pointer' : 'default' }}
                         >
                             <div
@@ -53,7 +53,7 @@ const Stepper = ({ steps, currentStep, onStepClick }) => {
                                 )}
                             </div>
                             <span
-                                className="text-[13px]"
+                                className={`text-[13px] ${state === 'active' ? '' : 'hidden sm:inline'}`}
                                 style={
                                     state === 'active'
                                         ? { fontWeight: 700, color: 'var(--primary-container)' }

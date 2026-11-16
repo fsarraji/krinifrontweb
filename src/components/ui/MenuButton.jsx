@@ -20,7 +20,7 @@ const MenuButton = ({ item, items, menuId, setMenuId }) => {
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === item.id ? null : item.id); }}
                 className="p-2 rounded-token hover:bg-slate-100 transition-colors"
                 style={{ color: 'var(--on-surface-variant)' }}
-                title="Options"
+                title="Options" aria-label="Options"
             >
                 <span className="material-symbols-outlined text-[18px]">more_vert</span>
             </button>

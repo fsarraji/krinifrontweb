@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import Button from './ui/Button';
+import Spinner from './ui/Spinner';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { toast } from './Toast';
@@ -8,6 +11,7 @@ import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../uti
 import { optimizeImageFile } from '../utils/imageUtils';
 
 const EditClient = () => {
+    const { formProps, markClean } = useUnsavedChanges();
     const { id } = useParams();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -147,6 +151,7 @@ const EditClient = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             toast.success('Client mis à jour avec succès.');
+            markClean();
             navigate('/clients');
         } catch (err) {
             console.error("Error updating client:", err);
@@ -170,7 +175,7 @@ const EditClient = () => {
         });
     };
 
-    if (loading) return <div className="p-8 text-center font-bold" style={{ color: 'var(--primary-container)' }}>Chargement du profil client...</div>;
+    if (loading) return <div className="p-8 flex items-center justify-center gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> Chargement du profil client…</div>;
 
     const totalSpent = contracts.reduce((sum, c) => sum + parseFloat(c.montant_total || 0), 0);
     const rentalCount = contracts.length;
@@ -196,33 +201,12 @@ const EditClient = () => {
                         {formData.prenom} {formData.nom} — {formData.cin_passport || `${cinLabelFor(formData.nationalite)} non renseigné`}
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={handleDelete}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-[18px]">delete</span>
-                        Supprimer
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate('/clients')}
-                        className="px-5 py-2.5 rounded-lg text-[13px] font-semibold card shadow-l1"
-                        style={{ color: 'var(--on-surface-variant)' }}
-                    >
-                        Annuler
-                    </button>
-                    <button
-                        type="submit"
-                        form="client-form"
-                        disabled={saving}
-                        className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2 disabled:opacity-60"
-                        style={{ background: 'var(--primary-container)' }}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">save</span>
-                        {saving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
+                <div className="flex flex-wrap items-center gap-3">
+                    <Button variant="ghost" icon="delete" className="!text-danger-dark hover:!bg-danger-bg" onClick={handleDelete}>Supprimer</Button>
+                    <Button variant="outline" onClick={() => navigate('/clients')}>Annuler</Button>
+                    <Button type="submit" form="client-form" icon="save" loading={saving}>
+                        {saving ? 'Enregistrement…' : 'Sauvegarder'}
+                    </Button>
                 </div>
             </div>
 
@@ -233,11 +217,11 @@ const EditClient = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-3 gap-6 items-start">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
                 {/* Left Column: Form Sections */}
-                <form id="client-form" onSubmit={handleSubmit} className="col-span-2 space-y-6">
+                <form id="client-form" {...formProps} onSubmit={handleSubmit} className="xl:col-span-2 space-y-6">
                     {/* Section 1: Personal Information */}
-                    <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label className="label">Prénom</label>
                                 <input name="prenom" value={formData.prenom || ''} onChange={handleChange} className={fieldClass('prenom')} type="text" />
@@ -330,7 +314,7 @@ const EditClient = () => {
                                 <label className="label">Pays</label>
                                 <input name="pays" value={formData.pays || ''} onChange={handleChange} className={fieldClass('pays')} type="text" />
                             </div>
-                            <div className="col-span-2">
+                            <div className="sm:col-span-2">
                                 <label className="label">Adresse</label>
                                 <input name="adresse" value={formData.adresse || ''} onChange={handleChange} className={fieldClass('adresse')} type="text" />
                                 {fieldErrorMsg('adresse') && (
@@ -343,7 +327,7 @@ const EditClient = () => {
                         </div>
 
                     {/* Section 2: Identity Documents */}
-                    <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             {/* Drivers License */}
                             <div>
                                 <div className="flex items-center gap-2 mb-5">

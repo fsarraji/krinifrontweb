@@ -1,15 +1,16 @@
 import React from 'react';
+import Modal from './Modal';
 
 /**
  * Ligne d'information (clé: valeur) pour les fiches.
  */
 export const Row = ({ icon, label, value, strong }) => (
     <div className="flex items-center justify-between gap-4 py-2.5 border-b border-stroke last:border-0">
-        <span className="flex items-center gap-2 text-[13px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.8 }}>
-            <span className="material-symbols-outlined text-[16px]">{icon}</span>
+        <span className="flex items-center gap-2 text-label-md text-text-muted">
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">{icon}</span>
             {label}
         </span>
-        <span className={`text-[13px] ${strong ? 'font-bold' : 'font-semibold'}`} style={{ color: strong ? 'var(--primary-container)' : 'var(--on-surface)' }}>
+        <span className={`text-label-md text-right ${strong ? 'font-bold text-primary' : 'font-semibold text-on-surface'}`}>
             {value}
         </span>
     </div>
@@ -19,14 +20,14 @@ export const Row = ({ icon, label, value, strong }) => (
  * Section titrée pour les fiches.
  */
 export const Section = ({ title, children }) => (
-    <div className="mt-5">
-        <p className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{title}</p>
+    <div className="mt-5 first:mt-0">
+        <p className="text-label-sm uppercase tracking-wider mb-1.5 text-text-muted">{title}</p>
         <div className="card rounded-token p-4 shadow-l1">{children}</div>
     </div>
 );
 
 /**
- * Coquille de modale réutilisable.
+ * Coquille de modale d'information (basée sur ui/Modal : Échap, focus, scroll lock).
  *
  * Props:
  * - isOpen: boolean
@@ -35,27 +36,10 @@ export const Section = ({ title, children }) => (
  * - subtitle?: string
  * - children: ReactNode
  */
-const InfoModal = ({ isOpen, onClose, title, subtitle, children }) => {
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-surface w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center bg-white shrink-0">
-                    <div>
-                        <h2 className="text-xl font-extrabold font-headline text-on-surface">{title}</h2>
-                        {subtitle && <p className="text-sm text-on-surface-variant mt-0.5">{subtitle}</p>}
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-surface-container-low transition-colors">
-                        <span className="material-symbols-outlined text-on-surface-variant">close</span>
-                    </button>
-                </div>
-                <div className="overflow-y-auto p-6 bg-surface flex-1">
-                    {children}
-                </div>
-            </div>
-        </div>
-    );
-};
+const InfoModal = ({ isOpen, onClose, title, subtitle, children }) => (
+    <Modal isOpen={isOpen} onClose={onClose} title={title} subtitle={subtitle} size="lg">
+        {children}
+    </Modal>
+);
 
 export default InfoModal;

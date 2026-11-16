@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
+import Button from './ui/Button';
+import Modal from './ui/Modal';
+import { formatDate, formatMoney } from '../utils/formatters';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 
@@ -126,37 +129,20 @@ const Calendar = () => {
     return (
         <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="flex justify-between items-end">
+            <div className="flex flex-wrap justify-between items-end gap-4">
                 <div>
                     <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Planning & Flotte</p>
                     <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Planning Interactif (Gantt)</h2>
                 </div>
 
                 {/* Month Navigator Controls */}
-                <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-                    <button
-                        onClick={handlePrevMonth}
-                        className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                        title="Mois précédent"
-                    >
-                        <span className="material-symbols-outlined text-lg">chevron_left</span>
-                    </button>
-                    <button
-                        onClick={handleToday}
-                        className="px-4 py-1.5 rounded-xl text-xs font-extrabold text-primary-deep bg-surface-container-high hover:bg-primary-light transition-colors"
-                    >
-                        Aujourd'hui
-                    </button>
-                    <span className="text-sm font-extrabold text-slate-900 px-2 min-w-[140px] text-center">
+                <div className="flex items-center justify-between gap-1 sm:gap-3 w-full sm:w-auto bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+                    <Button variant="ghost" iconOnly icon="chevron_left" onClick={handlePrevMonth} aria-label="Mois précédent" title="Mois précédent" />
+                    <Button variant="secondary" size="sm" onClick={handleToday}>Aujourd'hui</Button>
+                    <span className="text-sm font-extrabold text-slate-900 px-1 sm:px-2 flex-1 sm:flex-none sm:min-w-[140px] text-center truncate">
                         {monthDisplay}
                     </span>
-                    <button
-                        onClick={handleNextMonth}
-                        className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                        title="Mois suivant"
-                    >
-                        <span className="material-symbols-outlined text-lg">chevron_right</span>
-                    </button>
+                    <Button variant="ghost" iconOnly icon="chevron_right" onClick={handleNextMonth} aria-label="Mois suivant" title="Mois suivant" />
                 </div>
             </div>
 
@@ -173,8 +159,8 @@ const Calendar = () => {
             </div>
 
             {/* Timeline Legend */}
-            <div className="flex items-center justify-between px-2 text-xs font-semibold text-slate-600">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-semibold text-slate-600">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span className="flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-success"></span> Location En Cours
                     </span>
@@ -276,11 +262,13 @@ const Calendar = () => {
                                                 const isActive = contract.statut === 'EN_COURS';
 
                                                 return (
-                                                    <div
+                                                    <button
+                                                        type="button"
                                                         key={contract.id}
                                                         onClick={() => setSelectedContract(contract)}
+                                                        aria-label={`Contrat ${contract.id} : ${contract.client_name || contract.client_prenom}`}
                                                         style={barStyle}
-                                                        className={`absolute top-[18px] h-10 rounded-xl px-3 flex items-center justify-between gap-2 cursor-pointer transition-all z-20 ${
+                                                        className={`absolute top-[18px] h-10 rounded-xl px-3 flex items-center justify-between gap-2 cursor-pointer transition-all z-20 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                                                             isActive
                                                                 ? 'bg-success text-white shadow-[0_3px_8px_rgba(5,150,105,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
                                                                 : 'bg-primary text-white shadow-[0_3px_8px_rgba(79,70,229,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
@@ -290,7 +278,7 @@ const Calendar = () => {
                                                             #{contract.id} — {contract.client_name || contract.client_prenom}
                                                         </span>
                                                         <span className="material-symbols-outlined text-sm text-white/80 shrink-0">info</span>
-                                                    </div>
+                                                    </button>
                                                 );
                                             })}
 
@@ -317,65 +305,43 @@ const Calendar = () => {
             </div>
 
             {/* Contract Details Modal */}
-            {selectedContract && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
-                            <div>
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Détails du Contrat</span>
-                                <h3 className="text-lg font-extrabold text-slate-900">#CTR-{selectedContract.id.toString().padStart(5, '0')}</h3>
+            <Modal
+                isOpen={Boolean(selectedContract)}
+                onClose={() => setSelectedContract(null)}
+                title={selectedContract ? `#CTR-${selectedContract.id.toString().padStart(5, '0')}` : ''}
+                subtitle="Détails du contrat"
+                size="sm"
+                footer={(
+                    <>
+                        <Button variant="outline" onClick={() => setSelectedContract(null)}>Fermer</Button>
+                        <Button icon="edit" onClick={() => navigate(`/contracts/edit/${selectedContract.id}`)}>Modifier</Button>
+                    </>
+                )}
+            >
+                {selectedContract && (
+                    <dl className="space-y-4 text-sm">
+                        {[
+                            ['Client', `${selectedContract.client_name} ${selectedContract.client_prenom}`],
+                            ['Véhicule', `${selectedContract.vehicle_name} (${selectedContract.vehicle_matricule})`],
+                            ['Période', `${formatDate(selectedContract.date_sortie)} ➔ ${formatDate(selectedContract.date_retour_prevue)}`],
+                            ['Montant total', `${formatMoney(selectedContract.montant_total)} (${selectedContract.jours} jours)`],
+                        ].map(([label, value]) => (
+                            <div key={label} className="flex justify-between items-center gap-4 pb-3 border-b border-stroke">
+                                <dt className="text-label-sm uppercase tracking-wider text-text-muted">{label}</dt>
+                                <dd className="font-semibold text-on-surface text-right">{value}</dd>
                             </div>
-                            <button onClick={() => setSelectedContract(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <span className="material-symbols-outlined text-xl">close</span>
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-4 text-xs font-medium text-slate-700">
-                            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                                <span className="text-slate-400 font-bold uppercase tracking-wider">Client:</span>
-                                <span className="font-bold text-sm text-slate-900">{selectedContract.client_name} {selectedContract.client_prenom}</span>
-                            </div>
-
-                            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                                <span className="text-slate-400 font-bold uppercase tracking-wider">Véhicule:</span>
-                                <span className="font-semibold text-slate-900">{selectedContract.vehicle_name} ({selectedContract.vehicle_matricule})</span>
-                            </div>
-
-                            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                                <span className="text-slate-400 font-bold uppercase tracking-wider">Période:</span>
-                                <span className="font-semibold">{new Date(selectedContract.date_sortie).toLocaleDateString()} ➔ {new Date(selectedContract.date_retour_prevue).toLocaleDateString()}</span>
-                            </div>
-
-                            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-                                <span className="text-slate-400 font-bold uppercase tracking-wider">Montant Total:</span>
-                                <span className="font-extrabold text-primary text-sm">{selectedContract.montant_total} DH ({selectedContract.jours} jours)</span>
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400 font-bold uppercase tracking-wider">Statut:</span>
-                                <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${selectedContract.statut === 'EN_COURS' ? 'bg-success-bg text-success-dark ring-1 ring-success-border' : 'bg-surface-container-high text-primary-deep ring-1 ring-indigo-200'}`}>
+                        ))}
+                        <div className="flex justify-between items-center gap-4">
+                            <dt className="text-label-sm uppercase tracking-wider text-text-muted">Statut</dt>
+                            <dd>
+                                <span className={`px-3 py-1 text-label-sm rounded-full ${selectedContract.statut === 'EN_COURS' ? 'bg-success-bg text-success-dark ring-1 ring-success-border' : 'bg-primary-light text-primary-deep ring-1 ring-primary-border'}`}>
                                     {selectedContract.statut === 'EN_COURS' ? 'En Cours (Loué)' : 'Réservé'}
                                 </span>
-                            </div>
+                            </dd>
                         </div>
-
-                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
-                            <button
-                                onClick={() => setSelectedContract(null)}
-                                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-white transition-colors"
-                            >
-                                Fermer
-                            </button>
-                            <button
-                                onClick={() => navigate(`/contracts/edit/${selectedContract.id}`)}
-                                className="flex-1 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-deep shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5"
-                            >
-                                <span className="material-symbols-outlined text-sm">edit</span> Modifier
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    </dl>
+                )}
+            </Modal>
         </div>
     );
 };

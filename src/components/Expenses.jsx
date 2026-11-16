@@ -6,6 +6,13 @@ import Pagination from './Pagination';
 import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import { toast } from './Toast';
+import Button from './ui/Button';
+import Field from './ui/Field';
+import { Input, Textarea } from './ui/Input';
+import Modal from './ui/Modal';
+import PageHeader from './ui/PageHeader';
+import Table from './ui/Table';
+import { formatDate, formatMoney } from '../utils/formatters';
 
 const Expenses = () => {
     const [expenses, setExpenses] = useState([]);
@@ -104,7 +111,7 @@ const Expenses = () => {
                 { key: 'expense_date', label: 'Date' },
                 { key: 'title', label: 'Titre' },
                 { key: 'category', label: 'Catégorie' },
-                { key: 'amount', label: 'Montant (DH)' },
+                { key: 'amount', label: 'Montant (MAD)' },
                 { key: 'notes', label: 'Notes' },
             ]
         );
@@ -138,29 +145,17 @@ const Expenses = () => {
     return (
         <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="flex justify-between items-end">
-                <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Comptabilité</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dépenses</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleExport}
-                        className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all flex items-center gap-2"
-                        title="Exporter en CSV (Excel)"
-                    >
-                        <span className="material-symbols-outlined text-lg">download</span>
-                        <span>Exporter (CSV)</span>
-                    </button>
-                    <button 
-                        onClick={() => setShowModal(true)} 
-                        className="bg-primary hover:bg-primary-deep text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 flex items-center gap-2.5 hover:-translate-y-0.5"
-                    >
-                        <span className="material-symbols-outlined text-lg">add</span>
-                        Ajouter une Dépense
-                    </button>
-                </div>
-            </div>
+            <PageHeader
+                className="!mb-0"
+                eyebrow="Comptabilité"
+                title="Dépenses"
+                actions={(
+                    <>
+                        <Button variant="outline" icon="download" onClick={handleExport} title="Exporter en CSV (Excel)">Exporter (CSV)</Button>
+                        <Button icon="add" onClick={() => setShowModal(true)}>Ajouter une dépense</Button>
+                    </>
+                )}
+            />
 
             {/* Widgets (Compact Row) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -171,7 +166,7 @@ const Expenses = () => {
                         </div>
                         <div className="min-w-0">
                             <p className="text-[10px] font-bold text-primary-light uppercase tracking-widest truncate">Total des Dépenses</p>
-                            <p className="text-xl font-extrabold mt-1 leading-none">{totalGlobal.toLocaleString()} DH</p>
+                            <p className="text-xl font-extrabold mt-1 leading-none">{formatMoney(totalGlobal)}</p>
                         </div>
                     </div>
                 </div>
@@ -183,7 +178,7 @@ const Expenses = () => {
                         </div>
                         <div className="min-w-0">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Charges Agence</p>
-                            <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{totalAgency.toLocaleString()} DH</p>
+                            <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalAgency)}</p>
                         </div>
                     </div>
                 </div>
@@ -195,7 +190,7 @@ const Expenses = () => {
                         </div>
                         <div className="min-w-0">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Charges Flotte</p>
-                            <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{totalVehicles.toLocaleString()} DH</p>
+                            <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalVehicles)}</p>
                         </div>
                     </div>
                 </div>
@@ -214,178 +209,119 @@ const Expenses = () => {
             </div>
 
             {/* List */}
-            <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                {visibleExpenses.length === 0 ? (
-                    <div className="p-12 text-center text-slate-400 font-medium">Aucune dépense enregistrée.</div>
-                ) : (
-                    <>
-                    <div className="overflow-x-auto w-full">
-                        <table className="min-w-full divide-y divide-slate-100">
-                            <thead className="bg-slate-50/80">
-                                <tr>
-                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Titre / Description</th>
-                                    <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Type & Catégorie</th>
-                                    <th scope="col" className="px-6 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-widest">Montant</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-slate-100">
-                                {paginatedExpenses.map(e => (
-                                    <tr key={e.id} className="hover:bg-slate-50/80 transition-colors group">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
-                                            {new Date(e.expense_date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <p className="text-sm font-semibold text-slate-900">{e.title}</p>
-                                            {e.notes && <p className="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">{e.notes}</p>}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex flex-col gap-1 items-start">
-                                                {e.vehicle ? (
-                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-surface-container-high text-primary-deep ring-1 ring-primary/20">
-                                                        <span className="material-symbols-outlined text-xs">directions_car</span>
-                                                        Véhicule #{e.vehicle}
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-danger-bg text-danger-dark ring-1 ring-danger/20">
-                                                        <span className="material-symbols-outlined text-xs">storefront</span>
-                                                        Agence
-                                                    </span>
-                                                )}
-                                                <span className="text-xs text-slate-500 font-medium mt-0.5">
-                                                    {CATEGORIES.find(c => c.value === e.category)?.label || e.category}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-extrabold text-danger text-right">
-                                            -{parseFloat(e.amount).toLocaleString()} DH
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+            <Table
+                caption="Liste des dépenses"
+                rows={paginatedExpenses}
+                emptyTitle="Aucune dépense enregistrée."
+                columns={[
+                    { key: 'expense_date', label: 'Date', className: 'whitespace-nowrap font-medium', render: (v) => formatDate(v) },
+                    {
+                        key: 'title', label: 'Titre / Description',
+                        render: (v, e) => (
+                            <>
+                                <p className="font-semibold text-on-surface">{v}</p>
+                                {e.notes && <p className="text-xs text-text-muted font-medium mt-0.5 line-clamp-1">{e.notes}</p>}
+                            </>
+                        ),
+                    },
+                    {
+                        key: 'category', label: 'Type & catégorie',
+                        render: (_, e) => (
+                            <div className="flex flex-col gap-1 items-start">
+                                {e.vehicle ? (
+                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-primary-light text-primary-deep ring-1 ring-primary-border">
+                                        <span className="material-symbols-outlined text-xs" aria-hidden="true">directions_car</span>
+                                        Véhicule #{e.vehicle}
+                                    </span>
+                                ) : (
+                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-danger-bg text-danger-dark ring-1 ring-danger-border">
+                                        <span className="material-symbols-outlined text-xs" aria-hidden="true">storefront</span>
+                                        Agence
+                                    </span>
+                                )}
+                                <span className="text-xs text-text-muted font-medium">
+                                    {CATEGORIES.find((c) => c.value === e.category)?.label || e.category}
+                                </span>
+                            </div>
+                        ),
+                    },
+                    { key: 'amount', label: 'Montant', align: 'right', render: (v) => <span className="font-extrabold text-danger">-{formatMoney(v)}</span> },
+                ]}
+                footer={visibleExpenses.length > 0 && (
                     <Pagination
                         currentPage={currentPage}
                         totalItems={visibleExpenses.length}
                         pageSize={pageSize}
                         onPageChange={setCurrentPage}
-                        onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }}
+                        onPageSizeChange={(sz) => { setPageSize(sz); setCurrentPage(1); }}
                     />
-                    </>
                 )}
-            </div>
+            />
 
             {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
-                            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-danger text-xl">money_off</span> 
-                                Enregistrer une Dépense
-                            </h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <span className="material-symbols-outlined text-xl">close</span>
+            <Modal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                size="md"
+                title="Enregistrer une dépense"
+                footer={(
+                    <>
+                        <Button variant="outline" onClick={() => setShowModal(false)}>Annuler</Button>
+                        <Button type="submit" form="expenseForm" variant="danger" icon="check_circle">Valider</Button>
+                    </>
+                )}
+            >
+                <div className="space-y-4">
+                    <div role="group" aria-label="Type de dépense" className="flex bg-surface-container p-1 rounded-token">
+                        {[
+                            ['AGENCY', 'storefront', 'Dépense agence', 'Salaries', { vehicle: '' }],
+                            ['VEHICLE', 'directions_car', 'Dépense véhicule', 'Maintenance', {}],
+                        ].map(([type, icon, label, cat, extra]) => (
+                            <button
+                                key={type}
+                                type="button"
+                                aria-pressed={expenseType === type}
+                                onClick={() => { setExpenseType(type); setFormData((f) => ({ ...f, category: cat, ...extra })); }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-token transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${expenseType === type ? 'bg-white text-on-surface shadow-l1' : 'text-text-muted hover:text-on-surface'}`}
+                            >
+                                <span className="material-symbols-outlined text-base" aria-hidden="true">{icon}</span> {label}
                             </button>
-                        </div>
-                        
-                        <div className="p-6 overflow-y-auto space-y-4">
-                            {/* Type Selector */}
-                            <div className="flex bg-slate-100 p-1 rounded-xl">
-                                <button
-                                    type="button"
-                                    onClick={() => { setExpenseType('AGENCY'); setFormData(f => ({...f, category: 'Salaries', vehicle: ''})); }}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${expenseType === 'AGENCY' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                                >
-                                    <span className="material-symbols-outlined text-base">storefront</span> Dépense Agence
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => { setExpenseType('VEHICLE'); setFormData(f => ({...f, category: 'Maintenance'})); }}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${expenseType === 'VEHICLE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                                >
-                                    <span className="material-symbols-outlined text-base">directions_car</span> Dépense Véhicule
-                                </button>
-                            </div>
-
-                            <form id="expenseForm" onSubmit={handleSubmit} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Titre de la dépense <span className="text-danger">*</span></label>
-                                        <input 
-                                            type="text" required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                            placeholder="Ex: Facture électricité Janvier"
-                                            value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Montant (DH) <span className="text-danger">*</span></label>
-                                        <input 
-                                            type="number" required min="0" step="0.01"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                            placeholder="Ex: 500"
-                                            value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date <span className="text-danger">*</span></label>
-                                        <input 
-                                            type="date" required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                            value={formData.expense_date} onChange={e => setFormData({...formData, expense_date: e.target.value})}
-                                        />
-                                    </div>
-                                    
-                                    <div className={`col-span-2 ${expenseType === 'VEHICLE' ? '' : 'hidden'}`}>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Véhicule Concerné <span className="text-danger">*</span></label>
-                                        <Dropdown
-                                            isSearchable
-                                            placeholder="-- Sélectionner un véhicule --"
-                                            options={vehicles.map(v => ({
-                                                value: String(v.id),
-                                                label: `${v.marque} ${v.modele} - ${v.matricule}`
-                                            }))}
-                                            value={formData.vehicle}
-                                            onChange={(v) => setFormData({...formData, vehicle: v || ''})}
-                                        />
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Catégorie <span className="text-danger">*</span></label>
-                                        <Dropdown
-                                            options={CATEGORIES}
-                                            value={formData.category}
-                                            onChange={(v) => setFormData({...formData, category: v})}
-                                        />
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Notes</label>
-                                        <textarea 
-                                            rows="2"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                            placeholder="Détails (facultatif)..."
-                                            value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}
-                                        ></textarea>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 shrink-0">
-                            <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
-                                Annuler
-                            </button>
-                            <button form="expenseForm" type="submit" className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-danger hover:bg-danger-dark shadow-md shadow-rose-200/50 transition-all flex items-center justify-center gap-2">
-                                <span className="material-symbols-outlined text-sm">check_circle</span> Valider
-                            </button>
-                        </div>
+                        ))}
                     </div>
+
+                    <form id="expenseForm" onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Field label="Titre de la dépense" required className="sm:col-span-2">
+                            <Input type="text" required placeholder="Ex : Facture électricité janvier" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+                        </Field>
+                        <Field label="Montant (MAD)" required>
+                            <Input type="number" required min="0" step="0.01" placeholder="Ex : 500" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
+                        </Field>
+                        <Field label="Date" required>
+                            <Input type="date" required value={formData.expense_date} onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })} />
+                        </Field>
+
+                        <div className={`sm:col-span-2 ${expenseType === 'VEHICLE' ? '' : 'hidden'}`}>
+                            <p className="label mb-1.5">Véhicule concerné <span className="text-danger" aria-hidden="true">*</span></p>
+                            <Dropdown
+                                isSearchable
+                                placeholder="-- Sélectionner un véhicule --"
+                                options={vehicles.map((v) => ({ value: String(v.id), label: `${v.marque} ${v.modele} - ${v.matricule}` }))}
+                                value={formData.vehicle}
+                                onChange={(v) => setFormData({ ...formData, vehicle: v || '' })}
+                            />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                            <p className="label mb-1.5">Catégorie <span className="text-danger" aria-hidden="true">*</span></p>
+                            <Dropdown options={CATEGORIES} value={formData.category} onChange={(v) => setFormData({ ...formData, category: v })} />
+                        </div>
+
+                        <Field label="Notes" className="sm:col-span-2">
+                            <Textarea rows={2} placeholder="Détails (facultatif)…" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                        </Field>
+                    </form>
                 </div>
-            )}
+            </Modal>
         </div>
     );
 };

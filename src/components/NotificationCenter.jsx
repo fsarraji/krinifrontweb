@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { toast } from './Toast';
+import { formatDate } from '../utils/formatters';
 
 // Icône / couleur selon le type d'alerte renvoyé par /api/notifications/
 const KIND_META = {
@@ -137,11 +138,28 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
         return true;
     });
 
+    // Fermeture avec Échap tant que le panneau est ouvert.
+    useEffect(() => {
+        if (!isOpen) return undefined;
+        const onKey = (e) => e.key === 'Escape' && onClose();
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+        <div
+            className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={onClose}
+        >
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Centre de notifications"
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
                     <div className="flex items-center gap-3">
@@ -153,7 +171,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                             <p className="text-xs text-slate-500 font-medium">{notifications.filter(n => n.unread).length} non lue{notifications.filter(n => n.unread).length !== 1 ? 's' : ''}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
+                    <button onClick={onClose} aria-label="Fermer les notifications" className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
                         <span className="material-symbols-outlined text-xl">close</span>
                     </button>
                 </div>
@@ -224,7 +242,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                                         <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{item.category}</span>
                                         {item.date && (
                                             <span className="text-[10px] text-slate-400 font-medium">
-                                                {new Date(item.date).toLocaleDateString()}
+                                                {formatDate(item.date)}
                                             </span>
                                         )}
                                     </div>

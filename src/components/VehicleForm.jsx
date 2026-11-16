@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import Button from './ui/Button';
+import Spinner from './ui/Spinner';
 // Force Vercel redeploy - fix vehicle edit image issue
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Select from 'react-select';
@@ -9,6 +12,7 @@ import { messageBox } from './MessageBox';
 import { optimizeImageFile } from '../utils/imageUtils';
 
 const VehicleForm = () => {
+    const { formProps, markClean } = useUnsavedChanges();
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditMode = Boolean(id);
@@ -357,6 +361,7 @@ const VehicleForm = () => {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             }
+            markClean();
             navigate('/vehicles');
         } catch (error) {
             console.error("Erreur lors de l'enregistrement du véhicule", error);
@@ -434,7 +439,7 @@ const VehicleForm = () => {
         });
     };
 
-    if (fetching) return <div className="flex items-center justify-center min-h-screen text-primary font-bold">Chargement...</div>;
+    if (fetching) return <div className="flex items-center justify-center min-h-[50vh] gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> Chargement du véhicule…</div>;
 
     const stepState = (num) => {
         if (currentStep > num) return 'done';
@@ -478,7 +483,7 @@ const VehicleForm = () => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
+            <form {...formProps} onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                 {/* Stepper */}
                 <div className="grid grid-cols-2 gap-3 border-b border-slate-200 bg-white px-5 py-5 md:grid-cols-4">
                     {steps.map((s) => {
@@ -1011,53 +1016,24 @@ const VehicleForm = () => {
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/vehicles')}
-                        className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                    >
-                        Annuler
-                    </button>
+                    <Button variant="ghost" onClick={() => navigate('/vehicles')}>Annuler</Button>
                     {currentStep > 1 && (
-                        <button
-                            type="button"
-                            onClick={handlePrev}
-                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        >
-                            <span className="material-symbols-outlined text-[16px] mr-1">chevron_left</span>
-                            Précédent
-                        </button>
+                        <Button variant="outline" icon="chevron_left" onClick={handlePrev}>Précédent</Button>
                     )}
                     {isEditMode && (
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={loading}
-                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        >
-                            <span className="material-symbols-outlined text-[16px] mr-1">check</span>
+                        <Button variant={currentStep < 4 ? 'outline' : 'primary'} icon="check" loading={loading} onClick={handleSubmit}>
                             {loading ? 'Enregistrement…' : 'Enregistrer'}
-                        </button>
+                        </Button>
                     )}
                     {currentStep < 4 ? (
-                        <button
-                            type="button"
-                            onClick={handleNext}
-                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        >
+                        <Button onClick={handleNext}>
                             Suivant
-                            <span className="material-symbols-outlined text-[16px] ml-1">chevron_right</span>
-                        </button>
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">chevron_right</span>
+                        </Button>
                     ) : !isEditMode && (
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={loading}
-                            className="flex items-center rounded-md border border-slate-300 py-2 px-4 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                        >
-                            <span className="material-symbols-outlined text-[16px] mr-1">check</span>
+                        <Button icon="check" loading={loading} onClick={handleSubmit}>
                             {loading ? 'Enregistrement…' : 'Enregistrer'}
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>

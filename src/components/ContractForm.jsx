@@ -9,6 +9,9 @@ import { toast } from './Toast';
 import DatePicker from './ui/DatePicker';
 import Stepper from './ui/Stepper';
 import AddClientModal from './AddClientModal';
+import { formatMoney, formatNumber } from '../utils/formatters';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import Button from './ui/Button';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 
 const getLocalDatetime = (date) => {
@@ -17,6 +20,7 @@ const getLocalDatetime = (date) => {
 };
 
 const ContractForm = () => {
+    const { formProps, markClean } = useUnsavedChanges();
     const navigate = useNavigate();
     const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
@@ -165,7 +169,7 @@ const ContractForm = () => {
             if (odometer != null) {
                 const km = Math.round(odometer / 1000);
                 setFormData((prev) => ({ ...prev, km_sortie: km }));
-                toast.success(`Kilométrage GPS : ${km.toLocaleString('fr-FR')} km`);
+                toast.success(`Kilométrage GPS : ${formatNumber(km)} km`);
             } else {
                 toast.error('Aucune position GPS / kilométrage disponible pour ce véhicule.');
             }
@@ -224,6 +228,7 @@ const ContractForm = () => {
                     console.error("Erreur lors de la mise à jour du véhicule", vErr);
                 }
             }
+            markClean();
             navigate('/contracts');
             toast.success('Contrat créé avec succès.');
             } catch (error) {
@@ -265,7 +270,7 @@ const ContractForm = () => {
         const selectedClient = clients.find(c => c.id == formData.client);
 
         return (
-            <div className="max-w-6xl mx-auto px-4 py-6">
+            <div className="max-w-6xl mx-auto px-4 py-6" {...formProps}>
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div>
@@ -276,45 +281,18 @@ const ContractForm = () => {
                             Nouveau contrat de location
                         </h1>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            onClick={() => navigate('/contracts')}
-                            className="px-5 py-2.5 rounded-lg text-[13px] font-semibold card shadow-l1"
-                            style={{ color: 'var(--on-surface-variant)' }}
-                        >
-                            Annuler
-                        </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button variant="ghost" onClick={() => navigate('/contracts')}>Annuler</Button>
                         {currentStep > 1 && (
-                            <button
-                                type="button"
-                                onClick={handlePrev}
-                                className="px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white"
-                                style={{ background: 'var(--secondary)' }}
-                            >
-                                Étape précédente
-                            </button>
+                            <Button variant="outline" icon="arrow_back" onClick={handlePrev}>Étape précédente</Button>
                         )}
                         {currentStep < 4 ? (
-                            <button
-                                type="button"
-                                onClick={handleNext}
-                                className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2"
-                                style={{ background: 'var(--primary-container)' }}
-                            >
+                            <Button onClick={handleNext}>
                                 Continuer
-                                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                            </button>
+                                <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">arrow_forward</span>
+                            </Button>
                         ) : (
-                            <button
-                                type="button"
-                                onClick={handleSubmit}
-                                className="px-6 py-2.5 rounded-lg text-[13px] font-semibold text-white flex items-center gap-2"
-                                style={{ background: 'var(--success)' }}
-                            >
-                                <span className="material-symbols-outlined text-[16px]">fact_check</span>
-                                Valider le contrat
-                            </button>
+                            <Button variant="success" icon="fact_check" onClick={handleSubmit}>Valider le contrat</Button>
                         )}
                     </div>
                 </div>
@@ -322,9 +300,9 @@ const ContractForm = () => {
                 {/* Stepper */}
                 <Stepper steps={steps} currentStep={currentStep} />
 
-                <div className="grid grid-cols-3 gap-6 items-start pb-10">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start pb-10">
                     {/* Left column */}
-                    <div className="col-span-2 space-y-6">
+                    <div className="xl:col-span-2 space-y-6">
                         {currentStep === 1 && (
                             <div className={hasError('vehicle') ? 'border-danger ring-1 ring-danger/30 rounded-xl' : ''}>
                                 <div className="flex items-center justify-between mb-6">
@@ -358,7 +336,7 @@ const ContractForm = () => {
                                                 <h4 className="font-bold text-[13px] truncate" style={{ color: 'var(--on-surface)' }}>{vehicle.marque_name} {vehicle.modele_name}</h4>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200 text-slate-700 font-mono font-bold uppercase tracking-wider">{vehicle.matricule_actuel || vehicle.matricule}</span>
-                                                    <span className="text-xs font-bold" style={{ color: 'var(--primary-container)' }}>{vehicle.prix_par_jour} DH/j</span>
+                                                    <span className="text-xs font-bold" style={{ color: 'var(--primary-container)' }}>{formatMoney(vehicle.prix_par_jour, { decimals: 0 })}/j</span>
                                                 </div>
                                             </div>
                                             {formData.vehicle === vehicle.id && (
@@ -411,7 +389,7 @@ const ContractForm = () => {
                                 </div>
 
                                 {formData.client && (
-                                    <div className="mt-4 grid grid-cols-2 gap-4">
+                                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="p-3 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
                                             <p className="label mb-1">Téléphone</p>
                                             <p className="text-sm font-bold" style={{ color: 'var(--on-surface)' }}>{selectedClient?.telephone || 'N/A'}</p>
@@ -447,7 +425,7 @@ const ContractForm = () => {
 
                         {currentStep === 3 && (
                             <>
-                                <div className="grid grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div>
                                         <label className="label">Date et Heure de Départ</label>
                                         <DatePicker
@@ -504,7 +482,7 @@ const ContractForm = () => {
                                                 </div>
                                             </div>
                                             <div className="relative">
-                                                <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">DH</span>
+                                                <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
                                                 <input
                                                     className={`field pl-10 ${!isCautionActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     type="number"
@@ -515,11 +493,11 @@ const ContractForm = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="label mb-2">Montant Versé</label>
                                                 <div className="relative">
-                                                    <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">DH</span>
+                                                    <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
                                                     <input
                                                         className="field pl-10"
                                                         type="number"
@@ -548,7 +526,7 @@ const ContractForm = () => {
 
                         {currentStep === 4 && (
                             <>
-                                <div className="grid grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                     <div>
                                         <label className="label mb-3">Niveau de carburant au départ</label>
                                         <FuelGaugeSelector
@@ -569,7 +547,7 @@ const ContractForm = () => {
                                                 type="button"
                                                 onClick={fetchGpsKm}
                                                 disabled={kmLoading || !selectedVehicle}
-                                                title="Remplir avec le kilométrage GPS (Traccar)"
+                                                title="Remplir avec le kilométrage GPS (Traccar)" aria-label="Remplir avec le kilométrage GPS (Traccar)"
                                                 className="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
                                                 style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
                                             >
@@ -600,7 +578,7 @@ const ContractForm = () => {
                                     ></textarea>
                                 </div>
 
-                                <div className="grid grid-cols-4 gap-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {[
                                         { id: 'roue_secours', label: 'Roue secours' },
                                         { id: 'cric', label: 'Cric' },
@@ -657,7 +635,7 @@ const ContractForm = () => {
                                 </div>
                                 <div className="flex justify-between">
                                     <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Prix / jour</span>
-                                    <span className="font-semibold">{quote && quote.prix_moyen != null ? parseFloat(quote.prix_moyen).toLocaleString() : parseFloat(formData.prix_par_jour || 0).toLocaleString()} DH</span>
+                                    <span className="font-semibold">{formatMoney(quote && quote.prix_moyen != null ? quote.prix_moyen : formData.prix_par_jour || 0)}</span>
                                 </div>
                                 {quote && (
                                     <div className="flex justify-between">
@@ -669,7 +647,7 @@ const ContractForm = () => {
                                 )}
                                 <div className="flex justify-between">
                                     <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Caution</span>
-                                    <span className="font-semibold">{isCautionActive ? `${parseFloat(formData.caution || 0).toLocaleString()} DH` : '—'}</span>
+                                    <span className="font-semibold">{isCautionActive ? formatMoney(formData.caution || 0) : '—'}</span>
                                 </div>
                             </div>
                             <div className="my-4 h-px" style={{ background: 'var(--stroke)' }}></div>
@@ -677,7 +655,7 @@ const ContractForm = () => {
                                 <span className="font-bold text-[14px]">Total</span>
                                 <span className="font-bold text-[20px] flex items-center gap-2" style={{ color: 'var(--primary-container)' }}>
                                     {quoteLoading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
-                                    {totalEstimate().toLocaleString()} DH
+                                    {formatMoney(totalEstimate())}
                                 </span>
                             </div>
                         </div>

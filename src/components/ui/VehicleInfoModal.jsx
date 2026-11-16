@@ -1,7 +1,7 @@
 import React from 'react';
 import { resolveImage } from '../../imageUrl';
 import { normalizeVehicleStatut } from '../../utils/vehicleStatus';
-import { fmt, fmtNum, fmtDate, OUI_NON } from '../../utils/formatters';
+import { fmt, fmtNum, fmtDate, formatMoney, OUI_NON } from '../../utils/formatters';
 import InfoModal, { Row, Section } from './InfoModal';
 
 const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
@@ -44,7 +44,7 @@ const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
                 </div>
                 <div className="text-right shrink-0">
                     <p className="text-[12px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Tarif / jour</p>
-                    <p className="text-2xl font-extrabold" style={{ color: 'var(--primary-container)' }}>{fmtNum(vehicle.prix_par_jour, ' DH')}</p>
+                    <p className="text-2xl font-extrabold" style={{ color: 'var(--primary-container)' }}>{formatMoney(vehicle.prix_par_jour)}</p>
                 </div>
             </div>
 
@@ -70,8 +70,8 @@ const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
             </Section>
 
             <Section title="Informations financières">
-                <Row icon="sell" label="Prix de location / jour" value={fmtNum(vehicle.prix_par_jour, ' DH')} strong />
-                <Row icon="add_road" label="Tarif km supplémentaire" value={fmtNum(vehicle.tarif_km_extra, ' DH/km')} />
+                <Row icon="sell" label="Prix de location / jour" value={formatMoney(vehicle.prix_par_jour)} strong />
+                <Row icon="add_road" label="Tarif km supplémentaire" value={`${formatMoney(vehicle.tarif_km_extra)}/km`} />
             </Section>
 
             <Section title="Validité">

@@ -166,7 +166,7 @@ const UserManagement = () => {
                                         />
                                     </td>
                                     <td className="px-6 py-5 text-right">
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                                        <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity justify-end">
                                             <Button variant="ghost" iconOnly icon="edit" aria-label="Modifier" onClick={() => openModal(user)} />
                                             <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label="Supprimer" onClick={() => handleDelete(user.id)} />
                                         </div>

@@ -4,6 +4,9 @@ import FuelGaugeSelector from './FuelGaugeSelector';
 import DamageSelector from './DamageSelector';
 import Dropdown from './Dropdown';
 import { toast } from './Toast';
+import Button from './ui/Button';
+import Modal from './ui/Modal';
+import { formatDate, formatMoney, formatNumber } from '../utils/formatters';
 import { ACCESSORY_LABELS } from '../utils/vehicleAccessories';
 
 const STEPS = [
@@ -138,7 +141,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
         const km = Math.round(odometer / 1000);
         setKmRetour(km.toString());
         clearFieldError('kmRetour');
-        toast.success(`Kilométrage GPS : ${km.toLocaleString('fr-FR')} km`);
+        toast.success(`Kilométrage GPS : ${formatNumber(km)} km`);
       } else {
         toast.error("Aucune position GPS / kilométrage disponible pour ce véhicule.");
       }
@@ -214,35 +217,42 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
     );
   };
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
-         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-surface w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
+  const footerNode = (
+    <div className="flex items-center justify-between gap-4 w-full">
+      <Button variant="outline" icon="arrow_back" onClick={step > 1 ? () => setStep((s) => s - 1) : onClose}>
+        {step > 1 ? 'Précédent' : 'Annuler'}
+      </Button>
+      {step < STEPS.length ? (
+        <Button onClick={() => goToStep(step + 1)}>
+          Suivant
+          <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">arrow_forward</span>
+        </Button>
+      ) : (
+        <Button icon="verified" loading={loading} onClick={handleSubmit}>
+          {loading ? 'Clôture…' : 'Valider la clôture'}
+        </Button>
+      )}
+    </div>
+  );
 
-        {/* Header */}
-        <div className="p-4 border-b border-outline-variant/30 flex justify-between items-start bg-white shrink-0">
-          <div>
-            <h2 className="text-xl font-extrabold font-headline text-on-surface">Clôturer le Contrat #{String(contract.id).padStart(5,'0')}</h2>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              {contract.client_name} {contract.client_prenom}
-              <span className="mx-1.5 opacity-50">|</span>
-              {contract.vehicle_name} ({contract.vehicle_matricule})
-            </p>
-            {isEarlyReturn && (
-              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold"
-                    style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>
-                <span className="material-symbols-outlined text-[14px]">schedule</span>
-                Retour Anticipé
-              </span>
-            )}
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-surface-container-low transition-colors">
-            <span className="material-symbols-outlined text-on-surface-variant">close</span>
-          </button>
-        </div>
+  return (
+    <Modal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      title={`Clôturer le contrat #${String(contract.id).padStart(5, '0')}`}
+      subtitle={`${contract.client_name} ${contract.client_prenom} | ${contract.vehicle_name} (${contract.vehicle_matricule})`}
+      footer={footerNode}
+    >
+        {isEarlyReturn && (
+          <span className="mb-3 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-label-sm bg-warning-bg text-warning-dark">
+            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">schedule</span>
+            Retour anticipé
+          </span>
+        )}
 
         {/* Step Indicators */}
-        <div className="px-4 py-2.5 bg-white border-b border-outline-variant/30 flex items-center gap-2 shrink-0 overflow-x-auto no-scrollbar">
+        <div className="pb-3 mb-4 border-b border-stroke flex items-center gap-2 shrink-0 overflow-x-auto no-scrollbar">
           {STEPS.map((s, i) => {
             const state = stepState(s.id);
             return (
@@ -251,7 +261,9 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   <div className="step-line min-w-4 mx-0.5" style={step > s.id ? { background: 'var(--success)' } : {}}></div>
                 )}
                 <button
+                  type="button"
                   onClick={() => goToStep(s.id)}
+                  aria-current={step === s.id ? 'step' : undefined}
                   className="flex items-center gap-1.5 shrink-0"
                 >
                   <div
@@ -292,7 +304,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4 bg-surface space-y-4">
+        <div className="space-y-4">
 
           {error && (
             <div className="bg-error/10 text-error p-3 rounded-xl border border-error/20 flex gap-3 items-center animate-in slide-in-from-top-2">
@@ -305,19 +317,19 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
           {step === 1 && (
             <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
               <SectionTitle icon="speed" title="Dates & Kilométrage" />
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div className="p-3 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
                   <p className="label mb-1">Km au Départ</p>
-                  <p className="text-xl font-headline font-bold text-on-surface">{contract.km_sortie?.toLocaleString()} <span className="text-xs font-medium" style={{ color: 'var(--on-surface-variant)' }}>KM</span></p>
+                  <p className="text-xl font-headline font-bold text-on-surface">{formatNumber(contract.km_sortie)} <span className="text-xs font-medium" style={{ color: 'var(--on-surface-variant)' }}>KM</span></p>
                 </div>
                 <div className="p-3 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
                   <p className="label mb-1" style={{ color: 'var(--primary)' }}>Distance Parcourue</p>
                   <p className={`text-xl font-headline font-bold ${kmDiff >= 0 ? '' : 'text-red-600'}`} style={kmDiff >= 0 ? { color: 'var(--primary)' } : {}}>
-                    {kmDiff >= 0 ? '+' : ''}{kmDiff.toLocaleString()} <span className="text-xs font-medium opacity-50">KM</span>
+                    {kmDiff >= 0 ? '+' : ''}{formatNumber(kmDiff)} <span className="text-xs font-medium opacity-50">KM</span>
                   </p>
                   {agencySettings.km_extra_active && kmDiff > 0 && (
                     <p className="text-[11px] font-semibold mt-1" style={{ color: 'var(--on-surface-variant)' }}>
-                      Inclus: {(recalculatedDays * agencySettings.km_par_jour).toLocaleString()} km ({agencySettings.km_par_jour}/j)
+                      Inclus: {formatNumber(recalculatedDays * agencySettings.km_par_jour)} km ({agencySettings.km_par_jour}/j)
                     </p>
                   )}
                 </div>
@@ -340,7 +352,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   {isEarlyReturn && (
                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1.5" style={{ color: 'var(--warning)' }}>
                       <span className="material-symbols-outlined text-[14px]">info</span>
-                      Retour avant la date prévue ({new Date(contract.date_retour_prevue).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })})
+                      Retour avant la date prévue ({formatDate(contract.date_retour_prevue, { day: 'numeric', month: 'short' })})
                     </p>
                   )}
                 </div>
@@ -358,7 +370,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                         value={kmRetour}
                         min={contract.km_sortie + 1}
                         onChange={e => { setKmRetour(e.target.value); clearFieldError('kmRetour'); }}
-                        placeholder={`min. ${contract.km_sortie?.toLocaleString()} km`}
+                        placeholder={`min. ${formatNumber(contract.km_sortie)} km`}
                         className="field font-bold pr-12"
                         style={fieldErrors.kmRetour ? { borderColor: 'var(--danger)', background: 'var(--error-bg)' } : {}}
                       />
@@ -495,11 +507,11 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                 </div>
                 <div className="p-2.5 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
                   <p className="label mb-0.5">Sous-total Initial</p>
-                  <p className="text-base font-headline font-bold text-on-surface line-through opacity-40">{contract.montant_total} DH</p>
+                  <p className="text-base font-headline font-bold text-on-surface line-through opacity-40">{formatMoney(contract.montant_total)}</p>
                 </div>
                 <div className="p-2.5 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
                   <p className="label mb-0.5" style={{ color: 'var(--primary)' }}>Sous-total Ajusté</p>
-                  <p className="text-lg font-headline font-black" style={{ color: 'var(--primary)' }}>{recalculatedTotal.toLocaleString()} DH</p>
+                  <p className="text-lg font-headline font-black" style={{ color: 'var(--primary)' }}>{formatMoney(recalculatedTotal)}</p>
                 </div>
               </div>
 
@@ -511,11 +523,11 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                     Supplément Kilométrique
                   </p>
                   <div className="space-y-0.5 text-xs" style={{ color: 'var(--warning-dark)' }}>
-                    <p>Km inclus : {kmInclus.toLocaleString()} km ({agencySettings.km_par_jour} km/j × {recalculatedDays} j)</p>
-                    <p>Km parcourus : {kmDiff.toLocaleString()} km</p>
-                    <p className="font-bold">Dépassement : {kmSupplementaires.toLocaleString()} km × {tarifKmExtra} DH/km</p>
+                    <p>Km inclus : {formatNumber(kmInclus)} km ({agencySettings.km_par_jour} km/j × {recalculatedDays} j)</p>
+                    <p>Km parcourus : {formatNumber(kmDiff)} km</p>
+                    <p className="font-bold">Dépassement : {formatNumber(kmSupplementaires)} km × {tarifKmExtra} MAD/km</p>
                   </div>
-                  <p className="text-lg font-black mt-1" style={{ color: 'var(--warning)' }}>+{montantKmExtra.toLocaleString()} DH</p>
+                  <p className="text-lg font-black mt-1" style={{ color: 'var(--warning)' }}>+{formatMoney(montantKmExtra)}</p>
                 </div>
               )}
 
@@ -531,19 +543,19 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
               <div className="mt-3 pt-3 flex justify-between items-end" style={{ borderTop: '1px solid var(--stroke)' }}>
                 <div>
                   <p className="label mb-0.5">Déjà réglé</p>
-                  <p className="text-lg font-bold" style={{ color: 'var(--success)' }}>{contract.montant_paye} DH</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--success)' }}>{formatMoney(contract.montant_paye)}</p>
                 </div>
                 <div className="text-right">
                   <p className="label mb-0.5" style={{ color: 'var(--primary-container)' }}>Reste à payer</p>
                   <p className={`text-2xl font-headline font-black ${newBalance > 0 ? 'text-red-600' : ''}`} style={newBalance <= 0 ? { color: 'var(--success)' } : {}}>
-                    {newBalance.toLocaleString()} DH
+                    {formatMoney(newBalance)}
                   </p>
                 </div>
               </div>
 
               <div className="mt-3 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ borderTop: '1px solid var(--stroke)' }}>
                 <div>
-                  <label className="label mb-1">Montant versé (DH)</label>
+                  <label className="label mb-1">Montant versé (MAD)</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -579,39 +591,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
             </section>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-outline-variant/30 bg-white flex items-center justify-between gap-4 shrink-0">
-          <button
-            onClick={step > 1 ? () => setStep(s => s - 1) : onClose}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 font-bold hover:bg-slate-50 transition-colors text-slate-600"
-          >
-            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            {step > 1 ? 'Précédent' : 'Annuler'}
-          </button>
-
-          {step < STEPS.length ? (
-            <button
-              onClick={() => goToStep(step + 1)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-headline font-bold hover:bg-primary/90 transition-transform hover:scale-[0.99]"
-            >
-              Suivant
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="flex items-center gap-2 px-7 py-2.5 bg-primary text-white rounded-xl font-headline font-bold hover:bg-primary/90 transition-transform hover:scale-[0.99] disabled:opacity-50 disabled:grayscale"
-            >
-              {loading && <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
-              <span className="material-symbols-outlined text-[16px]">verified</span>
-              {loading ? 'Clôture...' : 'Valider la clôture'}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };
 
