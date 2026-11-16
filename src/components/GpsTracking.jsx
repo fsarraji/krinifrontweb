@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import api, { fetchAllPages } from '../api';
 import { resolveImage } from '../imageUrl';
 import { toast } from './Toast';
+import { messageBox } from './MessageBox';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
 
 const REFRESH_MS = 15000;
@@ -204,7 +205,7 @@ const GpsTracking = () => {
     const sendCommand = async (type, attributes) => {
         if (!selected?.traccar_device_id) return;
         const meta = COMMAND_LABELS[type];
-        if (meta?.danger && !window.confirm(`${meta.label} ? Cette action peut immobiliser le véhicule.`)) return;
+        if (meta?.danger && (await messageBox.ask(`${meta.label} ? Cette action peut immobiliser le véhicule.`, 'Confirmer la commande', { destructive: true, confirmText: 'Envoyer' })) !== true) return;
         setCommandLoading(true);
         try {
             const { data } = await api.post('gps/commands/', { vehicle_id: selected.id, type, attributes: attributes || {} });
@@ -287,7 +288,7 @@ const GpsTracking = () => {
     };
 
     const deleteDevice = async (device) => {
-        if (!window.confirm(`Supprimer le dispositif « ${device.name || `#${device.id}`} » (#${device.id}) du serveur Traccar ?`)) return;
+        if ((await messageBox.ask(`Supprimer le dispositif « ${device.name || `#${device.id}`} » (#${device.id}) du serveur Traccar ?`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
         setDeletingDeviceId(device.id);
         try {
             await api.delete('gps/devices/', { params: { device_id: device.id } });
@@ -320,7 +321,7 @@ const GpsTracking = () => {
     };
 
     const dissociateDevice = async (device) => {
-        if (!window.confirm(`Dissocier le dispositif « ${device.name || `#${device.id}`} » du véhicule « ${device.vehicle_matricule || `#${device.vehicle_id}`} » ?`)) return;
+        if ((await messageBox.ask(`Dissocier le dispositif « ${device.name || `#${device.id}`} » du véhicule « ${device.vehicle_matricule || `#${device.vehicle_id}`} » ?`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
         setAssociatingDeviceId(device.id);
         try {
             await api.post('gps/devices/associate/', { device_id: device.id });
@@ -336,7 +337,7 @@ const GpsTracking = () => {
 
     const dissociateSelectedVehicle = async () => {
         if (!selected?.traccar_device_id) return;
-        if (!window.confirm(`Dissocier le boîtier #${selected.traccar_device_id} du véhicule « ${selected.matricule} » ? Le véhicule n'apparaîtra plus sur le suivi GPS.`)) return;
+        if ((await messageBox.ask(`Dissocier le boîtier #${selected.traccar_device_id} du véhicule « ${selected.matricule} » ? Le véhicule n'apparaîtra plus sur le suivi GPS.`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
         setDissociatingVehicle(true);
         try {
             await api.post('gps/devices/associate/', { device_id: selected.traccar_device_id });
@@ -353,7 +354,7 @@ const GpsTracking = () => {
 
     const dissociateAllDevices = async () => {
         const linked = devices.filter((d) => d.vehicle_id != null).length;
-        if (!window.confirm(`Dissocier les ${linked} dispositifs associés de tous les véhicules ? Les véhicules n'apparaîtront plus sur le suivi GPS (les boîtiers restent sur le serveur Traccar).`)) return;
+        if ((await messageBox.ask(`Dissocier les ${linked} dispositifs associés de tous les véhicules ? Les véhicules n'apparaîtront plus sur le suivi GPS (les boîtiers restent sur le serveur Traccar).`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
         setAssociatingDeviceId('all');
         try {
             await api.post('gps/devices/associate/', { dissociate_all: true });

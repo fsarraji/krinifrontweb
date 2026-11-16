@@ -1,434 +1,183 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../api';
+import Button from './ui/Button';
+import Field from './ui/Field';
+import { Input } from './ui/Input';
+import { hasSession, setTokens } from '../utils/session';
 
-/* ── Styles injectés en JS pour éviter Tailwind CDN dans Vite ── */
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+const FEATURES = [
+    { icon: 'directions_car', label: 'Gestion complète de flotte en temps réel' },
+    { icon: 'receipt_long', label: 'Contrats & réservations automatisés' },
+    { icon: 'bar_chart', label: 'Tableaux de bord & rapports financiers' },
+];
 
-  .kricar-login-root {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  }
+const loginErrorMessage = (err) => {
+    if (!err.response) return 'Impossible de se connecter au serveur, réessayez plus tard.';
+    const data = err.response.data;
+    if (data?.detail) return data.detail;
+    if (data?.non_field_errors?.length) return data.non_field_errors[0];
+    if (err.response.status === 401) return "Nom d'utilisateur ou mot de passe incorrect.";
+    return `Une erreur est survenue (${err.response.status}).`;
+};
 
-  .kricar-grid-bg {
-    background-color: #f8fafc;
-    background-image:
-      linear-gradient(rgba(37,99,235,.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(37,99,235,.045) 1px, transparent 1px);
-    background-size: 42px 42px;
-  }
-
-  .kricar-glass {
-    background: rgba(255,255,255,.78);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-
-  @keyframes kricar-float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-12px); }
-  }
-  .kricar-float { animation: kricar-float 7s ease-in-out infinite; }
-
-  @keyframes kricar-fade-in {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .kricar-fade-in { animation: kricar-fade-in .55s ease both; }
-
-  .kricar-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #0f172a;
-    background: #fff;
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
-    box-sizing: border-box;
-  }
-  .kricar-input::placeholder { color: #94a3b8; }
-  .kricar-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-  }
-
-  .kricar-btn {
-    width: 100%;
-    padding: 14px 0;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: #fff;
-    font-weight: 700;
-    font-size: 15px;
-    letter-spacing: .02em;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    box-shadow: 0 4px 14px rgba(37,99,235,.35);
-    transition: transform .18s, box-shadow .18s, background .18s;
-  }
-  .kricar-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(37,99,235,.40);
-    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-  }
-  .kricar-btn:disabled { opacity: .65; cursor: not-allowed; }
-
-  .kricar-btn-spinner {
-    width: 18px; height: 18px;
-    border: 2.5px solid rgba(255,255,255,.35);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: kricar-spin .7s linear infinite;
-  }
-  @keyframes kricar-spin { to { transform: rotate(360deg); } }
-
-  .kricar-error {
-    background: #fef2f2;
-    border-left: 4px solid #ef4444;
-    color: #b91c1c;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
-    animation: kricar-fade-in .3s ease both;
-  }
-
-  .kricar-brand-panel {
-    background: linear-gradient(135deg, #172554 0%, #1e40af 55%, #2563eb 100%);
-    position: relative;
-    overflow: hidden;
-    display: none;
-  }
-  @media (min-width: 1024px) { .kricar-brand-panel { display: flex; } }
-
-  .kricar-dots-bg {
-    position: absolute; inset: 0; opacity: .10;
-    background-image: radial-gradient(circle at 20% 20%, white 1px, transparent 1px);
-    background-size: 28px 28px;
-  }
-
-  .kricar-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: 9999px;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.16);
-    padding: 8px 18px;
-    font-size: 13.5px;
-    font-weight: 500;
-    color: #fff;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-  .kricar-badge-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #93c5fd;
-    box-shadow: 0 0 12px rgba(147,197,253,.9);
-    flex-shrink: 0;
-  }
-
-  .kricar-feature-card {
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-  }
-  .kricar-feature-icon {
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    background: rgba(255,255,255,.12);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .kricar-right-panel {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 24px;
-    box-sizing: border-box;
-    position: relative;
-    overflow: hidden;
-  }
-  @media (min-width: 1024px) { .kricar-right-panel { width: 50%; min-height: unset; } }
-
-  .kricar-form-card {
-    width: 100%;
-    max-width: 440px;
-    background: rgba(255,255,255,.90);
-    border: 1.5px solid #e2e8f0;
-    border-radius: 20px;
-    padding: 40px 36px;
-    box-shadow: 0 25px 70px -20px rgba(30,64,175,.18);
-    box-sizing: border-box;
-    position: relative;
-    z-index: 1;
-  }
-
-  .kricar-label {
-    display: block;
-    font-size: 11.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: #64748b;
-    margin-bottom: 6px;
-  }
-`;
-
-/* ── Logo from public/logo.png ── */
-const KricarLogo = ({ size = 40 }) => (
-  <img src="/logo.png" alt="KRICAR" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
-);
-
-/* ── Feature pill for brand panel ── */
-const FeaturePill = ({ icon, label }) => (
-  <div className="kricar-feature-card">
-    <div className="kricar-feature-icon">
-      <span className="material-symbols-outlined" style={{ color: '#93c5fd', fontSize: 20 }}>{icon}</span>
+// Champ avec icône à gauche (et action optionnelle à droite).
+const IconInput = ({ icon, right, className = '', ...props }) => (
+    <div className="relative">
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-disabled text-[18px] pointer-events-none" aria-hidden="true">
+            {icon}
+        </span>
+        <Input className={`pl-10 ${right ? 'pr-11' : ''} ${className}`} {...props} />
+        {right}
     </div>
-    <span style={{ color: 'rgba(255,255,255,.85)', fontSize: 14, fontWeight: 500, lineHeight: 1.5 }}>{label}</span>
-  </div>
 );
 
-/* ══════════════════════════════════════════════════════════════ */
 const Login = () => {
-  const [username, setUsername]       = useState('');
-  const [password, setPassword]       = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError]             = useState('');
-  const [loading, setLoading]         = useState(false);
-  const navigate = useNavigate();
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    // Déjà connecté : inutile de revoir l'écran de connexion.
+    if (hasSession()) return <Navigate to="/dashboard" replace />;
 
-    try {
-      const response = await api.post('token/', { username, password });
-      const { access, refresh } = response.data;
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      navigate('/dashboard');
-    } catch (err) {
-      if (!err.response) {
-        setError("Impossible de se connecter au serveur, réessayez plus tard.");
-      } else if (err.response.data?.detail) {
-        setError(err.response.data.detail);
-      } else if (err.response.data?.non_field_errors?.length) {
-        setError(err.response.data.non_field_errors[0]);
-      } else if (err.response.status === 401) {
-        setError("Nom d'utilisateur ou mot de passe incorrect !");
-      } else {
-        setError(`Une erreur est survenue (${err.response.status})`);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            const { data } = await api.post('token/', { username, password });
+            setTokens({ access: data.access, refresh: data.refresh });
+            navigate('/dashboard');
+        } catch (err) {
+            setError(loginErrorMessage(err));
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: styles }} />
-
-      <div className="kricar-login-root" style={{ minHeight: '100vh', display: 'flex', background: '#f8fafc' }}>
-
-        {/* ── LEFT: Brand Panel ── */}
-        <section
-          className="kricar-brand-panel"
-          style={{ flex: '0 0 50%', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 64px' }}
-        >
-          <div className="kricar-dots-bg" />
-
-          <div style={{ position: 'relative', zIndex: 10, maxWidth: 480, width: '100%', display: 'flex', flexDirection: 'column', gap: 36 }}>
-
-            {/* Badge */}
-            <div>
-              <span className="kricar-badge">
-                <span className="kricar-badge-dot" />
-                Gestion intelligente de votre agence
-              </span>
-            </div>
-
-
-            {/* Headline */}
-            <div>
-              <h1 style={{ color: '#fff', fontSize: 32, fontWeight: 800, lineHeight: 1.25, margin: 0 }}>
-                Le standard de précision<br />pour votre agence.
-              </h1>
-              <p style={{ color: 'rgba(255,255,255,.70)', fontSize: 15, lineHeight: 1.6, margin: '12px 0 0' }}>
-                Plateforme intelligente dédiée aux gestionnaires modernes de parc automobile.
-              </p>
-            </div>
-
-            {/* Features */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <FeaturePill icon="directions_car" label="Gestion complète de flotte en temps réel" />
-              <FeaturePill icon="receipt_long"   label="Contrats & réservations automatisés" />
-              <FeaturePill icon="bar_chart"       label="Tableaux de bord & rapports financiers" />
-            </div>
-
-            {/* Footer */}
-            <div style={{ color: 'rgba(255,255,255,.40)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em' }}>
-              Kricar Agency © 2026
-            </div>
-          </div>
-        </section>
-
-        {/* ── RIGHT: Login Form ── */}
-        <section className="kricar-grid-bg kricar-right-panel">
-          {/* Decorative blobs */}
-          <div style={{
-            position: 'absolute', top: -160, left: -160,
-            width: 384, height: 384, borderRadius: '50%',
-            background: 'rgba(147,197,253,.25)', filter: 'blur(72px)', pointerEvents: 'none',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: -160, right: -160,
-            width: 480, height: 480, borderRadius: '50%',
-            background: 'rgba(96,165,250,.15)', filter: 'blur(72px)', pointerEvents: 'none',
-          }} />
-
-          <div className="kricar-form-card kricar-glass kricar-fade-in">
-
-            {/* Logo + brand */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-              <KricarLogo size={44} />
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', letterSpacing: '-.01em' }}>
-                  KRICAR <span style={{ color: '#2563eb' }}>Agency</span>
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-                  Espace de gestion
-                </div>
-              </div>
-            </div>
-
-            {/* Heading */}
-            <div style={{ marginBottom: 28 }}>
-              <p style={{ fontSize: 11.5, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '.09em', margin: '0 0 6px' }}>
-                Autorisation
-              </p>
-              <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', margin: 0, lineHeight: 1.2 }}>Bienvenue</h1>
-              <p style={{ fontSize: 14, color: '#64748b', margin: '8px 0 0', fontWeight: 500 }}>
-                Accédez à votre espace de gestion de flotte
-              </p>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="kricar-error" style={{ marginBottom: 20 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 16, verticalAlign: 'middle', marginRight: 6 }}>error</span>
-                {error}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-
-              {/* Username */}
-              <div>
-                <label className="kricar-label" htmlFor="username">Nom d'utilisateur</label>
-                <div style={{ position: 'relative' }}>
-                  <span className="material-symbols-outlined" style={{
-                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-                    color: '#94a3b8', fontSize: 18, pointerEvents: 'none',
-                  }}>person</span>
-                  <input
-                    className="kricar-input"
-                    id="username"
-                    name="username"
-                    type="text"
-                    placeholder="Votre nom d'utilisateur"
-                    autoComplete="username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    required
-                    style={{ paddingLeft: 42 }}
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="kricar-label" htmlFor="password">Mot de passe</label>
-                <div style={{ position: 'relative' }}>
-                  <span className="material-symbols-outlined" style={{
-                    position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-                    color: '#94a3b8', fontSize: 18, pointerEvents: 'none',
-                  }}>lock</span>
-                  <input
-                    className="kricar-input"
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    style={{ paddingLeft: 42, paddingRight: 44 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(v => !v)}
-                    style={{
-                      position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8',
-                      display: 'flex', alignItems: 'center', padding: 4,
-                    }}
-                    tabIndex={-1}
-                    aria-label={showPassword ? "Masquer" : "Afficher"}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                      {showPassword ? 'visibility_off' : 'visibility'}
+    return (
+        <div className="min-h-screen flex bg-app-bg font-sans">
+            {/* Panneau de marque (desktop) */}
+            <section className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col items-center justify-center px-16 py-12 bg-gradient-to-br from-indigo-950 via-primary-deep to-primary">
+                <div
+                    className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_20%_20%,white_1px,transparent_1px)] [background-size:28px_28px]"
+                    aria-hidden="true"
+                />
+                <div className="relative z-10 max-w-[480px] w-full flex flex-col gap-9">
+                    <span className="inline-flex items-center gap-2.5 self-start rounded-full bg-white/10 border border-white/15 px-4 py-2 text-label-lg font-medium text-white backdrop-blur">
+                        <span className="w-2 h-2 rounded-full bg-primary-border shadow-[0_0_12px_rgba(147,197,253,0.9)]" aria-hidden="true" />
+                        Gestion intelligente de votre agence
                     </span>
-                  </button>
+
+                    <div>
+                        <h1 className="text-headline-lg text-white font-extrabold leading-tight">
+                            Le standard de précision<br />pour votre agence.
+                        </h1>
+                        <p className="text-body-md text-white/70 mt-3">
+                            Plateforme intelligente dédiée aux gestionnaires modernes de parc automobile.
+                        </p>
+                    </div>
+
+                    <ul className="flex flex-col gap-2.5">
+                        {FEATURES.map((f) => (
+                            <li key={f.icon} className="flex items-start gap-3 rounded-xl bg-white/10 border border-white/10 p-4 backdrop-blur-sm">
+                                <span className="w-9 h-9 rounded-token bg-white/10 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-primary-border text-[20px]" aria-hidden="true">{f.icon}</span>
+                                </span>
+                                <span className="text-sm font-medium text-white/85 leading-relaxed">{f.label}</span>
+                            </li>
+                        ))}
+                    </ul>
+
+                    <p className="text-label-sm uppercase tracking-widest text-white/40">Kricar Agency © {new Date().getFullYear()}</p>
                 </div>
-              </div>
+            </section>
 
-              {/* Submit */}
-              <button className="kricar-btn" type="submit" id="login-submit" disabled={loading}>
-                {loading ? (
-                  <>
-                    <span className="kricar-btn-spinner" />
-                    Connexion en cours…
-                  </>
-                ) : (
-                  <>
-                    <span>Se connecter</span>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
-                  </>
-                )}
-              </button>
-            </form>
+            {/* Formulaire */}
+            <section className="w-full lg:w-1/2 min-h-screen flex items-center justify-center px-6 py-8 relative overflow-hidden">
+                <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-primary-border/25 blur-[72px] pointer-events-none" aria-hidden="true" />
+                <div className="absolute -bottom-40 -right-40 w-[480px] h-[480px] rounded-full bg-blue-600/10 blur-[72px] pointer-events-none" aria-hidden="true" />
 
-            {/* Footer note */}
-            <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
-              Accès réservé aux utilisateurs autorisés
-            </p>
-          </div>
-        </section>
-      </div>
-    </>
-  );
+                <div className="relative z-10 w-full max-w-[440px] bg-white/90 backdrop-blur border border-stroke rounded-2xl p-8 sm:p-10 shadow-l2">
+                    <div className="flex items-center gap-3 mb-7">
+                        <img src="/logo.png" alt="" width={44} height={44} className="object-contain" />
+                        <div>
+                            <p className="text-xl font-extrabold tracking-tight text-on-surface">
+                                KRICAR <span className="text-primary">Agency</span>
+                            </p>
+                            <p className="text-label-sm uppercase tracking-wider text-text-disabled">Espace de gestion</p>
+                        </div>
+                    </div>
+
+                    <div className="mb-7">
+                        <p className="text-label-sm uppercase tracking-widest text-primary mb-1.5">Autorisation</p>
+                        <h1 className="text-3xl font-extrabold text-on-surface leading-tight">Bienvenue</h1>
+                        <p className="text-sm font-medium text-text-muted mt-2">Accédez à votre espace de gestion de flotte</p>
+                    </div>
+
+                    {error && (
+                        <div role="alert" className="mb-5 flex items-start gap-2 rounded-token border-l-4 border-danger bg-danger-bg px-4 py-3 text-sm font-semibold text-danger-dark">
+                            <span className="material-symbols-outlined text-[18px] mt-px" aria-hidden="true">error</span>
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleLogin} className="flex flex-col gap-5" noValidate={false}>
+                        <Field label="Nom d'utilisateur" required>
+                            <IconInput
+                                icon="person"
+                                name="username"
+                                type="text"
+                                placeholder="Votre nom d'utilisateur"
+                                autoComplete="username"
+                                autoFocus
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                            />
+                        </Field>
+
+                        <Field label="Mot de passe" required>
+                            <IconInput
+                                icon="lock"
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                right={
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword((v) => !v)}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-token text-text-disabled hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                        aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                                        aria-pressed={showPassword}
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                                            {showPassword ? 'visibility_off' : 'visibility'}
+                                        </span>
+                                    </button>
+                                }
+                            />
+                        </Field>
+
+                        <Button type="submit" size="lg" loading={loading} className="w-full" id="login-submit">
+                            {loading ? 'Connexion en cours…' : 'Se connecter'}
+                        </Button>
+                    </form>
+
+                    <p className="text-center mt-6 text-xs font-medium text-text-disabled">
+                        Accès réservé aux utilisateurs autorisés
+                    </p>
+                </div>
+            </section>
+        </div>
+    );
 };
 
 export default Login;

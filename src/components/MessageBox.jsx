@@ -17,6 +17,15 @@ export const messageBox = {
         options.cancelText,
         options.destructive
     ).then((confirmed) => { if (confirmed && options.onConfirm) options.onConfirm(confirmed); }),
+    // Variante « promesse » : resolve(true/false) — remplace window.confirm.
+    ask: (message, title = 'Confirmation', options = {}) => open(
+        options.destructive ? 'danger' : 'confirm',
+        title,
+        message,
+        options.confirmText || 'Confirmer',
+        options.cancelText || 'Annuler',
+        Boolean(options.destructive)
+    ),
     danger: (message, title = 'Suppression', options = {}) => open(
         'danger',
         title,

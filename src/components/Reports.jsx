@@ -1,8 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { toast } from './Toast';
-import { downloadFile, fmtMoney } from '../utils/download';
+import { downloadFile } from '../utils/download';
+import { formatMoney } from '../utils/formatters';
 import { getClaims } from '../utils/session';
+import Button from './ui/Button';
+import { Input } from './ui/Input';
+import PageHeader from './ui/PageHeader';
+import UITable from './ui/Table';
 
 const iso = (d) => d.toISOString().slice(0, 10);
 const today = () => iso(new Date());
@@ -16,29 +21,13 @@ const TABS = [
     { id: 'clients', label: 'Top clients', path: 'top-clients', managerOnly: true },
 ];
 
+// Adaptateur : même API qu'avant (empty, right) au-dessus du composant partagé ui/Table.
 const Table = ({ columns, rows, empty = 'Aucune donnée sur la période.' }) => (
-    <div className="bg-white border border-slate-200 rounded-2xl overflow-x-auto">
-        {rows.length === 0 ? (
-            <p className="p-8 text-center text-slate-400 font-medium">{empty}</p>
-        ) : (
-            <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                    <tr>{columns.map(c => <th key={c.key} className={`p-3 ${c.right ? 'text-right' : 'text-left'}`}>{c.label}</th>)}</tr>
-                </thead>
-                <tbody>
-                    {rows.map((r, i) => (
-                        <tr key={i} className="border-t border-slate-100">
-                            {columns.map(c => (
-                                <td key={c.key} className={`p-3 ${c.right ? 'text-right' : ''}`}>
-                                    {c.render ? c.render(r[c.key], r) : r[c.key]}
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        )}
-    </div>
+    <UITable
+        columns={columns.map(({ right, ...c }) => ({ ...c, align: right ? 'right' : c.align, sortable: c.sortable ?? true }))}
+        rows={rows}
+        emptyTitle={empty}
+    />
 );
 
 const Stat = ({ label, value, tone }) => (
@@ -48,7 +37,7 @@ const Stat = ({ label, value, tone }) => (
     </div>
 );
 
-const money = (v) => fmtMoney(v);
+const money = (v) => formatMoney(v);
 
 const Reports = () => {
     const role = getClaims()?.role;
@@ -92,15 +81,12 @@ const Reports = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900">Rapports</h1>
-                    <p className="text-sm text-slate-500">Base caisse : les revenus sont comptés à la date d'encaissement des paiements.</p>
-                </div>
-                <button type="button" onClick={exportCsv} className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50">
-                    Export CSV
-                </button>
-            </div>
+            <PageHeader
+                className="!mb-0"
+                title="Rapports"
+                description="Base caisse : les revenus sont comptés à la date d'encaissement des paiements."
+                actions={<Button variant="outline" icon="download" onClick={exportCsv}>Export CSV</Button>}
+            />
 
             <div role="tablist" className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-fit">
                 {tabs.map(t => (
@@ -118,33 +104,36 @@ const Reports = () => {
 
             <div className="flex flex-wrap items-end gap-3">
                 {tab === 'cash' && (
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                    <label className="block text-label-sm uppercase tracking-wider text-text-muted">
                         Jour
-                        <input type="date" value={day} max={today()} onChange={(e) => setDay(e.target.value)} className="block mt-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium" />
+                        <Input type="date" value={day} max={today()} onChange={(e) => setDay(e.target.value)} className="mt-1 !w-auto" />
                     </label>
                 )}
                 {tab === 'revenue' && (
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                    <label className="block text-label-sm uppercase tracking-wider text-text-muted">
                         Année
                         <input type="number" value={year} min="2000" max="2100" onChange={(e) => setYear(e.target.value)} className="block mt-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium w-28" />
                     </label>
                 )}
                 {!['cash', 'revenue'].includes(tab) && (
                     <>
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                        <label className="block text-label-sm uppercase tracking-wider text-text-muted">
                             Du
-                            <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="block mt-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium" />
+                            <Input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="mt-1 !w-auto" />
                         </label>
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                        <label className="block text-label-sm uppercase tracking-wider text-text-muted">
                             Au
-                            <input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="block mt-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium" />
+                            <Input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="mt-1 !w-auto" />
                         </label>
                     </>
                 )}
             </div>
 
             {loading ? (
-                <p className="p-10 text-center font-bold text-primary">Chargement…</p>
+                <div className="space-y-4" aria-busy="true">
+                    <div className="h-20 rounded-token bg-surface-dim/60 animate-pulse" />
+                    <div className="h-48 rounded-token bg-surface-dim/60 animate-pulse" />
+                </div>
             ) : !data ? null : (
                 <>
                     {tab === 'cash' && (

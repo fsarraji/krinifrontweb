@@ -5,13 +5,14 @@ const VARIANTS = {
     secondary: 'bg-secondary-container text-on-secondary-container hover:bg-surface-dim',
     danger: 'bg-danger text-white hover:bg-danger-dark active:bg-danger-dark',
     success: 'bg-success text-white hover:bg-success-dark active:bg-success-dark',
+    outline: 'bg-white text-on-surface border border-stroke hover:bg-surface-hover',
     ghost: 'bg-transparent text-secondary hover:bg-surface-hover',
 };
 
 const SIZES = {
     sm: 'px-3 py-1.5 text-xs gap-1.5',
     md: 'px-4 py-2.5 text-sm gap-2',
-    lg: 'px-6 py-3 text-[15px] gap-2',
+    lg: 'px-6 py-3 text-base gap-2',
 };
 
 const Button = ({

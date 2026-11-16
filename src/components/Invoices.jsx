@@ -1,13 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import api, { fetchAllPages } from '../api';
 import { toast } from './Toast';
-import { downloadFile, fmtMoney, openPdf } from '../utils/download';
+import { downloadFile, openPdf } from '../utils/download';
+import { formatDate, formatMoney } from '../utils/formatters';
 import { getClaims } from '../utils/session';
-import { SkeletonTable } from './Skeleton';
+import Button from './ui/Button';
+import Field from './ui/Field';
+import { Input, Select } from './ui/Input';
+import Modal from './ui/Modal';
+import PageHeader from './ui/PageHeader';
+import Table from './ui/Table';
 
-const STATUS_STYLE = {
-    EMISE: 'bg-primary-light text-primary-deep',
-    ANNULEE: 'bg-slate-200 text-slate-600',
+const STATUS = {
+    EMISE: { label: 'Émise', cls: 'bg-badge-info-bg text-badge-info-text border-badge-info-border' },
+    ANNULEE: { label: 'Annulée', cls: 'bg-badge-neutral-bg text-badge-neutral-text border-badge-neutral-border' },
 };
 
 const errText = (err, fallback) => {
@@ -17,6 +23,13 @@ const errText = (err, fallback) => {
     if (d.detail) return d.detail;
     return Object.values(d).flat().join(' ') || fallback;
 };
+
+const Stat = ({ label, value }) => (
+    <div className="bg-white border border-stroke rounded-token p-4">
+        <p className="text-label-sm uppercase tracking-wider text-text-muted">{label}</p>
+        <p className="text-xl font-bold text-on-surface mt-1">{value}</p>
+    </div>
+);
 
 const Invoices = () => {
     const role = getClaims()?.role;
@@ -54,7 +67,7 @@ const Invoices = () => {
         setIssueOpen(true);
         try {
             const all = await fetchAllPages('contracts/');
-            setContracts(all.filter(c => c.statut !== 'ANNULE'));
+            setContracts(all.filter((c) => c.statut !== 'ANNULE'));
         } catch (err) {
             console.error(err);
             toast.error('Impossible de charger les contrats.');
@@ -63,10 +76,10 @@ const Invoices = () => {
 
     // Contrats déjà facturés (facture active) : exclus de la liste de choix.
     const invoicedContracts = useMemo(
-        () => new Set(invoices.filter(i => i.statut !== 'ANNULEE').map(i => i.contract)),
+        () => new Set(invoices.filter((i) => i.statut !== 'ANNULEE').map((i) => i.contract)),
         [invoices]
     );
-    const invoiceable = contracts.filter(c => !invoicedContracts.has(c.id));
+    const invoiceable = contracts.filter((c) => !invoicedContracts.has(c.id));
 
     const issue = async (e) => {
         e.preventDefault();
@@ -85,6 +98,12 @@ const Invoices = () => {
         }
     };
 
+    const closeCredit = () => {
+        setCreditFor(null);
+        setCreditAmount('');
+        setCreditReason('');
+    };
+
     const submitCredit = async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -93,9 +112,7 @@ const Invoices = () => {
             if (creditAmount !== '') body.amount = creditAmount;
             await api.post(`invoices/${creditFor.id}/credit-note/`, body);
             toast.success('Avoir émis.');
-            setCreditFor(null);
-            setCreditAmount('');
-            setCreditReason('');
+            closeCredit();
             await load();
         } catch (err) {
             toast.error(errText(err, "Échec de l'émission de l'avoir."));
@@ -104,199 +121,181 @@ const Invoices = () => {
         }
     };
 
-    const visible = invoices.filter(i => {
+    const filtered = invoices.filter((i) => {
         if (statut !== 'ALL' && i.statut !== statut) return false;
         const q = search.trim().toLowerCase();
         return !q || `${i.number} ${i.client_name}`.toLowerCase().includes(q);
     });
 
-    const totalTtc = visible.reduce((s, i) => s + Number(i.montant_ttc), 0);
-    const totalCredit = visible.reduce((s, i) => s + Number(i.montant_credite), 0);
+    const totalTtc = filtered.reduce((s, i) => s + Number(i.montant_ttc), 0);
+    const totalCredit = filtered.reduce((s, i) => s + Number(i.montant_credite), 0);
+
+    const columns = [
+        {
+            key: 'number', label: 'N°', sortable: true,
+            render: (v, inv) => (
+                <span className="font-bold text-on-surface">
+                    {v}
+                    {inv.credit_notes?.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setExpanded(expanded === inv.id ? null : inv.id)}
+                            className="ml-2 text-label-sm text-primary hover:underline"
+                            aria-expanded={expanded === inv.id}
+                        >
+                            {inv.credit_notes.length} avoir(s)
+                        </button>
+                    )}
+                </span>
+            ),
+        },
+        { key: 'client_name', label: 'Client', sortable: true },
+        { key: 'date_emission', label: 'Date', sortable: true, render: (v) => formatDate(v) },
+        { key: 'montant_ht', label: 'HT', align: 'right', sortable: true, render: (v) => formatMoney(v) },
+        { key: 'montant_tva', label: 'TVA', align: 'right', render: (v) => formatMoney(v) },
+        { key: 'montant_ttc', label: 'TTC', align: 'right', sortable: true, render: (v) => <strong>{formatMoney(v)}</strong> },
+        {
+            key: 'statut', label: 'Statut',
+            render: (v) => (
+                <span className={`inline-flex px-2 py-0.5 rounded-token border text-label-sm ${STATUS[v]?.cls || ''}`}>
+                    {STATUS[v]?.label || v}
+                </span>
+            ),
+        },
+        {
+            key: 'actions', label: 'Actions', align: 'right',
+            render: (_, inv) => (
+                <span className="inline-flex gap-1 whitespace-nowrap">
+                    <Button variant="ghost" size="sm" icon="picture_as_pdf" onClick={() => openPdf(`invoices/${inv.id}/pdf/`)}>PDF</Button>
+                    {isManager && inv.statut === 'EMISE' && (
+                        <Button variant="ghost" size="sm" className="!text-danger-dark" icon="undo" onClick={() => setCreditFor(inv)}>Avoir</Button>
+                    )}
+                </span>
+            ),
+        },
+    ];
+
+    const creditNotesOf = (inv) => inv.credit_notes || [];
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900">Factures & avoirs</h1>
-                    <p className="text-sm text-slate-500">Numérotation séquentielle par agence. Une facture émise est immuable : on la corrige par un avoir.</p>
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        type="button"
-                        onClick={() => downloadFile('invoices/export/', 'factures.csv')}
-                        className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50"
-                    >
-                        Export CSV
-                    </button>
-                    <button
-                        type="button"
-                        onClick={openIssue}
-                        className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary-hover"
-                    >
-                        Nouvelle facture
-                    </button>
-                </div>
-            </div>
+            <PageHeader
+                className="!mb-0"
+                title="Factures & avoirs"
+                description="Numérotation séquentielle par agence. Une facture émise est immuable : on la corrige par un avoir."
+                actions={(
+                    <>
+                        <Button variant="outline" icon="download" onClick={() => downloadFile('invoices/export/', 'factures.csv')}>Export CSV</Button>
+                        <Button icon="add" onClick={openIssue}>Nouvelle facture</Button>
+                    </>
+                )}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                    ['Factures', visible.length],
-                    ['Total TTC', fmtMoney(totalTtc)],
-                    ['Avoirs émis', fmtMoney(totalCredit)],
-                ].map(([label, value]) => (
-                    <div key={label} className="bg-white border border-slate-200 rounded-2xl p-4">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p>
-                        <p className="text-xl font-extrabold text-slate-900 mt-1">{value}</p>
-                    </div>
-                ))}
+                <Stat label="Factures" value={filtered.length} />
+                <Stat label="Total TTC" value={formatMoney(totalTtc)} />
+                <Stat label="Avoirs émis" value={formatMoney(totalCredit)} />
             </div>
 
             <div className="flex flex-wrap gap-3">
-                <input
+                <Input
                     type="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Rechercher (n° facture, client)…"
                     aria-label="Rechercher une facture"
-                    className="flex-1 min-w-[220px] px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+                    className="flex-1 min-w-[220px] !w-auto"
                 />
-                <select
+                <Select
                     value={statut}
                     onChange={(e) => setStatut(e.target.value)}
                     aria-label="Filtrer par statut"
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white"
+                    className="!w-auto"
                 >
                     <option value="ALL">Tous les statuts</option>
                     <option value="EMISE">Émises</option>
                     <option value="ANNULEE">Annulées</option>
-                </select>
+                </Select>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-x-auto">
-                {loading ? (
-                    <SkeletonTable />
-                ) : visible.length === 0 ? (
-                    <p className="p-10 text-center text-slate-400 font-medium">Aucune facture.</p>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                            <tr>
-                                <th className="text-left p-3">N°</th>
-                                <th className="text-left p-3">Client</th>
-                                <th className="text-left p-3">Date</th>
-                                <th className="text-right p-3">HT</th>
-                                <th className="text-right p-3">TVA</th>
-                                <th className="text-right p-3">TTC</th>
-                                <th className="text-left p-3">Statut</th>
-                                <th className="text-right p-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {visible.map(inv => (
-                                <React.Fragment key={inv.id}>
-                                    <tr className="border-t border-slate-100">
-                                        <td className="p-3 font-bold text-slate-900">
-                                            {inv.number}
-                                            {inv.credit_notes?.length > 0 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setExpanded(expanded === inv.id ? null : inv.id)}
-                                                    className="ml-2 text-xs font-bold text-primary"
-                                                    aria-expanded={expanded === inv.id}
-                                                >
-                                                    {inv.credit_notes.length} avoir(s)
-                                                </button>
-                                            )}
-                                        </td>
-                                        <td className="p-3">{inv.client_name}</td>
-                                        <td className="p-3">{new Date(inv.date_emission).toLocaleDateString('fr-FR')}</td>
-                                        <td className="p-3 text-right">{fmtMoney(inv.montant_ht)}</td>
-                                        <td className="p-3 text-right">{fmtMoney(inv.montant_tva)}</td>
-                                        <td className="p-3 text-right font-bold">{fmtMoney(inv.montant_ttc)}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${STATUS_STYLE[inv.statut] || 'bg-slate-100'}`}>
-                                                {inv.statut === 'EMISE' ? 'Émise' : 'Annulée'}
-                                            </span>
-                                        </td>
-                                        <td className="p-3 text-right whitespace-nowrap">
-                                            <button type="button" onClick={() => openPdf(`invoices/${inv.id}/pdf/`)} className="px-2 py-1 text-xs font-bold text-primary hover:underline">PDF</button>
-                                            {isManager && inv.statut === 'EMISE' && (
-                                                <button type="button" onClick={() => setCreditFor(inv)} className="px-2 py-1 text-xs font-bold text-danger-dark hover:underline">Avoir</button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                    {expanded === inv.id && inv.credit_notes.map(n => (
-                                        <tr key={`n-${n.id}`} className="bg-slate-50/70 text-xs">
-                                            <td className="p-2 pl-8 font-semibold">{n.number}</td>
-                                            <td className="p-2" colSpan={2}>{n.reason || '—'}</td>
-                                            <td className="p-2 text-right">{fmtMoney(n.montant_ht)}</td>
-                                            <td className="p-2 text-right">{fmtMoney(n.montant_tva)}</td>
-                                            <td className="p-2 text-right font-bold">-{fmtMoney(n.montant_ttc)}</td>
-                                            <td className="p-2" />
-                                            <td className="p-2 text-right">
-                                                <button type="button" onClick={() => openPdf(`credit-notes/${n.id}/pdf/`)} className="px-2 py-1 font-bold text-primary hover:underline">PDF</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </React.Fragment>
+            <Table
+                caption="Liste des factures"
+                columns={columns}
+                rows={filtered}
+                paginate
+                defaultSort={{ key: 'date_emission', dir: 'desc' }}
+                loading={loading}
+                emptyTitle="Aucune facture"
+                emptyDescription="Émettez une facture depuis un contrat pour la voir apparaître ici."
+                footer={expanded && (() => {
+                    const inv = invoices.find((i) => i.id === expanded);
+                    if (!inv) return null;
+                    return (
+                        <div className="border-t border-stroke bg-surface px-4 py-3 space-y-2">
+                            <p className="text-label-sm uppercase tracking-wider text-text-muted">Avoirs sur {inv.number}</p>
+                            {creditNotesOf(inv).map((n) => (
+                                <div key={n.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                                    <span className="font-semibold">{n.number}</span>
+                                    <span className="text-text-muted flex-1 min-w-[120px]">{n.reason || '—'}</span>
+                                    <span className="font-bold">-{formatMoney(n.montant_ttc)}</span>
+                                    <Button variant="ghost" size="sm" icon="picture_as_pdf" onClick={() => openPdf(`credit-notes/${n.id}/pdf/`)}>PDF</Button>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                    );
+                })()}
+            />
+
+            <Modal
+                isOpen={issueOpen}
+                onClose={() => setIssueOpen(false)}
+                title="Émettre une facture"
+                size="md"
+                footer={(
+                    <>
+                        <Button variant="outline" onClick={() => setIssueOpen(false)}>Annuler</Button>
+                        <Button type="submit" form="issue-invoice-form" loading={busy} disabled={!contractId}>Émettre</Button>
+                    </>
                 )}
-            </div>
+            >
+                <form id="issue-invoice-form" onSubmit={issue}>
+                    <Field label="Contrat à facturer" required hint="Seuls les contrats non annulés et non encore facturés sont proposés.">
+                        <Select required value={contractId} onChange={(e) => setContractId(e.target.value)}>
+                            <option value="">— Choisir —</option>
+                            {invoiceable.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                    #{c.id} — {c.client_prenom} {c.client_name} — {c.vehicle_matricule} ({formatMoney(c.montant_total)})
+                                </option>
+                            ))}
+                        </Select>
+                    </Field>
+                </form>
+            </Modal>
 
-            {issueOpen && (
-                <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 p-4" role="dialog" aria-modal="true" aria-label="Nouvelle facture">
-                    <form onSubmit={issue} className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
-                        <h2 className="text-lg font-extrabold text-slate-900">Émettre une facture</h2>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
-                            Contrat à facturer
-                            <select
-                                required
-                                value={contractId}
-                                onChange={(e) => setContractId(e.target.value)}
-                                className="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium normal-case"
-                            >
-                                <option value="">— Choisir —</option>
-                                {invoiceable.map(c => (
-                                    <option key={c.id} value={c.id}>
-                                        #{c.id} — {c.client_prenom} {c.client_name} — {c.vehicle_matricule} ({fmtMoney(c.montant_total)})
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <div className="flex justify-end gap-2">
-                            <button type="button" onClick={() => setIssueOpen(false)} className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold">Annuler</button>
-                            <button type="submit" disabled={busy || !contractId} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50">
-                                {busy ? 'Émission…' : 'Émettre'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            {creditFor && (
-                <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 p-4" role="dialog" aria-modal="true" aria-label="Émettre un avoir">
-                    <form onSubmit={submitCredit} className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
-                        <h2 className="text-lg font-extrabold text-slate-900">Avoir sur {creditFor.number}</h2>
-                        <p className="text-xs text-slate-500">Laissez le montant vide pour un avoir total du solde restant. Un avoir total annule la facture.</p>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
-                            Montant TTC (optionnel)
-                            <input type="number" min="0.01" step="0.01" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} className="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium" />
-                        </label>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
-                            Motif
-                            <input type="text" value={creditReason} onChange={(e) => setCreditReason(e.target.value)} className="mt-2 w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium normal-case" />
-                        </label>
-                        <div className="flex justify-end gap-2">
-                            <button type="button" onClick={() => setCreditFor(null)} className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold">Annuler</button>
-                            <button type="submit" disabled={busy} className="px-4 py-2 rounded-xl bg-danger text-white text-sm font-bold disabled:opacity-50">
-                                {busy ? 'Émission…' : "Émettre l'avoir"}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+            <Modal
+                isOpen={Boolean(creditFor)}
+                onClose={closeCredit}
+                title={`Avoir sur ${creditFor?.number || ''}`}
+                size="md"
+                footer={(
+                    <>
+                        <Button variant="outline" onClick={closeCredit}>Annuler</Button>
+                        <Button type="submit" form="credit-note-form" variant="danger" loading={busy}>Émettre l'avoir</Button>
+                    </>
+                )}
+            >
+                <form id="credit-note-form" onSubmit={submitCredit} className="space-y-4">
+                    <p className="text-sm text-text-muted">
+                        Laissez le montant vide pour un avoir total du solde restant. Un avoir total annule la facture.
+                    </p>
+                    <Field label="Montant TTC (optionnel)">
+                        <Input type="number" min="0.01" step="0.01" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} />
+                    </Field>
+                    <Field label="Motif">
+                        <Input type="text" value={creditReason} onChange={(e) => setCreditReason(e.target.value)} />
+                    </Field>
+                </form>
+            </Modal>
         </div>
     );
 };
