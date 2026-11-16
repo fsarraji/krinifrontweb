@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import NotificationCenter from './NotificationCenter';
 import UserMenu from './ui/UserMenu';
+import { logout } from '../api';
 
 const Layout = ({ children }) => {
     const location = useLocation();
@@ -30,8 +31,7 @@ const Layout = ({ children }) => {
 
     useEffect(() => {
         if (session === null) {
-            localStorage.clear();
-            window.location.href = '/login';
+            logout();
         }
     }, [session]);
 
@@ -52,19 +52,22 @@ const Layout = ({ children }) => {
             title: 'Opérations',
             items: [
                 { path: '/dashboard', label: 'Tableau de bord', icon: 'dashboard', roles: ['ALL'] },
-                { path: '/vehicles', label: 'Véhicules', icon: 'directions_car', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
-                { path: '/gps', label: 'Suivi GPS', icon: 'satellite_alt', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
-                { path: '/reservations', label: 'Réservations', icon: 'event_note', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
-                { path: '/calendar', label: 'Calendrier', icon: 'calendar_month', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
-                { path: '/contracts', label: 'Contrats', icon: 'description', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
+                { path: '/vehicles', label: 'Véhicules', icon: 'directions_car', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/gps', label: 'Suivi GPS', icon: 'satellite_alt', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/reservations', label: 'Réservations', icon: 'event_note', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/calendar', label: 'Calendrier', icon: 'calendar_month', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/contracts', label: 'Contrats', icon: 'description', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/maintenance', label: 'Maintenance', icon: 'build', roles: ['OWNER', 'EMPLOYEE'] },
             ]
         },
         {
             title: 'Gestion',
             items: [
-                { path: '/clients', label: 'Clients', icon: 'group', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
-                { path: '/payments', label: 'Paiements', icon: 'payments', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
-                { path: '/expenses', label: 'Dépenses', icon: 'receipt_long', roles: ['ADMIN', 'USER', 'STAFF', 'AGENCY'] },
+                { path: '/clients', label: 'Clients', icon: 'group', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/payments', label: 'Paiements', icon: 'payments', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/expenses', label: 'Dépenses', icon: 'receipt_long', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/invoices', label: 'Factures', icon: 'request_quote', roles: ['OWNER', 'EMPLOYEE'] },
+                { path: '/reports', label: 'Rapports', icon: 'analytics', roles: ['OWNER', 'EMPLOYEE'] },
                 { path: '/admin/agencies', label: 'Gestion Agences', icon: 'admin_panel_settings', roles: ['SUPERADMIN'] },
                 { path: '/admin/subscriptions', label: 'Abonnements', icon: 'workspace_premium', roles: ['SUPERADMIN'] },
                 { path: '/admin/users', label: 'Gestion Utilisateurs', icon: 'manage_accounts', roles: ['SUPERADMIN'] },
@@ -199,4 +202,4 @@ const Layout = ({ children }) => {
 };
 
 export default Layout;
-
+

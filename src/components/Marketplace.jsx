@@ -14,26 +14,35 @@ const Marketplace = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchVehicles();
+    let cancelled = false;
+    (async () => {
+      try {
+        const baseUrl = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/').replace(/\/$/, "");
+        // Endpoint public paginé : on suit `next` pour tout récupérer (axios nu, sans jeton).
+        let url = `${baseUrl}/public-vehicles/?page_size=100`;
+        let all = [];
+        while (url) {
+          const { data } = await axios.get(url);
+          if (Array.isArray(data)) { all = all.concat(data); url = null; }
+          else { all = all.concat(data.results || []); url = data.next || null; }
+        }
+        if (!cancelled) setVehicles(all);
+      } catch (error) {
+        console.error('Error fetching vehicles:', error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
-  const fetchVehicles = async () => {
-    try {
-      const baseUrl = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/').replace(/\/$/, "");
-      const response = await axios.get(`${baseUrl}/public-vehicles/`);
-      setVehicles(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching vehicles:', error);
-      setLoading(false);
-    }
-  };
-
   const filteredVehicles = vehicles.filter(vehicle => {
-    const matchesCategory = filters.category === 'All Vehicles' || 
-                             (filters.category === 'Luxury Sedan' && vehicle.marque_name?.includes('Mercedes') || vehicle.marque_name?.includes('Porsche')) ||
-                             (filters.category === 'Premium SUV' && vehicle.modele_name?.includes('SUV') || vehicle.modele_name?.includes('Range')) ||
-                             (filters.category === 'Sports Coupe' && vehicle.modele_name?.includes('911'));
+    const brand = vehicle.marque_name || '';
+    const model = vehicle.modele_name || '';
+    const matchesCategory = filters.category === 'All Vehicles' ||
+                             (filters.category === 'Luxury Sedan' && (brand.includes('Mercedes') || brand.includes('Porsche'))) ||
+                             (filters.category === 'Premium SUV' && (model.includes('SUV') || model.includes('Range'))) ||
+                             (filters.category === 'Sports Coupe' && model.includes('911'));
     const matchesPrice = parseFloat(vehicle.prix_par_jour) <= filters.price;
     return matchesCategory && matchesPrice;
   });

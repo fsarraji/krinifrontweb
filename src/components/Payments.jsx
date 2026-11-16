@@ -29,7 +29,8 @@ const Payments = () => {
     }, []);
 
     // Reset to page 1 on filter/search change
-    useEffect(() => { setCurrentPage(1); }, [search, methodFilter]);
+    const handleSearchChange = (value) => { setSearch(value); setCurrentPage(1); };
+    const handleFilterChange = (value) => { setMethodFilter(value); setCurrentPage(1); };
 
     const handleExport = () => {
         exportToCSV(
@@ -58,7 +59,7 @@ const Payments = () => {
     const totalCollected = payments.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
 
     const methodOptions = [
-        { value: 'ALL', label: 'Toutes', dot: 'bg-indigo-600' },
+        { value: 'ALL', label: 'Toutes', dot: 'bg-primary' },
         ...[...new Set(payments.map(p => p.payment_method).filter(Boolean))].map(m => ({
             value: m, label: m, dot: 'bg-indigo-500',
         })),
@@ -93,7 +94,7 @@ const Payments = () => {
                         <span>Exporter (CSV)</span>
                     </button>
                     <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm">
-                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center ring-1 ring-emerald-100">
+                        <div className="w-10 h-10 bg-success-bg text-success rounded-xl flex items-center justify-center ring-1 ring-success-bg">
                             <span className="material-symbols-outlined text-xl">account_balance</span>
                         </div>
                         <div>
@@ -109,10 +110,10 @@ const Payments = () => {
                 <SearchFilterBar
                     placeholder="Rechercher (contrat, référence, méthode)..."
                     search={search}
-                    onSearchChange={setSearch}
+                    onSearchChange={handleSearchChange}
                     options={methodOptions}
                     filter={methodFilter}
-                    onFilterChange={setMethodFilter}
+                    onFilterChange={handleFilterChange}
                 />
             </div>
 
@@ -149,7 +150,7 @@ const Payments = () => {
                                                 })}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <Link to={`/contracts/edit/${payment.contract}`} className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
+                                                <Link to={`/contracts/edit/${payment.contract}`} className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-deep hover:underline">
                                                     <span>CTR-{payment.contract.toString().padStart(5, '0')}</span>
                                                     <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                                                 </Link>
@@ -162,7 +163,7 @@ const Payments = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-slate-500 truncate max-w-[150px]">
                                                 {payment.reference || '—'}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-extrabold text-emerald-600 text-right">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-extrabold text-success text-right">
                                                 +{parseFloat(payment.amount).toLocaleString()} DH
                                             </td>
                                         </tr>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { logout } from '../../api';
 
 const getInitials = (name) => {
     if (!name) return 'FC';
@@ -30,8 +31,7 @@ const UserMenu = ({ userName = 'Utilisateur', userRole = 'Admin', agencyName = '
     }, []);
 
     const handleLogout = () => {
-        localStorage.clear();
-        window.location.href = '/login';
+        logout();
     };
 
     return (

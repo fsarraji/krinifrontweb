@@ -1,73 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import api, { fetchAllPages } from '../api';
+import React, { useState } from 'react';
+import api from '../api';
+import useFetchAll from '../hooks/useFetchAll';
 import Dropdown from './Dropdown';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
+import Button from './ui/Button';
+import Modal from './ui/Modal';
+import Field from './ui/Field';
+import StatusBadge from './ui/StatusBadge';
+import Spinner from './ui/Spinner';
+import EmptyState from './ui/EmptyState';
+import PageHeader from './ui/PageHeader';
+
+const EMPTY_FORM = { username: '', email: '', firstName: '', lastName: '', role: 'EMPLOYEE', agency: '', password: '', isActive: true };
+
+const ROLE_OPTIONS = [
+    { value: 'OWNER', label: 'Propriétaire Agence' },
+    { value: 'EMPLOYEE', label: 'Employé' },
+];
+
+const ACTIVE_OPTIONS = [
+    { value: 'true', label: 'Actif' },
+    { value: 'false', label: 'Inactif' },
+];
+
+const toForm = (user) => ({
+    id: user.id,
+    username: user.username || '',
+    email: user.email || '',
+    firstName: user.first_name || '',
+    lastName: user.last_name || '',
+    role: user.role || 'EMPLOYEE',
+    agency: user.agency ? String(user.agency) : '',
+    password: '',
+    isActive: user.is_active !== false,
+});
+
+const toPayload = (form) => {
+    const payload = {
+        username: form.username,
+        email: form.email,
+        first_name: form.firstName,
+        last_name: form.lastName,
+        role: form.role,
+        agency: form.agency || null,
+        is_active: form.isActive,
+    };
+    if (form.password) payload.password = form.password;
+    return payload;
+};
 
 const UserManagement = () => {
-    const [users, setUsers] = useState([]);
-    const [agencies, setAgencies] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [currentUser, setCurrentUser] = useState({ username: '', email: '', first_name: '', last_name: '', role: 'EMPLOYEE', agency: '', password: '', is_active: true });
     const [isEditing, setIsEditing] = useState(false);
+    const [form, setForm] = useState(EMPTY_FORM);
 
-    useEffect(() => {
-        fetchUsers();
-        fetchAgencies();
-    }, []);
+    const { data: users, loading, refetch: fetchUsers } = useFetchAll('users/');
+    const { data: agencies } = useFetchAll('agencies/');
 
-    const fetchUsers = async () => {
-        try {
-            const users = await fetchAllPages('users/');
-            setUsers(users);
-            setLoading(false);
-        } catch (error) {
-            console.error("Erreur lors de la récupération des utilisateurs", error);
-            setLoading(false);
-        }
+    const openModal = (user = null) => {
+        setForm(user ? toForm(user) : EMPTY_FORM);
+        setIsEditing(Boolean(user));
+        setShowModal(true);
     };
 
-    const fetchAgencies = async () => {
-        try {
-            const agencies = await fetchAllPages('agencies/');
-            setAgencies(agencies);
-        } catch (error) {
-            console.error("Erreur les agences", error);
-        }
-    };
+    const closeModal = () => setShowModal(false);
 
-    const handleSaveUser = async (e) => {
+    const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+
+    const handleSave = async (e) => {
         e.preventDefault();
-        const data = { ...currentUser };
-        if (!data.password) delete data.password;
-        if (!data.agency) data.agency = null;
-
         try {
             if (isEditing) {
-                await api.put(`users/${currentUser.id}/`, data);
+                await api.put(`users/${form.id}/`, toPayload(form));
             } else {
-                await api.post('users/', data);
+                await api.post('users/', toPayload(form));
             }
-            setShowModal(false);
-            fetchUsers();
+            closeModal();
+            await fetchUsers();
             toast.success(isEditing ? 'Utilisateur mis à jour avec succès.' : 'Utilisateur créé avec succès.');
-            resetForm();
         } catch (error) {
             console.error("Erreur lors de l'enregistrement", error);
             toast.error("Erreur lors de l'enregistrement. Vérifiez les données (le nom d'utilisateur doit être unique).");
         }
-    };
-
-    const resetForm = () => {
-        setCurrentUser({ username: '', email: '', first_name: '', last_name: '', role: 'EMPLOYEE', agency: '', password: '', is_active: true });
-        setIsEditing(false);
-    };
-
-    const handleEdit = (user) => {
-        setCurrentUser({ ...user, password: '' });
-        setIsEditing(true);
-        setShowModal(true);
     };
 
     const handleDelete = (id) => {
@@ -75,57 +90,65 @@ const UserManagement = () => {
             onConfirm: async () => {
                 try {
                     await api.delete(`users/${id}/`);
-                    fetchUsers();
+                    await fetchUsers();
                     toast.success('Utilisateur supprimé avec succès.');
                 } catch (error) {
-                    console.error("Erreur suppression", error);
+                    console.error("Erreur lors de la suppression", error);
                     toast.error("Erreur lors de la suppression.");
                 }
             }
         });
     };
 
-    if (loading) return <div className="text-center mt-20 font-bold text-primary">Chargement...</div>;
+    if (loading) {
+        return <div className="flex justify-center py-20"><Spinner size={28} /></div>;
+    }
 
     return (
         <>
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-primary mb-1 block font-label">Administration Système</span>
-                    <h2 className="text-3xl font-extrabold font-headline text-on-surface tracking-tight">Gestion des Utilisateurs</h2>
-                </div>
-                <button 
-                    onClick={() => { resetForm(); setShowModal(true); }}
-                    className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-headline font-bold text-sm editorial-shadow hover:scale-[0.98] transition-all"
-                >
-                    <span className="material-symbols-outlined text-lg">person_add</span>
-                    Nouvel Utilisateur
-                </button>
-            </div>
+            <PageHeader
+                eyebrow="Administration Système"
+                title="Gestion des Utilisateurs"
+                actions={
+                    <Button icon="person_add" size="lg" onClick={() => openModal()}>
+                        Nouvel Utilisateur
+                    </Button>
+                }
+            />
 
-            <div className="bg-surface-container-lowest rounded-3xl editorial-shadow overflow-hidden">
-                <div className="p-4 overflow-x-auto">
+            <div className="card rounded-token shadow-l1 overflow-hidden">
+                <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="text-left border-b border-slate-50">
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-label">Utilisateur</th>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-label">Agence</th>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-label">Rôle</th>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-label">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-label text-right">Actions</th>
+                            <tr className="text-left border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
+                                <th className="px-6 py-4">Utilisateur</th>
+                                <th className="px-6 py-4">Agence</th>
+                                <th className="px-6 py-4">Rôle</th>
+                                <th className="px-6 py-4">Statut</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {users.map(user => (
-                                <tr key={user.id} className="group hover:bg-surface-container-low/50 transition-colors">
+                        <tbody className="divide-y divide-stroke">
+                            {users.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-4">
+                                        <EmptyState
+                                            icon="person_off"
+                                            title="Aucun utilisateur"
+                                            description="Créez un premier utilisateur pour votre agence."
+                                        />
+                                    </td>
+                                </tr>
+                            ) : users.map(user => (
+                                <tr key={user.id} className="group hover:bg-surface-hover transition-colors">
                                     <td className="px-6 py-5">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                                            <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center font-bold text-primary">
                                                 {user.username[0].toUpperCase()}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-on-surface">{user.username}</p>
-                                                <p className="text-[10px] text-slate-500">{user.email}</p>
+                                                <p className="text-[10px] text-on-surface-variant">{user.email}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -133,21 +156,19 @@ const UserManagement = () => {
                                         <p className="text-sm font-medium">{user.agency_name || 'Système (Super Admin)'}</p>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <span className="text-xs font-semibold text-slate-600">{user.role}</span>
+                                        <span className="text-xs font-semibold text-on-surface-variant">{user.role}</span>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${user.is_active ? 'bg-tertiary-container/20 text-on-tertiary-container' : 'bg-error-container/30 text-error'}`}>
-                                            {user.is_active ? 'Actif' : 'Inactif'}
-                                        </span>
+                                        <StatusBadge
+                                            variant={user.is_active ? 'success' : 'neutral'}
+                                            appearance="dot"
+                                            label={user.is_active ? 'Actif' : 'Inactif'}
+                                        />
                                     </td>
                                     <td className="px-6 py-5 text-right">
-                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                                            <button onClick={() => handleEdit(user)} className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                <span className="material-symbols-outlined text-lg">edit</span>
-                                            </button>
-                                            <button onClick={() => handleDelete(user.id)} className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors">
-                                                <span className="material-symbols-outlined text-lg">delete</span>
-                                            </button>
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                                            <Button variant="ghost" iconOnly icon="edit" aria-label="Modifier" onClick={() => openModal(user)} />
+                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label="Supprimer" onClick={() => handleDelete(user.id)} />
                                         </div>
                                     </td>
                                 </tr>
@@ -157,117 +178,68 @@ const UserManagement = () => {
                 </div>
             </div>
 
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden editorial-shadow">
-                        <div className="px-8 py-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                            <h3 className="text-xl font-bold font-headline">{isEditing ? 'Modifier l\'Utilisateur' : 'Ajouter un Utilisateur'}</h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-on-surface transition-colors">
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
-                        </div>
-                        <form onSubmit={handleSaveUser} className="p-8 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Nom d'utilisateur</label>
-                                    <input 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"	
-                                        type="text" 
-                                        value={currentUser.username} 
-                                        onChange={e => setCurrentUser({...currentUser, username: e.target.value})} 
-                                        required 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Email</label>
-                                    <input 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"	
-                                        type="email" 
-                                        value={currentUser.email} 
-                                        onChange={e => setCurrentUser({...currentUser, email: e.target.value})} 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Prénom</label>
-                                    <input 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"	
-                                        type="text" 
-                                        value={currentUser.first_name} 
-                                        onChange={e => setCurrentUser({...currentUser, first_name: e.target.value})} 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Nom</label>
-                                    <input 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"	
-                                        type="text" 
-                                        value={currentUser.last_name} 
-                                        onChange={e => setCurrentUser({...currentUser, last_name: e.target.value})} 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Agence</label>
-                                    <Dropdown
-                                        options={[
-                                            { value: '', label: '-- Aucune (Super Admin) --' },
-                                            ...agencies.map(a => ({ value: String(a.id), label: a.nom_agence }))
-                                        ]}
-                                        value={currentUser.agency || ''}
-                                        onChange={(v) => setCurrentUser({...currentUser, agency: v || ''})}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Rôle</label>
-                                    <Dropdown
-                                        options={[
-                                            { value: 'OWNER', label: 'Propriétaire Agence' },
-                                            { value: 'EMPLOYEE', label: 'Employé' }
-                                        ]}
-                                        value={currentUser.role}
-                                        onChange={(v) => setCurrentUser({...currentUser, role: v})}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Mot de passe {isEditing && '(laisser vide pour ne pas changer)'}</label>
-                                    <input 
-                                        className="w-full px-4 py-3 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"	
-                                        type="password" 
-                                        value={currentUser.password} 
-                                        onChange={e => setCurrentUser({...currentUser, password: e.target.value})} 
-                                        required={!isEditing}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Statut</label>
-                                    <Dropdown
-                                        options={[
-                                            { value: 'true', label: 'Actif' },
-                                            { value: 'false', label: 'Inactif' }
-                                        ]}
-                                        value={currentUser.is_active ? 'true' : 'false'}
-                                        onChange={(v) => setCurrentUser({...currentUser, is_active: v === 'true'})}
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button 
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors"
-                                >
-                                    Annuler
-                                </button>
-                                <button 
-                                    type="submit"
-                                    className="px-8 py-3 bg-primary text-white rounded-xl text-sm font-bold editorial-shadow hover:scale-[0.98] transition-all"
-                                >
-                                    Enregistrer
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                isOpen={showModal}
+                onClose={closeModal}
+                title={isEditing ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
+                labelId="user-modal-title"
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={closeModal}>Annuler</Button>
+                        <Button type="submit" form="user-form" icon="save">Enregistrer</Button>
+                    </>
+                }
+            >
+                <form id="user-form" onSubmit={handleSave} className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <Field label="Nom d'utilisateur" required>
+                            <input className="field w-full" type="text" value={form.username} onChange={(e) => setField('username', e.target.value)} required />
+                        </Field>
+                        <Field label="Email">
+                            <input className="field w-full" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
+                        </Field>
+                        <Field label="Prénom">
+                            <input className="field w-full" type="text" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} />
+                        </Field>
+                        <Field label="Nom">
+                            <input className="field w-full" type="text" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} />
+                        </Field>
+                        <Field label="Agence">
+                            <Dropdown
+                                options={[
+                                    { value: '', label: '-- Aucune (Super Admin) --' },
+                                    ...agencies.map(a => ({ value: String(a.id), label: a.nom_agence }))
+                                ]}
+                                value={form.agency || ''}
+                                onChange={(v) => setField('agency', v || '')}
+                            />
+                        </Field>
+                        <Field label="Rôle">
+                            <Dropdown
+                                options={ROLE_OPTIONS}
+                                value={form.role}
+                                onChange={(v) => setField('role', v)}
+                            />
+                        </Field>
+                        <Field label={isEditing ? "Mot de passe" : "Mot de passe"} hint={isEditing ? 'Laisser vide pour ne pas changer.' : undefined}>
+                            <input
+                                className="field w-full"
+                                type="password"
+                                value={form.password}
+                                onChange={(e) => setField('password', e.target.value)}
+                                required={!isEditing}
+                            />
+                        </Field>
+                        <Field label="Statut">
+                            <Dropdown
+                                options={ACTIVE_OPTIONS}
+                                value={form.isActive ? 'true' : 'false'}
+                                onChange={(v) => setField('isActive', v === 'true')}
+                            />
+                        </Field>
                     </div>
-                </div>
-            )}
+                </form>
+            </Modal>
         </>
     );
 };

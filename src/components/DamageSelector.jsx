@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
 import carDiagram from '../assets/car_damage_diagram.webp';
 
+let damageSeq = 0;
+
+const nextDamageId = () => { damageSeq += 1; return `dmg-${damageSeq}`; };
+
 const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPART' }) => {
     const imgRef = useRef(null);
     const [activeDamageId, setActiveDamageId] = useState(null);
@@ -17,7 +21,7 @@ const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPA
         const xPercent = (xPos / rect.width) * 100;
         const yPercent = (yPos / rect.height) * 100;
         
-        const newId = Date.now().toString(); // temporary ID for frontend
+        const newId = nextDamageId(); // temporary ID for frontend
         const newDamage = {
             id: newId,
             type: type,

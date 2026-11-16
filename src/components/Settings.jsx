@@ -13,11 +13,11 @@ const ToggleSwitch = ({ checked, onChange, disabled }) => (
             onChange={onChange}
             disabled={disabled}
         />
-        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"></div>
+        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"></div>
     </label>
 );
 
-const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 outline-none transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500";
+const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500";
 
 const fieldLabel = "block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2";
 
@@ -30,6 +30,7 @@ const Settings = () => {
         email: '',
         caution_active: true,
         caution_montant: 1500,
+        tva_rate: 20,
         km_extra_active: true,
         km_par_jour: 250,
         km_tarif_extra_defaut: 1.5,
@@ -86,6 +87,7 @@ const Settings = () => {
                 email: res.data.email || '',
                 caution_active: res.data.caution_active,
                 caution_montant: parseFloat(res.data.caution_montant),
+                tva_rate: res.data.tva_rate != null ? parseFloat(res.data.tva_rate) : 20,
                 km_extra_active: res.data.km_extra_active,
                 km_par_jour: parseInt(res.data.km_par_jour),
                 km_tarif_extra_defaut: parseFloat(res.data.km_tarif_extra_defaut),
@@ -228,12 +230,12 @@ const Settings = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
             <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
                 <h2 className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-indigo-600">{icon}</span>
+                    <span className="material-symbols-outlined text-primary">{icon}</span>
                     {title}
                 </h2>
                 <p className="text-slate-500 text-sm mt-1">
                     {description}
-                    {!isOwner && <span className="font-bold text-red-500 ml-1">(Seul le propriétaire peut modifier)</span>}
+                    {!isOwner && <span className="font-bold text-danger ml-1">(Seul le propriétaire peut modifier)</span>}
                 </p>
             </div>
             <div className="p-6 space-y-6">{children}</div>
@@ -257,7 +259,7 @@ const Settings = () => {
 
     const Message = ({ msg }) =>
         msg.text ? (
-            <div className={`p-4 rounded-xl border font-semibold flex items-center gap-3 ${msg.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+            <div className={`p-4 rounded-xl border font-semibold flex items-center gap-3 ${msg.type === 'success' ? 'bg-success-bg border-success-border text-success-dark' : 'bg-danger-bg border-danger-border text-danger-dark'}`}>
                 <span className="material-symbols-outlined">{msg.type === 'success' ? 'check_circle' : 'error'}</span>
                 {msg.text}
             </div>
@@ -366,6 +368,24 @@ const Settings = () => {
                         </div>
                     </SectionCard>
 
+                    {/* Section TVA / Facturation */}
+                    <SectionCard icon="receipt_long" title="Facturation & TVA" description="Taux de TVA appliqué aux factures et avoirs. Les montants des contrats sont saisis TTC ; le HT et la TVA en sont déduits.">
+                        <div>
+                            <label className={fieldLabel}>Taux de TVA (%)</label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                                <input
+                                    type="number" min="0" max="100" step="0.01"
+                                    value={settings.tva_rate}
+                                    onChange={(e) => setSettings({ ...settings, tva_rate: e.target.value })}
+                                    disabled={!isOwner || saving}
+                                    className={`${inputClass} pl-12`}
+                                />
+                            </div>
+                            <p className="text-xs text-slate-500 mt-2">N'affecte que les nouvelles factures : les factures déjà émises restent inchangées.</p>
+                        </div>
+                    </SectionCard>
+
                     {/* Section Kilométrage */}
                     <SectionCard icon="speed" title="Kilométrage Inclus & Supplément" description="Définissez le nombre de km inclus par jour et le tarif facturé par km supplémentaire.">
                         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -413,18 +433,18 @@ const Settings = () => {
 
                         {/* Preview calculation */}
                         {settings.km_extra_active && (
-                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                                <p className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <div className="p-4 bg-surface-container-high rounded-xl border border-primary-light">
+                                <p className="text-xs font-bold text-primary-deep uppercase tracking-wider mb-2 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">info</span>
                                     Exemple de calcul (3 jours, 900 km parcourus)
                                 </p>
-                                <div className="space-y-1 text-xs text-indigo-600">
+                                <div className="space-y-1 text-xs text-primary">
                                     <p>• Km inclus : {settings.km_par_jour} km/j × 3 jours = <strong>{settings.km_par_jour * 3} km</strong></p>
                                     <p>• Km parcourus : 900 km</p>
                                     {900 > settings.km_par_jour * 3 ? (
                                         <p className="text-orange-600 font-bold">• Dépassement : {900 - settings.km_par_jour * 3} km × {settings.km_tarif_extra_defaut} DH = <strong>{((900 - settings.km_par_jour * 3) * settings.km_tarif_extra_defaut).toFixed(2)} DH de supplément</strong></p>
                                     ) : (
-                                        <p className="text-green-600 font-bold">• Aucun dépassement — inclus dans le forfait ✓</p>
+                                        <p className="text-success font-bold">• Aucun dépassement — inclus dans le forfait ✓</p>
                                     )}
                                 </div>
                             </div>
@@ -433,7 +453,7 @@ const Settings = () => {
 
                     {/* Section Suivi GPS / Traccar */}
                     <SectionCard icon="satellite_alt" title="Suivi GPS (Traccar)" description="Connectez le compte serveur Traccar de votre agence pour suivre vos véhicules en temps réel.">
-                        <div className={`flex items-center gap-2 mb-4 text-sm font-bold ${traccarConfigured ? 'text-green-600' : 'text-red-500'}`}>
+                        <div className={`flex items-center gap-2 mb-4 text-sm font-bold ${traccarConfigured ? 'text-success' : 'text-danger'}`}>
                             <span className="material-symbols-outlined text-base">{traccarConfigured ? 'check_circle' : 'cancel'}</span>
                             {traccarConfigured ? 'Compte Traccar connecté' : 'Compte Traccar non configuré'}
                         </div>
@@ -446,7 +466,7 @@ const Settings = () => {
                                     onChange={(e) => setSettings(prev => ({ ...prev, traccar_url: e.target.value }))}
                                     placeholder="http://serveur-traccar:8082"
                                     disabled={!isOwner || saving}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
                             </div>
                             <div>
@@ -457,7 +477,7 @@ const Settings = () => {
                                     onChange={(e) => setSettings(prev => ({ ...prev, traccar_username: e.target.value }))}
                                     placeholder="Utilisateur Traccar"
                                     disabled={!isOwner || saving}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
                             </div>
                             <div>
@@ -468,7 +488,7 @@ const Settings = () => {
                                     onChange={(e) => setTraccarPassword(e.target.value)}
                                     placeholder={traccarPasswordSet ? '•••••••• (laisser vide pour conserver)' : 'Mot de passe Traccar'}
                                     disabled={!isOwner || saving}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
                             </div>
                             {traccarPasswordSet && (
@@ -531,7 +551,7 @@ const Settings = () => {
                         )}
                         {selectedBrands.length > 0 && (
                             <p className="text-xs text-slate-500 mt-3 ml-1">
-                                <span className="font-bold text-indigo-600">{selectedBrands.length}</span> marque(s) sélectionnée(s) pour l'affichage.
+                                <span className="font-bold text-primary">{selectedBrands.length}</span> marque(s) sélectionnée(s) pour l'affichage.
                             </p>
                         )}
                     </SectionCard>
@@ -561,7 +581,7 @@ const Settings = () => {
 
                                     {/* Upload button */}
                                     <div className="flex-1">
-                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-indigo-600 hover:border-indigo-300'}`}>
+                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-primary hover:border-indigo-300'}`}>
                                             <span className="material-symbols-outlined text-[20px]">upload_file</span>
                                             {logoFile ? 'Changer le logo' : 'Importer un logo (PNG/JPG)'}
                                             <input
@@ -577,7 +597,7 @@ const Settings = () => {
                                             />
                                         </label>
                                         {logoFile && (
-                                            <p className="text-xs text-indigo-600 font-bold mt-2 ml-1 flex items-center gap-1">
+                                            <p className="text-xs text-primary font-bold mt-2 ml-1 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
                                                 Fichier prêt à être sauvegardé
                                             </p>
@@ -608,7 +628,7 @@ const Settings = () => {
 
                                     {/* Upload button */}
                                     <div className="flex-1">
-                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-indigo-600 hover:border-indigo-300'}`}>
+                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-primary hover:border-indigo-300'}`}>
                                             <span className="material-symbols-outlined text-[20px]">upload_file</span>
                                             {cachetFile ? 'Changer l\'image' : 'Importer un cachet (PNG/JPG)'}
                                             <input
@@ -624,7 +644,7 @@ const Settings = () => {
                                             />
                                         </label>
                                         {cachetFile && (
-                                            <p className="text-xs text-indigo-600 font-bold mt-2 ml-1 flex items-center gap-1">
+                                            <p className="text-xs text-primary font-bold mt-2 ml-1 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
                                                 Fichier prêt à être sauvegardé
                                             </p>
@@ -641,7 +661,7 @@ const Settings = () => {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="flex items-center gap-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {saving ? (
                                     <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> Sauvegarde en cours...</>
@@ -733,7 +753,7 @@ const Settings = () => {
                         <button
                             type="submit"
                             disabled={accountSaving}
-                            className="flex items-center gap-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {accountSaving ? (
                                 <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> Sauvegarde en cours...</>

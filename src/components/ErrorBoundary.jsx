@@ -1,0 +1,36 @@
+import React from 'react';
+
+// Filet de sécurité : une erreur de rendu n'affiche plus un écran blanc.
+export default class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, info) {
+        console.error('Erreur de rendu', error, info);
+    }
+
+    render() {
+        if (!this.state.hasError) return this.props.children;
+        return (
+            <div role="alert" className="min-h-screen flex items-center justify-center p-6 text-center">
+                <div className="max-w-md space-y-4">
+                    <h1 className="text-xl font-extrabold text-slate-900">Une erreur est survenue</h1>
+                    <p className="text-sm text-slate-500">La page n'a pas pu s'afficher. Rechargez-la ; si le problème persiste, contactez le support.</p>
+                    <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold"
+                    >
+                        Recharger
+                    </button>
+                </div>
+            </div>
+        );
+    }
+}

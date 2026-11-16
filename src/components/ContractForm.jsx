@@ -10,7 +10,6 @@ import DatePicker from './ui/DatePicker';
 import Stepper from './ui/Stepper';
 import AddClientModal from './AddClientModal';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
-import { getRole } from '../utils/userRole';
 
 const getLocalDatetime = (date) => {
     const tzoffset = date.getTimezoneOffset() * 60000;
@@ -24,7 +23,6 @@ const ContractForm = () => {
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [userRole, setUserRole] = useState('');
     const [agencySettings, setAgencySettings] = useState({ caution_active: true, caution_montant: 1500 });
     const [isCautionActive, setIsCautionActive] = useState(true);
     const [currentStep, setCurrentStep] = useState(1);
@@ -74,20 +72,7 @@ const ContractForm = () => {
     const [showClientModal, setShowClientModal] = useState(false);
     const [unavailableRanges, setUnavailableRanges] = useState([]);
 
-    const fetchClients = async () => {
-        try {
-            const clients = await fetchAllPages('clients/');
-            setClients(clients);
-            return clients;
-        } catch (error) {
-            console.error("Erreur lors du chargement des clients", error);
-            return [];
-        }
-    };
-
     useEffect(() => {
-        setUserRole(getRole());
-
         const fetchData = async () => {
             try {
                 const [vehicles, clients, settingsRes] = await Promise.all([

@@ -1,16 +1,37 @@
-# React + Vite
+# Krini — Frontend (back-office)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + Vite + Tailwind. Consomme l'API Django (`E:\krini\krini`).
 
-Currently, two official plugins are available:
+## Démarrage
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+cp .env.example .env     # puis ajuster VITE_API_URL
+npm install
+npm run dev
+```
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Commande | Rôle |
+|---|---|
+| `npm run dev` | Serveur de développement |
+| `npm run build` | Build de production (`dist/`) |
+| `npm run lint` | ESLint |
+| `npm test` | Tests Vitest (session, rafraîchissement du token, routes protégées) |
 
-## Expanding the ESLint configuration
+## Architecture
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `src/api.js` — instance axios : jeton `Bearer`, **rafraîchissement automatique sur 401**, déroulage de la pagination DRF, `logout()` (blacklist du refresh token).
+- `src/utils/session.js` — tokens JWT, claims, `hasSession()`.
+- `src/components/ProtectedRoute.jsx` — garde de routes (session + rôle `OWNER`/`EMPLOYEE`/`SUPERADMIN`) ; `/admin/*` réservé au `SUPERADMIN`.
+- `src/components/` — pages et composants métier ; `ui/` pour les briques partagées.
+- Pages récentes : `Invoices` (factures/avoirs), `Reports` (rapports + journal de caisse), `Maintenance`, notifications réelles (`NotificationCenter`).
+
+Voir aussi `DESIGN.md` (système visuel) et `FRONTEND.md`.
+
+## Dette connue
+
+- `fetchAllPages` charge des listes entières côté client (clients, véhicules, contrats, paiements) : à remplacer par pagination/filtres serveur.
+- Gros composants à découper : `VehicleForm`, `GpsTracking`, `Settings`, `ContractForm` ; `AddClient`/`EditClient` quasi dupliqués.
+- Jetons en `localStorage` (exposés en cas de XSS) : un refresh token en cookie HttpOnly demanderait un changement d'API.
+- UI uniquement en français, sans i18n/RTL.

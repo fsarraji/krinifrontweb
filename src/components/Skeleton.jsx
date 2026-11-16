@@ -37,5 +37,3 @@ export const SkeletonTable = ({ rows = 5, cols = 6 }) => (
         </div>
     </div>
 );
-
-export default { SkeletonBox, SkeletonCards, SkeletonTable };

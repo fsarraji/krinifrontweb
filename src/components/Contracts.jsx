@@ -4,10 +4,14 @@ import api, { fetchAllPages } from '../api';
 import CloseContractModal from './CloseContractModal';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
-import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import { toast } from './Toast';
 import StatusBadge from './ui/StatusBadge';
+import PageHeader from './ui/PageHeader';
+import Button from './ui/Button';
+import MetricCard from './ui/MetricCard';
+import ExportButton from './ui/ExportButton';
+import Modal from './ui/Modal';
 
 import { AVATAR_COLORS } from '../utils/avatarColors';
 
@@ -21,6 +25,7 @@ const Contracts = () => {
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [reloadKey, setReloadKey] = useState(0);
 
     const FILTER_OPTIONS = [
         { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
@@ -30,40 +35,23 @@ const Contracts = () => {
         { value: 'ANNULE', label: 'Annulé', dot: 'bg-danger' },
     ];
 
-    const fetchContracts = async () => {
-        try {
-            const contracts = await fetchAllPages('contracts/');
-            setContracts(contracts);
-            setLoading(false);
-        } catch (error) {
-            console.error('Erreur lors de la récupération des contrats', error);
-            setLoading(false);
-        }
-    };
-
     const handleCloseSuccess = () => {
         setCloseContract(null);
         toast.success('Le contrat a été clôturé avec succès.');
         fetchContracts();
     };
 
-    const handleExport = () => {
-        exportToCSV(
-            filteredContracts,
-            'contrats_location',
-            [
-                { key: 'id', label: 'ID Contrat' },
-                { key: 'client_name', label: 'Nom Client' },
-                { key: 'client_prenom', label: 'Prénom Client' },
-                { key: 'vehicle_name', label: 'Véhicule' },
-                { key: 'vehicle_matricule', label: 'Matricule' },
-                { key: 'jours', label: 'Durée (Jours)' },
-                { key: 'montant_total', label: 'Montant Total (DH)' },
-                { key: 'statut', label: 'Statut Contrat' },
-                { key: 'payment_status', label: 'Statut Paiement' },
-            ]
-        );
-    };
+    const EXPORT_COLUMNS = [
+        { key: 'id', label: 'ID Contrat' },
+        { key: 'client_name', label: 'Nom Client' },
+        { key: 'client_prenom', label: 'Prénom Client' },
+        { key: 'vehicle_name', label: 'Véhicule' },
+        { key: 'vehicle_matricule', label: 'Matricule' },
+        { key: 'jours', label: 'Durée (Jours)' },
+        { key: 'montant_total', label: 'Montant Total (DH)' },
+        { key: 'statut', label: 'Statut Contrat' },
+        { key: 'payment_status', label: 'Statut Paiement' },
+    ];
 
     const handleDownloadPDF = async (id, withCachet) => {
         try {
@@ -84,10 +72,25 @@ const Contracts = () => {
         }
     };
 
-    useEffect(() => { fetchContracts(); }, []);
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const data = await fetchAllPages('contracts/');
+                if (!cancelled) setContracts(data);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des contrats', error);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [reloadKey]);
 
-    // Reset to page 1 on filter/search change
-    useEffect(() => { setCurrentPage(1); }, [search, activeFilter]);
+    const fetchContracts = () => setReloadKey((k) => k + 1);
+
+    const handleSearchChange = (value) => { setSearch(value); setCurrentPage(1); };
+    const handleFilterChange = (value) => { setActiveFilter(value); setCurrentPage(1); };
 
     const activeRentals = contracts.filter(c => c.statut === 'EN_COURS').length;
     const totalRevenue = contracts.reduce((acc, c) => acc + parseFloat(c.montant_total || 0), 0).toLocaleString();
@@ -119,100 +122,76 @@ const Contracts = () => {
 
             {/* Print Contract Modal */}
             {printContractId && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-on-surface/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-card-white w-full max-w-sm rounded-lg shadow-l2 overflow-hidden animate-in zoom-in-95 duration-200 p-6 text-center border border-stroke">
-                        <div className="w-14 h-14 bg-info-bg rounded-lg flex items-center justify-center mx-auto mb-4 text-primary">
-                            <span className="material-symbols-outlined text-2xl">print</span>
-                        </div>
-                        <h3 className="text-title-lg font-bold text-on-surface mb-1">Imprimer le Contrat</h3>
-                        <p className="text-body-sm text-on-surface-variant mb-6 font-medium">Souhaitez-vous inclure le cachet de l'agence sur ce contrat ?</p>
-                        <div className="flex flex-col gap-2.5">
-                            <button
-                                onClick={() => handleDownloadPDF(printContractId, true)}
-                                className="w-full py-2.5 bg-primary hover:bg-primary-deep text-white font-semibold rounded-lg text-label-sm shadow-l1 transition-all flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-sm">verified</span>
-                                Oui, avec Cachet
-                            </button>
-                            <button
-                                onClick={() => handleDownloadPDF(printContractId, false)}
-                                className="w-full py-2.5 bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold rounded-lg text-label-sm transition-all flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-sm">description</span>
-                                Non, sans Cachet
-                            </button>
-                            <button
-                                onClick={() => setPrintContractId(null)}
-                                className="w-full py-2 text-on-surface-variant font-medium text-body-sm hover:text-on-surface transition-colors"
-                            >
-                                Annuler
-                            </button>
-                        </div>
+                <Modal
+                    isOpen
+                    size="sm"
+                    title="Imprimer le Contrat"
+                    subtitle="Souhaitez-vous inclure le cachet de l'agence sur ce contrat ?"
+                    onClose={() => setPrintContractId(null)}
+                    footer={(
+                        <>
+                            <Button variant="secondary" icon="description" onClick={() => handleDownloadPDF(printContractId, false)}>
+                                Sans cachet
+                            </Button>
+                            <Button icon="verified" onClick={() => handleDownloadPDF(printContractId, true)}>
+                                Avec cachet
+                            </Button>
+                        </>
+                    )}
+                >
+                    <div className="flex flex-col items-center gap-3 py-2">
+                        <span className="material-symbols-outlined text-primary" style={{ fontSize: 44 }}>print</span>
+                        <p className="text-label-md text-center text-on-surface-variant">
+                            Le PDF du contrat sera téléchargé avec ou sans cachet de l'agence.
+                        </p>
                     </div>
-                </div>
+                </Modal>
             )}
 
             {/* Editorial Header */}
-            <div className="flex items-end justify-between mb-8">
-                <div>
-                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Opérations de Flotte</p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>Contrats de Location</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[13px] hover:bg-slate-50 transition-colors"
-                        title="Exporter en CSV (Excel)"
-                        style={{ color: 'var(--on-surface)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">download</span>
-                        <span>Exporter (CSV)</span>
-                    </button>
-                    <button
-                        onClick={() => navigate('/contracts/new')}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white hover:opacity-90 transition-opacity"
-                        style={{ background: 'var(--primary-container)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">add</span>
-                        Nouveau Contrat
-                    </button>
-                </div>
-            </div>
+            <PageHeader
+                eyebrow="Opérations de Flotte"
+                title="Contrats de Location"
+                actions={(
+                    <>
+                        <ExportButton
+                            data={filteredContracts}
+                            filename="contrats_location"
+                            columns={EXPORT_COLUMNS}
+                            label="Exporter (CSV)"
+                        />
+                        <Button icon="add" onClick={() => navigate('/contracts/new')}>Nouveau Contrat</Button>
+                    </>
+                )}
+            />
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-3 gap-6 mb-8">
-                <div className="p-5 flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--info-bg)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>car_rental</span>
-                    </div>
-                    <div>
-                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{activeRentals}</p>
-                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Contrats Actifs</p>
-                    </div>
-                    <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--success)', background: 'var(--success-bg)' }}>+12%</span>
-                </div>
-
-                <div className="p-5 flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--secondary-container)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--secondary)' }}>payments</span>
-                    </div>
-                    <div>
-                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{totalRevenue} DH</p>
-                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Chiffre d'Affaires</p>
-                    </div>
-                    <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--success)', background: 'var(--success-bg)' }}>+5.4%</span>
-                </div>
-
-                <div className="p-5 flex items-center gap-4" style={{ background: 'var(--primary-container)' }}>
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-white/20">
-                        <span className="material-symbols-outlined text-[20px] text-white">signature</span>
-                    </div>
-                    <div>
-                        <p className="font-bold text-[22px] leading-tight text-white">{contracts.filter(c => c.statut === 'RESERVE').length}</p>
-                        <p className="text-[12px] mt-0.5 text-white/70">Signatures en Attente</p>
-                    </div>
-                    <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full text-white bg-white/20">À traiter</span>
-                </div>
+                <MetricCard
+                    icon="car_rental"
+                    iconBg="bg-info-bg"
+                    iconColor="text-info"
+                    value={activeRentals}
+                    label="Contrats Actifs"
+                    trend={{ value: '+12%', positive: true }}
+                />
+                <MetricCard
+                    icon="payments"
+                    iconBg="bg-secondary-container"
+                    iconColor="text-secondary"
+                    value={totalRevenue}
+                    unit="DH"
+                    label="Chiffre d'Affaires"
+                    trend={{ value: '+5.4%', positive: true }}
+                />
+                <MetricCard
+                    icon="signature"
+                    tone="primary"
+                    value={contracts.filter(c => c.statut === 'RESERVE').length}
+                    label="Signatures en Attente"
+                >
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white bg-white/20">À traiter</span>
+                </MetricCard>
             </div>
 
             {/* Search & Filter */}
@@ -220,10 +199,10 @@ const Contracts = () => {
                 <SearchFilterBar
                     placeholder="Rechercher (client, matricule, marque)..."
                     search={search}
-                    onSearchChange={setSearch}
+                    onSearchChange={handleSearchChange}
                     options={FILTER_OPTIONS}
                     filter={activeFilter}
-                    onFilterChange={setActiveFilter}
+                    onFilterChange={handleFilterChange}
                 />
             </div>
 

@@ -26,3 +26,7 @@ code.html
 *.njsproj
 *.sln
 *.sw?
+
+# Scratch / design mockups (archivés hors du projet)
+kricar_login.html
+screen.png

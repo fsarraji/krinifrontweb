@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
 import { resolveImage } from '../imageUrl';
-import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
@@ -13,6 +12,10 @@ import VehicleInfoModal from './ui/VehicleInfoModal';
 import ArchiveVehicleModal from './ui/ArchiveVehicleModal';
 import { messageBox } from './MessageBox';
 import { toast } from './Toast';
+import PageHeader from './ui/PageHeader';
+import Button from './ui/Button';
+import MetricCard from './ui/MetricCard';
+import ExportButton from './ui/ExportButton';
 
 const PAGE_SIZE_DEFAULT = 10;
 
@@ -32,6 +35,7 @@ const Vehicles = () => {
     const [menuId, setMenuId] = useState(null);
     const [infoVehicle, setInfoVehicle] = useState(null);
     const [archiveVehicle, setArchiveVehicle] = useState(null);
+    const [reloadKey, setReloadKey] = useState(0);
 
     const isSuperAdmin = getRole() === 'SUPERADMIN';
 
@@ -44,26 +48,28 @@ const Vehicles = () => {
         ...(isSuperAdmin ? [{ value: 'deleted', label: 'Supprimés', dot: 'bg-danger' }] : []),
     ];
 
-    const load = useCallback(async () => {
-        try {
-            const params = {};
-            if (statusFilter === 'archived') params.include_archived = '1';
-            if (statusFilter === 'deleted') params.include_deleted = '1';
-            const data = await fetchAllPages('vehicles/', params);
-            setVehicles(data);
-            setLoading(false);
-        } catch (error) {
-            console.error("Erreur lors de la récupération des véhicules", error);
-            setLoading(false);
-        }
-    }, [statusFilter]);
-
     useEffect(() => {
-        load();
-    }, [load]);
+        let cancelled = false;
+        (async () => {
+            try {
+                const params = {};
+                if (statusFilter === 'archived') params.include_archived = '1';
+                if (statusFilter === 'deleted') params.include_deleted = '1';
+                const data = await fetchAllPages('vehicles/', params);
+                if (!cancelled) setVehicles(data);
+            } catch (error) {
+                console.error("Erreur lors de la récupération des véhicules", error);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [statusFilter, reloadKey]);
 
-    // Reset to page 1 on filter/search change
-    useEffect(() => { setCurrentPage(1); }, [search, statusFilter]);
+    const load = () => setReloadKey((k) => k + 1);
+
+    const handleSearchChange = (value) => { setSearch(value); setCurrentPage(1); };
+    const handleFilterChange = (value) => { setStatusFilter(value); setCurrentPage(1); };
 
     const totalFleet = vehicles.length;
     const rentedCount = vehicles.filter(v => normalizeVehicleStatut(v.statut) === 'Rented').length;
@@ -86,22 +92,16 @@ const Vehicles = () => {
 
     const paginatedVehicles = filteredVehicles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-    const handleExport = () => {
-        exportToCSV(
-            filteredVehicles,
-            'flotte_vehicules',
-            [
-                { key: 'matricule', label: 'Matricule' },
-                { key: 'marque_name', label: 'Marque' },
-                { key: 'modele_name', label: 'Modèle' },
-                { key: 'annee', label: 'Année' },
-                { key: 'kilometrage', label: 'Kilométrage (km)' },
-                { key: 'carburant', label: 'Carburant' },
-                { key: 'statut', label: 'Statut' },
-                { key: 'prix_par_jour', label: 'Prix/Jour (DH)' },
-            ]
-        );
-    };
+    const EXPORT_COLUMNS = [
+        { key: 'matricule', label: 'Matricule' },
+        { key: 'marque_name', label: 'Marque' },
+        { key: 'modele_name', label: 'Modèle' },
+        { key: 'annee', label: 'Année' },
+        { key: 'kilometrage', label: 'Kilométrage (km)' },
+        { key: 'carburant', label: 'Carburant' },
+        { key: 'statut', label: 'Statut' },
+        { key: 'prix_par_jour', label: 'Prix/Jour (DH)' },
+    ];
 
     const handleDelete = (v) => {
         messageBox.danger(
@@ -176,81 +176,30 @@ const Vehicles = () => {
     return (
         <div>
             {/* Header Section */}
-            <div className="flex items-end justify-between mb-8">
-                <div>
-                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Stock d'actifs</p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>Gestion de Flotte</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[13px] card hover:bg-slate-50 transition-colors shadow-l1"
-                        title="Exporter en CSV (Excel)"
-                        style={{ color: 'var(--on-surface)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">download</span>
-                        <span>Exporter (CSV)</span>
-                    </button>
-                    <Link
-                        to="/vehicles/new"
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white hover:opacity-90 transition-opacity"
-                        style={{ background: 'var(--primary-container)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">add</span>
-                        <span>Ajouter un Véhicule</span>
-                    </Link>
-                </div>
-            </div>
+            <PageHeader
+                eyebrow="Stock d'actifs"
+                title="Gestion de Flotte"
+                actions={(
+                    <>
+                        <ExportButton
+                            data={filteredVehicles}
+                            filename="flotte_vehicules"
+                            columns={EXPORT_COLUMNS}
+                            label="Exporter (CSV)"
+                        />
+                        <Button icon="add" variant="primary" onClick={() => navigate('/vehicles/new')}>
+                            Ajouter un Véhicule
+                        </Button>
+                    </>
+                )}
+            />
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-4 gap-6 mb-8">
-                <div className="card rounded-token p-5 shadow-l1 flex items-center justify-between">
-                    <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--info-bg)' }}>
-                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>directions_car</span>
-                        </div>
-                        <div className="min-w-0">
-                            <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{totalFleet}</p>
-                            <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Flotte Totale</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="card rounded-token p-5 shadow-l1 flex items-center justify-between">
-                    <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--success-bg)' }}>
-                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--success)' }}>key</span>
-                        </div>
-                        <div className="min-w-0">
-                            <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{rentedCount}</p>
-                            <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Actuellement Loués</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="card rounded-token p-5 shadow-l1 flex items-center justify-between">
-                    <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--warning-bg)' }}>
-                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--warning)' }}>build</span>
-                        </div>
-                        <div className="min-w-0">
-                            <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{maintenanceCount}</p>
-                            <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>En Maintenance</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="card rounded-token p-5 shadow-l1 flex items-center justify-between">
-                    <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--secondary-container)' }}>
-                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--secondary)' }}>payments</span>
-                        </div>
-                        <div className="min-w-0">
-                            <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{avgDailyRate} <span className="text-[12px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>DH</span></p>
-                            <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Tarif Moyen / Jour</p>
-                        </div>
-                    </div>
-                </div>
+                <MetricCard icon="directions_car" iconBg="bg-info-bg" iconColor="text-info" value={totalFleet} label="Flotte Totale" />
+                <MetricCard icon="key" iconBg="bg-success-bg" iconColor="text-success" value={rentedCount} label="Actuellement Loués" />
+                <MetricCard icon="build" iconBg="bg-warning-bg" iconColor="text-warning" value={maintenanceCount} label="En Maintenance" />
+                <MetricCard icon="payments" iconBg="bg-secondary-container" iconColor="text-secondary" value={avgDailyRate} unit="DH" label="Tarif Moyen / Jour" />
             </div>
 
             {/* Search Filter Bar & View Switcher */}
@@ -259,10 +208,10 @@ const Vehicles = () => {
                     <SearchFilterBar
                         placeholder="Rechercher par matricule, marque, modèle, carburant..."
                         search={search}
-                        onSearchChange={setSearch}
+                        onSearchChange={handleSearchChange}
                         options={FILTER_OPTIONS}
                         filter={statusFilter}
-                        onFilterChange={setStatusFilter}
+                        onFilterChange={handleFilterChange}
                     />
                 </div>
 
@@ -402,10 +351,10 @@ const Vehicles = () => {
                                                     </div>
                                                 )}
                                                 <div className="min-w-0">
-                                                    <h3 className="text-title-lg text-on-surface group-hover:text-primary transition-colors truncate">
+                                                    <h3 className="text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors truncate">
                                                         {vehicle.marque_name} {vehicle.modele_name}
                                                     </h3>
-                                                    <p className="text-body-sm text-on-surface-variant font-medium">{vehicle.matricule_actuel || vehicle.matricule}</p>
+                                                    <p className="text-label-md text-on-surface-variant">{vehicle.matricule_actuel || vehicle.matricule}</p>
                                                 </div>
                                             </div>
                                             {vehicle.is_deleted ? (
@@ -417,7 +366,7 @@ const Vehicles = () => {
                                             )}
                                         </div>
 
-                                        <div className="space-y-2 text-body-sm text-on-surface-variant border-t border-stroke pt-3">
+                                        <div className="space-y-2 text-label-md text-on-surface-variant border-t border-stroke pt-3">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm">local_gas_station</span> Carburant:

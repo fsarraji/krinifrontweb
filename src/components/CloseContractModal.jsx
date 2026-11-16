@@ -3,7 +3,6 @@ import api from '../api';
 import FuelGaugeSelector from './FuelGaugeSelector';
 import DamageSelector from './DamageSelector';
 import Dropdown from './Dropdown';
-import axios from 'axios';
 import { toast } from './Toast';
 import { ACCESSORY_LABELS } from '../utils/vehicleAccessories';
 
@@ -53,10 +52,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
       setKmRetour(contract.km_sortie?.toString() || '');
     }
     // Fetch km settings
-    const token = localStorage.getItem('access_token');
-    axios.get('http://localhost:8000/api/agency/settings/', {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => {
+    api.get('agency/settings/').then(res => {
       setAgencySettings({
         km_extra_active: res.data.km_extra_active,
         km_par_jour: parseInt(res.data.km_par_jour) || 250,

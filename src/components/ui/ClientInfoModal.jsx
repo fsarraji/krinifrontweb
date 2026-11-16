@@ -1,5 +1,6 @@
 import React from 'react';
-import InfoModal, { Row, Section, fmt, fmtDate, OUI_NON } from './InfoModal';
+import { fmt, fmtDate, OUI_NON } from '../../utils/formatters';
+import InfoModal, { Row, Section } from './InfoModal';
 
 const SEXE = (v) => (v === 'HOMME' ? 'Homme' : v === 'FEMME' ? 'Femme' : fmt(v));
 

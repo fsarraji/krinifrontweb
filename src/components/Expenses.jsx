@@ -19,8 +19,8 @@ const Expenses = () => {
     const [pageSize, setPageSize] = useState(10);
 
     const TYPE_FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Tous', dot: 'bg-indigo-600' },
-        { value: 'AGENCY', label: 'Agence', dot: 'bg-rose-500' },
+        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
+        { value: 'AGENCY', label: 'Agence', dot: 'bg-danger' },
         { value: 'VEHICLE', label: 'Véhicule', dot: 'bg-indigo-500' },
     ];
 
@@ -154,7 +154,7 @@ const Expenses = () => {
                     </button>
                     <button 
                         onClick={() => setShowModal(true)} 
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 flex items-center gap-2.5 hover:-translate-y-0.5"
+                        className="bg-primary hover:bg-primary-deep text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 flex items-center gap-2.5 hover:-translate-y-0.5"
                     >
                         <span className="material-symbols-outlined text-lg">add</span>
                         Ajouter une Dépense
@@ -164,13 +164,13 @@ const Expenses = () => {
 
             {/* Widgets (Compact Row) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-indigo-600 text-white p-4 rounded-xl shadow-sm flex items-center justify-between h-20 relative overflow-hidden">
+                <div className="bg-primary text-white p-4 rounded-xl shadow-sm flex items-center justify-between h-20 relative overflow-hidden">
                     <div className="flex items-center gap-3.5 min-w-0 relative z-10">
                         <div className="w-11 h-11 bg-white/10 text-white rounded-xl flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest truncate">Total des Dépenses</p>
+                            <p className="text-[10px] font-bold text-primary-light uppercase tracking-widest truncate">Total des Dépenses</p>
                             <p className="text-xl font-extrabold mt-1 leading-none">{totalGlobal.toLocaleString()} DH</p>
                         </div>
                     </div>
@@ -178,7 +178,7 @@ const Expenses = () => {
 
                 <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
                     <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-11 h-11 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center shrink-0">
+                        <div className="w-11 h-11 bg-danger-bg text-danger rounded-xl flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">storefront</span>
                         </div>
                         <div className="min-w-0">
@@ -190,7 +190,7 @@ const Expenses = () => {
 
                 <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
                     <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-11 h-11 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                        <div className="w-11 h-11 bg-surface-container-high text-primary rounded-xl flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">directions_car</span>
                         </div>
                         <div className="min-w-0">
@@ -242,12 +242,12 @@ const Expenses = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex flex-col gap-1 items-start">
                                                 {e.vehicle ? (
-                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20">
+                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-surface-container-high text-primary-deep ring-1 ring-primary/20">
                                                         <span className="material-symbols-outlined text-xs">directions_car</span>
                                                         Véhicule #{e.vehicle}
                                                     </span>
                                                 ) : (
-                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
+                                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-[11px] font-bold rounded-full bg-danger-bg text-danger-dark ring-1 ring-danger/20">
                                                         <span className="material-symbols-outlined text-xs">storefront</span>
                                                         Agence
                                                     </span>
@@ -257,7 +257,7 @@ const Expenses = () => {
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-extrabold text-rose-600 text-right">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-extrabold text-danger text-right">
                                             -{parseFloat(e.amount).toLocaleString()} DH
                                         </td>
                                     </tr>
@@ -282,7 +282,7 @@ const Expenses = () => {
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-rose-500 text-xl">money_off</span> 
+                                <span className="material-symbols-outlined text-danger text-xl">money_off</span> 
                                 Enregistrer une Dépense
                             </h3>
                             <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -312,36 +312,36 @@ const Expenses = () => {
                             <form id="expenseForm" onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Titre de la dépense <span className="text-rose-500">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Titre de la dépense <span className="text-danger">*</span></label>
                                         <input 
                                             type="text" required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                             placeholder="Ex: Facture électricité Janvier"
                                             value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Montant (DH) <span className="text-rose-500">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Montant (DH) <span className="text-danger">*</span></label>
                                         <input 
                                             type="number" required min="0" step="0.01"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                             placeholder="Ex: 500"
                                             value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date <span className="text-rose-500">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date <span className="text-danger">*</span></label>
                                         <input 
                                             type="date" required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                             value={formData.expense_date} onChange={e => setFormData({...formData, expense_date: e.target.value})}
                                         />
                                     </div>
                                     
                                     <div className={`col-span-2 ${expenseType === 'VEHICLE' ? '' : 'hidden'}`}>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Véhicule Concerné <span className="text-rose-500">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Véhicule Concerné <span className="text-danger">*</span></label>
                                         <Dropdown
                                             isSearchable
                                             placeholder="-- Sélectionner un véhicule --"
@@ -355,7 +355,7 @@ const Expenses = () => {
                                     </div>
 
                                     <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Catégorie <span className="text-rose-500">*</span></label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Catégorie <span className="text-danger">*</span></label>
                                         <Dropdown
                                             options={CATEGORIES}
                                             value={formData.category}
@@ -367,7 +367,7 @@ const Expenses = () => {
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Notes</label>
                                         <textarea 
                                             rows="2"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                                             placeholder="Détails (facultatif)..."
                                             value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}
                                         ></textarea>
@@ -379,7 +379,7 @@ const Expenses = () => {
                             <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
                                 Annuler
                             </button>
-                            <button form="expenseForm" type="submit" className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-200/50 transition-all flex items-center justify-center gap-2">
+                            <button form="expenseForm" type="submit" className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-danger hover:bg-danger-dark shadow-md shadow-rose-200/50 transition-all flex items-center justify-center gap-2">
                                 <span className="material-symbols-outlined text-sm">check_circle</span> Valider
                             </button>
                         </div>

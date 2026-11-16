@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
+import PageHeader from './ui/PageHeader';
+import Button from './ui/Button';
+import MetricCard from './ui/MetricCard';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -51,75 +54,51 @@ const Dashboard = () => {
     return (
         <div>
             {/* Header */}
-            <div className="flex items-end justify-between mb-8">
-                <div>
-                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                        Aperçu temps réel — {data.stats.agency_name || "Votre agence"}
-                    </p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                        Tableau de bord
-                    </h2>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => navigate('/contracts/new')}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white hover:opacity-90 transition-opacity"
-                        style={{ background: 'var(--primary-container)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">add</span>
-                        Nouveau contrat
-                    </button>
-                </div>
-            </div>
+            <PageHeader
+                eyebrow={`Aperçu temps réel — ${data.stats.agency_name || "Votre agence"}`}
+                title="Tableau de bord"
+                actions={(
+                    <Button icon="add" onClick={() => navigate('/contracts/new')}>Nouveau contrat</Button>
+                )}
+            />
 
             {/* Metric cards : 4 colonnes strictes comme krini_vantage_fleet.html */}
             <div className="grid grid-cols-4 gap-6 mb-8">
-
-                {/* Card 1: Revenu */}
-                <div className="card rounded-token p-6 shadow-l1">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--info-bg)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>payments</span>
+                <MetricCard
+                    icon="payments"
+                    iconBg="bg-info-bg"
+                    iconColor="text-info"
+                    value={(data.stats.revenue_this_month ?? 0).toLocaleString('fr-FR')}
+                    unit="DH"
+                    label="Revenu du mois"
+                />
+                <MetricCard
+                    icon="check_circle"
+                    iconBg="bg-success-bg"
+                    iconColor="text-success"
+                    value={availableFleet}
+                    unit={`/ ${totalFleet}`}
+                    label="Véhicules disponibles"
+                >
+                    <div className="h-1.5 rounded-full overflow-hidden bg-stroke">
+                        <div className="h-full rounded-full bg-success" style={{ width: `${availPercent}%` }} />
                     </div>
-                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>
-                        {(data.stats.revenue_this_month ?? 0).toLocaleString()}{' '}
-                        <span className="text-[14px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>DH</span>
-                    </p>
-                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Revenu du mois</p>
-                </div>
-
-                {/* Card 2: Disponibilité */}
-                <div className="card rounded-token p-6 shadow-l1">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--success-bg)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--success)' }}>check_circle</span>
-                    </div>
-                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>
-                        {availableFleet}{' '}
-                        <span className="text-[14px] font-medium" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>/ {totalFleet}</span>
-                    </p>
-                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Véhicules disponibles</p>
-                    <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--stroke)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${availPercent}%`, background: 'var(--success)' }}></div>
-                    </div>
-                </div>
-
-                {/* Card 3: Contrats actifs */}
-                <div className="card rounded-token p-6 shadow-l1">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--secondary-container)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--secondary)' }}>description</span>
-                    </div>
-                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--on-surface)' }}>{activeContracts}</p>
-                    <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Contrats actifs</p>
-                </div>
-
-                {/* Card 4: Alertes */}
-                <div className="card rounded-token p-6 shadow-l1" style={{ background: 'var(--error-bg)', borderColor: 'var(--danger-border)' }}>
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ background: '#ffffff' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--error-c)' }}>warning</span>
-                    </div>
-                    <p className="font-bold text-[24px] leading-8" style={{ color: 'var(--danger-dark)' }}>{totalAlerts}</p>
-                    <p className="text-[12px] mt-1" style={{ color: 'var(--error-c)', opacity: 0.8 }}>Alertes échéance</p>
-                    <p className="text-[12px] mt-3" style={{ color: 'var(--error-c)', opacity: 0.7 }}>Assurance · visite technique</p>
-                </div>
+                </MetricCard>
+                <MetricCard
+                    icon="description"
+                    iconBg="bg-secondary-container"
+                    iconColor="text-secondary"
+                    value={activeContracts}
+                    label="Contrats actifs"
+                />
+                <MetricCard
+                    icon="warning"
+                    tone="danger"
+                    value={totalAlerts}
+                    label="Alertes échéance"
+                >
+                    <p className="text-[12px]" style={{ color: 'var(--error-c)', opacity: 0.7 }}>Assurance · visite technique</p>
+                </MetricCard>
             </div>
 
             {/* Grid 3 colonnes : Fleet table (2 col) + Échéances (1 col) */}
@@ -213,13 +192,11 @@ const Dashboard = () => {
                             </div>
                         )}
                     </div>
-                    <button
-                        onClick={() => navigate('/vehicles')}
-                        className="mx-4 mb-4 py-2.5 rounded-token text-[13px] font-semibold hover:bg-slate-100 transition-colors"
-                        style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
-                    >
-                        Voir toutes les alertes
-                    </button>
+                    <div className="mx-4 mb-4">
+                        <Button variant="secondary" className="w-full" onClick={() => navigate('/vehicles')}>
+                            Voir toutes les alertes
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
 import api from '../api';
-
-const UNIQUE_FIELDS = {
-    cin_passport: 'CIN/passeport',
-    email: 'email',
-    telephone: 'téléphone',
-    permis_conduite: 'permis de conduire',
-};
+import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
 
 /**
  * Modale de création rapide de client.
- * Utilisée dans ContractForm, ReservationForm, et AddContract.
+ * Utilisée dans ContractForm et ReservationForm.
  *
  * Props:
  * - isOpen: boolean
@@ -42,23 +36,8 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
     };
 
     const checkUnique = async (field, value) => {
-        if (!value || !value.trim()) {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-            return;
-        }
-        try {
-            const res = await api.get('clients/check-unique/', {
-                params: { field, value: value.trim() }
-            });
-            setUniqueErrors(prev => ({
-                ...prev,
-                [field]: res.data.available === false
-                    ? `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`
-                    : false
-            }));
-        } catch {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-        }
+        const available = await apiCheckUnique({ field, value });
+        setUniqueErrors(prev => ({ ...prev, [field]: available ? false : UNIQUE_MSG(field) }));
     };
 
     const handleBlurUnique = (field) => (e) => {

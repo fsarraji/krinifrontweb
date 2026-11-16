@@ -28,7 +28,7 @@ const MenuButton = ({ item, items, menuId, setMenuId }) => {
                 open={menuId === item.id}
                 onClose={() => setMenuId(null)}
                 items={items}
-                anchor={btnRef.current}
+                anchorRef={btnRef}
             />
         </div>
     );

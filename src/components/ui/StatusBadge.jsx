@@ -1,4 +1,5 @@
 import React from 'react';
+import STATUS_MAP from './statusMap';
 
 // Système de badges Krincar Agency (code.html / DESIGN.md).
 // Tonalité = couleur sémantique ; appearance = forme.
@@ -54,21 +55,6 @@ const CATEGORIES = {
   client: { bg: 'bg-cat-client-bg', text: 'text-cat-client-text', border: 'border-cat-client-text', icon: 'person' },
   contrat: { bg: 'bg-cat-contrat-bg', text: 'text-cat-contrat-text', border: 'border-cat-contrat-text', icon: 'description' },
   agence: { bg: 'bg-cat-agence-bg', text: 'text-cat-agence-text', border: 'border-cat-agence-text', icon: 'storefront' },
-};
-
-// Un seul endroit pour mapper les valeurs backend -> libellé FR + tonalité.
-// Étends cet objet plutôt que d'en recréer un dans chaque vue.
-export const STATUS_MAP = {
-  // Véhicules
-  Available: { label: 'Disponible', variant: 'success' },
-  Rented: { label: 'Louée', variant: 'info' },
-  Maintenance: { label: 'Maintenance', variant: 'warning' },
-  // Contrats / réservations
-  RESERVE: { label: 'Réservé', variant: 'info' },
-  EN_COURS: { label: 'En cours', variant: 'success' },
-  TERMINE: { label: 'Terminé', variant: 'neutral' },
-  ANNULE: { label: 'Annulé', variant: 'danger' },
-  PENDING: { label: 'En attente', variant: 'warning' },
 };
 
 const BASE = 'inline-flex items-center w-fit rounded-lg px-3 py-1.5 text-label-md gap-2';

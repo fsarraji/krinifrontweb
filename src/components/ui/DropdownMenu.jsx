@@ -3,12 +3,13 @@ import { createPortal } from 'react-dom';
 
 // Menu déroulant des options ⋮ (3 points).
 // items : [{ key, icon, label, color, destructive, onClick }]
-const DropdownMenu = ({ open, onClose, items, anchor }) => {
+const DropdownMenu = ({ open, onClose, items, anchorRef }) => {
     const ref = useRef(null);
     const [pos, setPos] = useState(null);
 
     useEffect(() => {
         if (!open) return;
+        const anchor = anchorRef.current;
         // Repositionne si l'ancre change (scroll, resize)
         const compute = () => {
             const r = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
@@ -27,10 +28,11 @@ const DropdownMenu = ({ open, onClose, items, anchor }) => {
             window.removeEventListener('scroll', compute, true);
             window.removeEventListener('resize', compute);
         };
-    }, [open, anchor]);
+    }, [open, anchorRef]);
 
     useEffect(() => {
         if (!open) return;
+        const anchor = anchorRef.current;
         const handler = (e) => {
             const isInsideMenu = ref.current && ref.current.contains(e.target);
             const isAnchor = anchor && anchor.contains && anchor.contains(e.target);
@@ -43,7 +45,7 @@ const DropdownMenu = ({ open, onClose, items, anchor }) => {
             document.removeEventListener('mousedown', handler);
             document.removeEventListener('keydown', escHandler);
         };
-    }, [open, onClose]);
+    }, [open, onClose, anchorRef]);
 
     if (!open || !pos) return null;
 

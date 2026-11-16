@@ -3,13 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
-import exportToCSV from '../utils/exportUtils';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
 import MenuButton from './ui/MenuButton';
 import ClientInfoModal from './ui/ClientInfoModal';
 import { messageBox } from './MessageBox';
 import { toast } from './Toast';
+import PageHeader from './ui/PageHeader';
+import Button from './ui/Button';
+import MetricCard from './ui/MetricCard';
+import ExportButton from './ui/ExportButton';
+import EmptyState from './ui/EmptyState';
+import Spinner from './ui/Spinner';
 
 const PAGE_SIZE_DEFAULT = 10;
 
@@ -123,26 +128,20 @@ const Clients = () => {
     const activeCount = totalCount - blacklistedCount;
     const withEmailCount = allClients.filter(c => c.email).length;
 
-    const handleExport = () => {
-        exportToCSV(
-            allClients.length ? allClients : clients,
-            'annuaire_clients',
-            [
-                { key: 'prenom', label: 'Prénom' },
-                { key: 'nom', label: 'Nom' },
-                { key: 'telephone', label: 'Téléphone' },
-                { key: 'email', label: 'Email' },
-                { key: 'cin_passport', label: 'CIN / Passeport' },
-                { key: 'date_expiration_cin', label: 'Expiration CIN' },
-                { key: 'permis_conduite', label: 'Permis de conduire' },
-                { key: 'nationalite', label: 'Nationalité' },
-                { key: 'sexe', label: 'Sexe' },
-                { key: 'ville', label: 'Ville' },
-                { key: 'pays', label: 'Pays' },
-                { key: 'liste_noire', label: 'Liste Noire' },
-            ]
-        );
-    };
+    const EXPORT_COLUMNS = [
+        { key: 'prenom', label: 'Prénom' },
+        { key: 'nom', label: 'Nom' },
+        { key: 'telephone', label: 'Téléphone' },
+        { key: 'email', label: 'Email' },
+        { key: 'cin_passport', label: 'CIN / Passeport' },
+        { key: 'date_expiration_cin', label: 'Expiration CIN' },
+        { key: 'permis_conduite', label: 'Permis de conduire' },
+        { key: 'nationalite', label: 'Nationalité' },
+        { key: 'sexe', label: 'Sexe' },
+        { key: 'ville', label: 'Ville' },
+        { key: 'pays', label: 'Pays' },
+        { key: 'liste_noire', label: 'Liste Noire' },
+    ];
 
     const handleDelete = (c) => {
         messageBox.danger(
@@ -210,73 +209,30 @@ const Clients = () => {
     return (
         <div>
             {/* Header */}
-            <div className="flex items-end justify-between mb-8">
-                <div>
-                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Annuaire & Portefeuille</p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>Gestion des Clients</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[13px] card hover:bg-slate-50 transition-colors shadow-l1"
-                        title="Exporter en CSV (Excel)"
-                        style={{ color: 'var(--on-surface)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">download</span>
-                        <span>Exporter (CSV)</span>
-                    </button>
-                    <Link
-                        to="/clients/add"
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-token font-semibold text-[14px] text-white hover:opacity-90 transition-opacity"
-                        style={{ background: 'var(--primary-container)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">person_add</span>
-                        <span>Nouveau Client</span>
-                    </Link>
-                </div>
-            </div>
+            <PageHeader
+                eyebrow="Annuaire & Portefeuille"
+                title="Gestion des Clients"
+                actions={(
+                    <>
+                        <ExportButton
+                            data={allClients.length ? allClients : clients}
+                            filename="annuaire_clients"
+                            columns={EXPORT_COLUMNS}
+                            label="Exporter (CSV)"
+                        />
+                        <Button icon="person_add" onClick={() => navigate('/clients/add')}>
+                            Nouveau Client
+                        </Button>
+                    </>
+                )}
+            />
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-4 gap-6 mb-8">
-                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--info-bg)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--info)' }}>group</span>
-                    </div>
-                    <div className="min-w-0">
-                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{totalCount}</p>
-                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Total Clients</p>
-                    </div>
-                </div>
-
-                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--success-bg)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--success)' }}>verified_user</span>
-                    </div>
-                    <div className="min-w-0">
-                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{activeCount}</p>
-                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Clients Éligibles</p>
-                    </div>
-                </div>
-
-                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--error-bg)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--error-c)' }}>block</span>
-                    </div>
-                    <div className="min-w-0">
-                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{blacklistedCount}</p>
-                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Liste Noire</p>
-                    </div>
-                </div>
-
-                <div className="card rounded-token p-5 shadow-l1 flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--secondary-container)' }}>
-                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--secondary)' }}>badge</span>
-                    </div>
-                    <div className="min-w-0">
-                        <p className="font-bold text-[22px] leading-tight" style={{ color: 'var(--on-surface)' }}>{withEmailCount}</p>
-                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Fiches Complètes</p>
-                    </div>
-                </div>
+                <MetricCard icon="group" iconBg="bg-info-bg" iconColor="text-info" value={totalCount} label="Total Clients" />
+                <MetricCard icon="verified_user" iconBg="bg-success-bg" iconColor="text-success" value={activeCount} label="Clients Éligibles" />
+                <MetricCard icon="block" tone="danger" value={blacklistedCount} label="Liste Noire" />
+                <MetricCard icon="badge" iconBg="bg-secondary-container" iconColor="text-secondary" value={withEmailCount} label="Fiches Complètes" />
             </div>
 
             {/* Filter & View Switcher */}
@@ -324,12 +280,9 @@ const Clients = () => {
             {/* Main Content Area */}
             <div className="card rounded-token overflow-hidden shadow-l1 flex flex-col">
                 {loading ? (
-                    <div className="p-16 text-center font-bold" style={{ color: 'var(--primary-container)' }}>Chargement de l'annuaire clients...</div>
+                    <div className="p-16 flex items-center justify-center"><Spinner size={28} /></div>
                 ) : clients.length === 0 ? (
-                    <div className="p-16 text-center font-medium flex flex-col items-center gap-2" style={{ color: 'var(--on-surface-variant)' }}>
-                        <span className="material-symbols-outlined text-4xl" style={{ opacity: 0.4 }}>person_off</span>
-                        <p>Aucun client trouvé dans l'annuaire.</p>
-                    </div>
+                    <EmptyState icon="person_off" title="Aucun client trouvé dans l'annuaire." />
                 ) : viewMode === 'table' ? (
                     <div className="overflow-x-auto flex-1">
                         <table className="w-full text-left">
@@ -412,16 +365,16 @@ const Clients = () => {
                                                     {getInitials(client.prenom, client.nom)}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-title-lg text-on-surface group-hover:text-primary transition-colors">
+                                                    <h3 className="text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors">
                                                         {client.prenom} {client.nom}
                                                     </h3>
-                                                    <p className="text-body-sm text-on-surface-variant font-medium">#{client.cin_passport}</p>
+                                                    <p className="text-label-md text-on-surface-variant">#{client.cin_passport}</p>
                                                 </div>
                                             </div>
                                             <ClientStatus client={client} />
                                         </div>
 
-                                        <div className="space-y-2 text-body-sm text-on-surface-variant border-t border-stroke pt-3">
+                                        <div className="space-y-2 text-label-md text-on-surface-variant border-t border-stroke pt-3">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
                                                     <span className="material-symbols-outlined text-sm">call</span> Téléphone:

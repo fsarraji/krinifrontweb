@@ -258,6 +258,12 @@ Design inspiré de Material 3 (« Vantage Fleet »), centré sur des variables C
 | `Skeleton` | Placeholders de chargement (`SkeletonBox`, `SkeletonCards`, `SkeletonTable`) |
 | `Pagination` | Barre pagination contrôlée (ellipse, tailles 10/25/50) |
 | `SearchFilterBar` | Barre recherche + filtre par pastilles |
+| `Button` | Bouton unique — variants `primary/secondary/danger/success/ghost`, tailles `sm/md/lg`, `loading` (Spinner intégré), `icon`, `iconOnly`, focus visible. Standardise les chaînes Tailwind brutes (`bg-primary px-4 py-2.5…`) |
+| `Modal` | Coquille de modale générique (généralise `InfoModal`) : `size` sm/md/lg/xl, `title`/`subtitle`, `footer`, overlay `bg-on-surface/40` z-[200] unifié |
+| `Spinner` | Indicateur de chargement (`progress_activity` animé, taille réglable) — consommé par `Button loading` |
+| `PageHeader` | En-tête de page `eyebrow` + titre + `description` + slot `actions` |
+| `Field` | Champ de formulaire `label` + contrôle + `error`/`hint` (classes `.label`/`.field` du design system) |
+| `EmptyState` | État vide standard (icône + titre + description + action) |
 
 ### Composants fonctionnels
 | Composant | Rôle |
@@ -279,6 +285,10 @@ Design inspiré de Material 3 (« Vantage Fleet »), centré sur des variables C
 - **`imageUtils.js`** — `optimizeImageFile(file)` : redimensionne (max 1600 px) et re-compresse les images côté navigateur avant upload (PNG conservé, JPG/autre → JPEG, SVG/GIF/PDF passés tels quels).
 - **`clientConstants.js`** — `SEXE_OPTIONS`, `NATIONALITES` (liste de pays), `cinLabelFor(nationalite)` (« CIN / Passeport » ou « Passport »).
 - **`imageUrl.js`** — `resolveImage(img)` : transforme un chemin relatif d'image en URL absolue basée sur l'origine de l'API (retire le suffixe `/api/`).
+
+## 10.1 Hooks (`src/hooks/`)
+
+- **`useFetchAll(url)`** — chargement paginé (toutes pages) d'un endpoint de liste : fetch automatique au montage (et à chaque changement d'URL), retourne `{ data, loading, refetch }`. `refetch()` relance le chargement après une mutation. Les `setState` sont placés dans des callbacks asynchrones pour satisfaire la règle `react-hooks/set-state-in-effect`. Utilisé par les 3 pages admin (AgencyManagement, UserManagement, Subscriptions).
 
 ---
 
@@ -302,6 +312,7 @@ Chunks manuels (`manualChunks`) :
 
 ## 13. Points d'attention / dette technique
 
+- Le module admin SaaS (`AgencyManagement`, `UserManagement`, `Subscriptions`) est **normalisé** sur les tokens `card`/`shadow-l1`, `StatusBadge`, `Button`, `Modal`, `Field`, `PageHeader`, `EmptyState` et le hook `useFetchAll` ; les classes mortes `editorial-shadow`/`font-headline`/`font-label` et les z-index de modale incohérents ont été supprimées. Les composants `payments`/`expenses`/`settings`/`calendar`/`editcontrat` utilisent encore la palette Tailwind brute (dialecte à unifier ultérieurement).
 - `CloseContractModal.jsx` utilise une URL **codée en dur** (`http://localhost:8000/api/agency/settings/`) au lieu du client `api` partagé.
 - `ContractForm.jsx` et `ReservationForm.jsx` dupliquent chacun un `AddClientModal` interne (factorisation possible).
 - Plusieurs boutons d'`EditContract.jsx` (prolonger, facture, PDF, résilier) sont décoratifs.

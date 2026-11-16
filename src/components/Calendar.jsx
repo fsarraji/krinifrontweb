@@ -36,11 +36,11 @@ const Calendar = () => {
     const daysOfWeek = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
 
     const FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Toute la flotte', dot: 'bg-indigo-600' },
-        { value: 'Rented', label: 'En location', dot: 'bg-emerald-500' },
+        { value: 'ALL', label: 'Toute la flotte', dot: 'bg-primary' },
+        { value: 'Rented', label: 'En location', dot: 'bg-success' },
         { value: 'Reserved', label: 'Réservés', dot: 'bg-indigo-500' },
         { value: 'Available', label: 'Disponibles', dot: 'bg-slate-400' },
-        { value: 'Maintenance', label: 'Maintenance', dot: 'bg-rose-500' },
+        { value: 'Maintenance', label: 'Maintenance', dot: 'bg-danger' },
     ];
 
     useEffect(() => {
@@ -143,7 +143,7 @@ const Calendar = () => {
                     </button>
                     <button
                         onClick={handleToday}
-                        className="px-4 py-1.5 rounded-xl text-xs font-extrabold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                        className="px-4 py-1.5 rounded-xl text-xs font-extrabold text-primary-deep bg-surface-container-high hover:bg-primary-light transition-colors"
                     >
                         Aujourd'hui
                     </button>
@@ -176,13 +176,13 @@ const Calendar = () => {
             <div className="flex items-center justify-between px-2 text-xs font-semibold text-slate-600">
                 <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Location En Cours
+                        <span className="w-2.5 h-2.5 rounded-full bg-success"></span> Location En Cours
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Réservation Confirmée
+                        <span className="w-2.5 h-2.5 rounded-full bg-primary"></span> Réservation Confirmée
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Maintenance
+                        <span className="w-2.5 h-2.5 rounded-full bg-danger"></span> Maintenance
                     </span>
                 </div>
                 <span className="text-slate-400 font-medium">Cliquez sur un contrat pour afficher les détails</span>
@@ -212,11 +212,11 @@ const Calendar = () => {
                                             style={{ width: `${dayWidth}px` }}
                                             className={`relative h-[54px] flex flex-col items-center justify-center border-r border-slate-100 ${isWeekend ? 'bg-danger-bg/40' : ''} ${isToday ? 'bg-primary-light/30' : ''}`}
                                         >
-                                            <p className={`text-[10px] font-bold ${isWeekend ? 'text-rose-500' : 'text-slate-400'}`}>{dayName}</p>
+                                            <p className={`text-[10px] font-bold ${isWeekend ? 'text-danger' : 'text-slate-400'}`}>{dayName}</p>
                                             <p className={`text-xs font-extrabold mt-0.5 ${
                                                 isToday
-                                                    ? 'bg-indigo-600 text-white rounded-lg px-[7px] py-[4px] shadow-sm'
-                                                    : isWeekend ? 'text-rose-600' : 'text-slate-600'
+                                                    ? 'bg-primary text-white rounded-lg px-[7px] py-[4px] shadow-sm'
+                                                    : isWeekend ? 'text-danger' : 'text-slate-600'
                                             }`}>
                                                 {day.toString().padStart(2, '0')}
                                             </p>
@@ -248,11 +248,11 @@ const Calendar = () => {
                                                     {vehicle.marque_name} {vehicle.modele_name}
                                                 </p>
                                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                                    <span className="font-mono text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                                                    <span className="font-mono text-[10px] font-bold text-primary bg-surface-container-high px-1.5 py-0.5 rounded">
                                                         {vehicle.matricule}
                                                     </span>
                                                     {isMaintenance && (
-                                                        <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">
+                                                        <span className="text-[9px] font-bold text-danger-dark bg-danger-bg px-1.5 py-0.5 rounded">
                                                             Maint.
                                                         </span>
                                                     )}
@@ -282,8 +282,8 @@ const Calendar = () => {
                                                         style={barStyle}
                                                         className={`absolute top-[18px] h-10 rounded-xl px-3 flex items-center justify-between gap-2 cursor-pointer transition-all z-20 ${
                                                             isActive
-                                                                ? 'bg-emerald-600 text-white shadow-[0_3px_8px_rgba(5,150,105,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
-                                                                : 'bg-indigo-600 text-white shadow-[0_3px_8px_rgba(79,70,229,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
+                                                                ? 'bg-success text-white shadow-[0_3px_8px_rgba(5,150,105,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
+                                                                : 'bg-primary text-white shadow-[0_3px_8px_rgba(79,70,229,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
                                                         }`}
                                                     >
                                                         <span className="text-xs font-extrabold truncate">
@@ -296,7 +296,7 @@ const Calendar = () => {
 
                                             {/* Maintenance Bar */}
                                             {isMaintenance && vehicleContracts.length === 0 && (
-                                                <div className="absolute inset-x-2 top-[18px] h-10 rounded-xl bg-rose-500 text-white shadow-[0_3px_8px_rgba(225,29,72,0.35)] flex items-center justify-center gap-2 text-xs font-bold z-10">
+                                                <div className="absolute inset-x-2 top-[18px] h-10 rounded-xl bg-danger text-white shadow-[0_3px_8px_rgba(225,29,72,0.35)] flex items-center justify-center gap-2 text-xs font-bold z-10">
                                                     <span className="material-symbols-outlined text-base text-white/90">build</span>
                                                     <span>Véhicule en Maintenance</span>
                                                 </div>
@@ -348,12 +348,12 @@ const Calendar = () => {
 
                             <div className="flex justify-between items-center pb-3 border-b border-slate-100">
                                 <span className="text-slate-400 font-bold uppercase tracking-wider">Montant Total:</span>
-                                <span className="font-extrabold text-indigo-600 text-sm">{selectedContract.montant_total} DH ({selectedContract.jours} jours)</span>
+                                <span className="font-extrabold text-primary text-sm">{selectedContract.montant_total} DH ({selectedContract.jours} jours)</span>
                             </div>
 
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-400 font-bold uppercase tracking-wider">Statut:</span>
-                                <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${selectedContract.statut === 'EN_COURS' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200'}`}>
+                                <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${selectedContract.statut === 'EN_COURS' ? 'bg-success-bg text-success-dark ring-1 ring-success-border' : 'bg-surface-container-high text-primary-deep ring-1 ring-indigo-200'}`}>
                                     {selectedContract.statut === 'EN_COURS' ? 'En Cours (Loué)' : 'Réservé'}
                                 </span>
                             </div>
@@ -368,7 +368,7 @@ const Calendar = () => {
                             </button>
                             <button
                                 onClick={() => navigate(`/contracts/edit/${selectedContract.id}`)}
-                                className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5"
+                                className="flex-1 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-deep shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5"
                             >
                                 <span className="material-symbols-outlined text-sm">edit</span> Modifier
                             </button>

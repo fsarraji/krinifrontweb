@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { toast } from './Toast';
 
+// Icône / couleur selon le type d'alerte renvoyé par /api/notifications/
+const KIND_META = {
+    INSURANCE: { type: 'INSURANCE', category: 'Échéance Assurance', icon: 'verified_user', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
+    VISITE: { type: 'TECHNICAL', category: 'Visite Technique', icon: 'build', color: 'bg-warning-bg text-warning-dark ring-warning-bg' },
+    VIDANGE: { type: 'TECHNICAL', category: 'Vidange', icon: 'oil_barrel', color: 'bg-warning-bg text-warning-dark ring-warning-bg' },
+    RETURN_DUE: { type: 'RETURN', category: 'Retour prévu', icon: 'event_available', color: 'bg-primary-light text-primary-deep ring-primary-border/30' },
+    RETURN_OVERDUE: { type: 'RETURN', category: 'Retour en retard', icon: 'alarm', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
+};
+
+const asList = (data) => (Array.isArray(data) ? data : (data?.results || []));
+
 const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
@@ -12,92 +23,90 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
         return typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default';
     });
 
+
     const fetchNotifications = useCallback(async () => {
         try {
-            const [dashRes, requestsRes, reservationsRes] = await Promise.all([
-                api.get('dashboard/'),
+            const [notifRes, requestsRes, reservationsRes] = await Promise.all([
+                api.get('notifications/', { params: { page_size: 50 } }),
                 api.get('booking-requests/?statut=PENDING'),
                 api.get('reservations/?statut=PENDING'),
             ]);
 
-            const alerts = dashRes.data?.alerts || { insurance_expiring: [], visite_expiring: [] };
-            const pendingRequests = Array.isArray(requestsRes.data)
-                ? requestsRes.data
-                : (requestsRes.data?.results || []);
-            const pendingReservations = Array.isArray(reservationsRes.data)
-                ? reservationsRes.data
-                : (reservationsRes.data?.results || []);
-
             const items = [];
 
-            // 1. Pending Booking Requests
-            pendingRequests.forEach(req => {
+            // Demandes en attente (pas des Notification : toujours « non lues »)
+            asList(requestsRes.data).forEach(req => {
                 items.push({
-                    id: `req-${req.id}`,
-                    type: 'REQUEST',
-                    category: 'Demande Client',
+                    id: `req-${req.id}`, type: 'REQUEST', category: 'Demande Client', unread: true,
                     title: `Nouvelle demande de réservation #${req.id}`,
                     subtitle: `${req.client_name || req.nom} — ${req.vehicle_name || 'Véhicule'}`,
-                    date: req.created_at || req.date_sortie,
-                    icon: 'event_note',
-                    color: 'bg-primary-light text-primary-deep ring-primary-border/30',
-                    link: '/reservations',
+                    date: req.created_at || req.date_sortie, icon: 'event_note',
+                    color: 'bg-primary-light text-primary-deep ring-primary-border/30', link: '/reservations',
                 });
             });
-
-            // 2. Pending Client Reservations (créées depuis le compte client)
-            pendingReservations.forEach(req => {
+            asList(reservationsRes.data).forEach(req => {
                 items.push({
-                    id: `res-${req.id}`,
-                    type: 'REQUEST',
-                    category: 'Réservation Client',
+                    id: `res-${req.id}`, type: 'REQUEST', category: 'Réservation Client', unread: true,
                     title: `Nouvelle réservation client #${req.id}`,
                     subtitle: `${req.client_name || 'Client'} — ${req.vehicle_name || 'Véhicule'}`,
-                    date: req.created_at || req.date_sortie,
-                    icon: 'event_note',
-                    color: 'bg-primary-light text-primary-deep ring-primary-border/30',
-                    link: '/reservations',
+                    date: req.created_at || req.date_sortie, icon: 'event_note',
+                    color: 'bg-primary-light text-primary-deep ring-primary-border/30', link: '/reservations',
                 });
             });
 
-            // 2. Insurance Alerts
-            (alerts.insurance_expiring || []).forEach(ins => {
+            // Alertes générées par le backend (assurance, visite, vidange, retours)
+            asList(notifRes.data).forEach(n => {
+                const meta = KIND_META[n.kind] || { type: 'TECHNICAL', category: n.kind, icon: 'notifications', color: 'bg-slate-100 text-slate-600 ring-slate-200' };
                 items.push({
-                    id: `ins-${ins.id}`,
-                    type: 'INSURANCE',
-                    category: 'Échéance Assurance',
-                    title: `Assurance expirante : ${ins.marque || 'Véhicule'}`,
-                    subtitle: `Matricule ${ins.matricule} — Expire le ${ins.date_assurance}`,
-                    date: ins.date_assurance,
-                    icon: 'verified_user',
-                    color: 'bg-danger-bg text-danger-dark ring-danger-bg',
-                    link: `/vehicles/edit/${ins.id}`,
+                    id: `n-${n.id}`, notifId: n.id, type: meta.type, category: meta.category,
+                    unread: !n.is_read, title: n.title,
+                    subtitle: n.message || (n.vehicle_matricule ? `Matricule ${n.vehicle_matricule}` : ''),
+                    date: n.created_at, icon: meta.icon, color: meta.color,
+                    link: n.contract ? `/contracts/edit/${n.contract}` : (n.vehicle ? `/vehicles/edit/${n.vehicle}` : '/dashboard'),
                 });
             });
 
-            // 3. Technical Visit Alerts
-            (alerts.visite_expiring || []).forEach(vis => {
-                items.push({
-                    id: `vis-${vis.id}`,
-                    type: 'TECHNICAL',
-                    category: 'Visite Technique',
-                    title: `Visite technique à prévoir : ${vis.marque || 'Véhicule'}`,
-                    subtitle: `Matricule ${vis.matricule} — Date : ${vis.date_visite_technique}`,
-                    date: vis.date_visite_technique,
-                    icon: 'build',
-                    color: 'bg-warning-bg text-warning-dark ring-warning-bg',
-                    link: `/vehicles/edit/${vis.id}`,
-                });
-            });
-
+            items.sort((x, y) => new Date(y.date || 0) - new Date(x.date || 0));
             setNotifications(items);
-            if (onCountChange) onCountChange(items.length);
+            if (onCountChange) onCountChange(items.filter(i => i.unread).length);
         } catch (err) {
             console.error("Erreur lors de la récupération des notifications", err);
+            toast.error("Impossible de charger les notifications.");
         } finally {
             setLoading(false);
         }
     }, [onCountChange]);
+
+    const markRead = async (item) => {
+        if (!item.notifId || !item.unread) return;
+        try {
+            await api.post(`notifications/${item.notifId}/mark_read/`);
+            const next = notifications.map(n => (n.id === item.id ? { ...n, unread: false } : n));
+            setNotifications(next);
+            if (onCountChange) onCountChange(next.filter(n => n.unread).length);
+        } catch (err) {
+            console.error("Erreur mark_read", err);
+        }
+    };
+
+    const markAllRead = async () => {
+        try {
+            await api.post('notifications/mark_all_read/');
+            await fetchNotifications();
+        } catch (err) {
+            console.error("Erreur mark_all_read", err);
+            toast.error("Action impossible.");
+        }
+    };
+
+    const refreshAlerts = async () => {
+        try {
+            await api.post('notifications/refresh/');
+        } catch (err) {
+            console.error("Erreur refresh alertes", err);
+        }
+        await fetchNotifications();
+    };
 
     useEffect(() => {
         fetchNotifications();
@@ -124,7 +133,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
 
     const filteredItems = notifications.filter(item => {
         if (filterTab === 'REQUESTS') return item.type === 'REQUEST';
-        if (filterTab === 'ALERTS') return item.type === 'INSURANCE' || item.type === 'TECHNICAL';
+        if (filterTab === 'ALERTS') return item.type !== 'REQUEST';
         return true;
     });
 
@@ -141,7 +150,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                         </div>
                         <div>
                             <h3 className="text-lg font-extrabold text-slate-900">Centre de Notifications</h3>
-                            <p className="text-xs text-slate-500 font-medium">{notifications.length} alerte{notifications.length !== 1 ? 's' : ''} en temps réel</p>
+                            <p className="text-xs text-slate-500 font-medium">{notifications.filter(n => n.unread).length} non lue{notifications.filter(n => n.unread).length !== 1 ? 's' : ''}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
@@ -201,6 +210,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                             <div
                                 key={item.id}
                                 onClick={() => {
+                                    markRead(item);
                                     onClose();
                                     navigate(item.link);
                                 }}
@@ -218,7 +228,9 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                                             </span>
                                         )}
                                     </div>
-                                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-primary transition-colors mt-0.5">{item.title}</h4>
+                                    <h4 className={`text-xs text-slate-900 group-hover:text-primary transition-colors mt-0.5 ${item.unread ? 'font-extrabold' : 'font-medium opacity-70'}`}>
+                                        {item.unread && <span className="inline-block w-2 h-2 rounded-full bg-primary mr-1.5 align-middle" />}{item.title}
+                                    </h4>
                                     <p className="text-xs text-slate-500 font-medium mt-1 truncate">{item.subtitle}</p>
                                 </div>
                                 <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg self-center">chevron_right</span>
@@ -230,10 +242,16 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                 {/* Footer Action */}
                 <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3">
                     <button
-                        onClick={fetchNotifications}
+                        onClick={markAllRead}
                         className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
-                        <span className="material-symbols-outlined text-sm">refresh</span> Actualiser les notifications
+                        <span className="material-symbols-outlined text-sm">done_all</span> Tout marquer lu
+                    </button>
+                    <button
+                        onClick={refreshAlerts}
+                        className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <span className="material-symbols-outlined text-sm">refresh</span> Actualiser
                     </button>
                 </div>
             </div>

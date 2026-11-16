@@ -4,6 +4,7 @@ import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstants';
+import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
 import { optimizeImageFile } from '../utils/imageUtils';
 
 const EditClient = () => {
@@ -46,31 +47,9 @@ const EditClient = () => {
 
     const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? 'Champ requis' : '');
 
-    const UNIQUE_FIELDS = {
-        cin_passport: 'CIN/passeport',
-        email: 'email',
-        telephone: 'téléphone',
-        permis_conduite: 'permis de conduire',
-    };
-
     const checkUnique = async (field, value) => {
-        if (!value || !value.trim()) {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-            return;
-        }
-        try {
-            const res = await api.get('clients/check-unique/', {
-                params: { field, value: value.trim(), exclude_id: id }
-            });
-            setUniqueErrors(prev => ({
-                ...prev,
-                [field]: res.data.available === false
-                    ? `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`
-                    : false
-            }));
-        } catch (err) {
-            setUniqueErrors(prev => ({ ...prev, [field]: false }));
-        }
+        const available = await apiCheckUnique({ field, value, excludeId: id });
+        setUniqueErrors(prev => ({ ...prev, [field]: available ? false : UNIQUE_MSG(field) }));
     };
 
     const handleBlurUnique = (field) => (e) => {
@@ -141,15 +120,11 @@ const EditClient = () => {
         for (const field of Object.keys(UNIQUE_FIELDS)) {
             const val = formData[field];
             if (val && val.trim()) {
-                try {
-                    const res = await api.get('clients/check-unique/', { params: { field, value: val.trim(), exclude_id: id } });
-                    if (res.data.available === false) {
-                        setUniqueErrors(prev => ({ ...prev, [field]: `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.` }));
-                        toast.error(`Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`);
-                        return;
-                    }
-                } catch (err) {
-                    console.error("Erreur vérification unicité", err);
+                const available = await apiCheckUnique({ field, value: val, excludeId: id });
+                if (!available) {
+                    setUniqueErrors(prev => ({ ...prev, [field]: UNIQUE_MSG(field) }));
+                    toast.error(UNIQUE_MSG(field));
+                    return;
                 }
             }
         }

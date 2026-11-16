@@ -1,7 +1,8 @@
 import React from 'react';
 import { resolveImage } from '../../imageUrl';
 import { normalizeVehicleStatut } from '../../utils/vehicleStatus';
-import InfoModal, { Row, Section, fmt, fmtNum, fmtDate, OUI_NON } from './InfoModal';
+import { fmt, fmtNum, fmtDate, OUI_NON } from '../../utils/formatters';
+import InfoModal, { Row, Section } from './InfoModal';
 
 const VehicleInfoModal = ({ isOpen, vehicle, onClose }) => {
     if (!isOpen || !vehicle) return null;
