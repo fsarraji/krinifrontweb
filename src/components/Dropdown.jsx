@@ -1,8 +1,13 @@
-import React from 'react';
-import Select from 'react-select';
+import React, { forwardRef } from 'react';
+import { MultiSelector, Selector } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
 
-const Dropdown = ({
+// Liste déroulante (Selector / MultiSelector Astryx). API historique, basée sur les valeurs :
+//   options [{ value, label }], value (scalaire, ou tableau si isMulti), onChange(value, option),
+//   placeholder, isSearchable, isClearable, isDisabled, isMulti.
+// Les valeurs d'origine (nombres compris) sont conservées : Astryx manipule des chaînes, on retrouve
+// l'option d'origine au changement. Props propres à react-select (styles, classNamePrefix…) ignorées.
+const Dropdown = forwardRef(function Dropdown({
     options,
     value,
     onChange,
@@ -10,89 +15,58 @@ const Dropdown = ({
     isSearchable = false,
     isClearable = false,
     isDisabled = false,
+    isMulti = false,
+    noOptionsMessage,
     className,
-    classNamePrefix = 'react-select',
-    styles,
-    ...rest
-}) => {
+    name,
+    label,
+    description,
+    status,
+    isRequired,
+    'aria-label': ariaLabel,
+}, ref) {
     const { t } = useI18n();
-    const selected = Array.isArray(options) && value !== undefined && value !== null && value !== ''
-        ? options.find(o => String(o.value) === String(value)) || null
-        : null;
+    const list = Array.isArray(options) ? options : [];
+    const items = list.map((o) => ({ value: String(o.value), label: String(o.label ?? o.value) }));
+    const byString = new Map(list.map((o) => [String(o.value), o]));
+    const common = {
+        ref,
+        label: label || ariaLabel || placeholder || ' ',
+        isLabelHidden: !label,
+        description,
+        status,
+        isRequired,
+        isDisabled,
+        className,
+        htmlName: name,
+        options: items,
+        hasSearch: isSearchable,
+        placeholder: placeholder ?? t('u.slectionner'),
+        emptyText: noOptionsMessage ? noOptionsMessage() : t('u.aucune_option'),
+    };
 
+    if (isMulti) {
+        return (
+            <MultiSelector
+                {...common}
+                value={(Array.isArray(value) ? value : []).map(String)}
+                onChange={(vals) => onChange?.(vals.map((v) => byString.get(v)?.value ?? v))}
+            />
+        );
+    }
+    const hasValue = value !== undefined && value !== null && value !== '';
     return (
-        <Select
-            options={options || []}
-            value={selected}
-            onChange={(opt) => { if (onChange) onChange(opt ? opt.value : ''); }}
-            placeholder={placeholder ?? t('u.slectionner')}
-            noOptionsMessage={() => t('u.aucune_option')}
-            isSearchable={isSearchable}
-            isClearable={isClearable}
-            isDisabled={isDisabled}
-            className={className}
-            classNamePrefix={classNamePrefix}
-            menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
-            menuPosition="fixed"
-            styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                control: (base, state) => ({
-                    ...base,
-                    backgroundColor: 'var(--card-white)',
-                    border: '1px solid var(--stroke)',
-                    boxShadow: state.isFocused ? '0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent)' : 'none',
-                    borderColor: state.isFocused ? 'var(--color-accent)' : 'var(--stroke)',
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                    padding: '0 4px',
-                    cursor: 'pointer',
-                    minHeight: '42px',
-                    '&:hover': { borderColor: 'var(--text-disabled)' }
-                }),
-                menu: (base) => ({
-                    ...base,
-                    borderRadius: '0.5rem',
-                    boxShadow: 'var(--shadow-med)',
-                    border: '1px solid var(--stroke)',
-                    backgroundColor: 'var(--card-white)',
-                    overflow: 'hidden'
-                }),
-                option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.isFocused ? 'var(--surface-active)' : 'var(--card-white)',
-                    color: state.isSelected ? 'var(--primary)' : 'var(--on-surface)',
-                    fontWeight: state.isSelected || state.isFocused ? '600' : '400',
-                    fontSize: '0.875rem',
-                    cursor: 'pointer',
-                    padding: '10px 14px'
-                }),
-                placeholder: (base) => ({
-                    ...base,
-                    color: 'var(--text-disabled)'
-                }),
-                singleValue: (base) => ({
-                    ...base,
-                    fontWeight: '600',
-                    color: 'var(--on-surface)'
-                }),
-                indicatorSeparator: (base) => ({
-                    ...base,
-                    backgroundColor: 'var(--stroke)'
-                }),
-                dropdownIndicator: (base) => ({
-                    ...base,
-                    color: 'var(--text-muted)',
-                    cursor: 'pointer'
-                }),
-                clearIndicator: (base) => ({
-                    ...base,
-                    cursor: 'pointer'
-                }),
-                ...styles
+        <Selector
+            {...common}
+            value={hasValue ? String(value) : ''}
+            hasClear={isClearable}
+            onChange={(v) => {
+                const option = v ? byString.get(v) : undefined;
+                onChange?.(option ? option.value : '', option);
             }}
-            {...rest}
         />
     );
-};
+});
+Dropdown.isAstryxControl = true;
 
 export default Dropdown;

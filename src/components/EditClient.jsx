@@ -1,4 +1,9 @@
 import { tNow } from '../i18n/runtime';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
+import { formatDate, formatMoney } from '../utils/formatters';
+import StatusBadge from './ui/StatusBadge';
+import Table from './ui/Table';
+import { Input, Select, Textarea } from './ui/Input';
 import { apiErrorText } from '../utils/apiErrorText';
 import { translateOr } from '../i18n/helpers';
 import React, { useState, useEffect } from 'react';
@@ -186,12 +191,6 @@ const EditClient = () => {
     const totalSpent = contracts.reduce((sum, c) => sum + parseFloat(c.montant_total || 0), 0);
     const rentalCount = contracts.length;
 
-    const fieldClass = (name) => `field transition-all duration-200 ${
-        hasError(name)
-            ? 'border-rose-400 bg-rose-50/40 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500'
-            : 'focus:bg-white'
-    }`;
-
     return (
         <div className="w-full px-4 py-6">
             {/* Breadcrumb + header */}
@@ -230,7 +229,7 @@ const EditClient = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label className="label">{t('u.prnom')}</label>
-                                <input name="prenom" value={formData.prenom || ''} onChange={handleChange} className={fieldClass('prenom')} type="text" />
+                                <Input invalid={hasError('prenom')} name="prenom" value={formData.prenom || ''} onChange={handleChange} type="text" />
                                 {fieldErrorMsg('prenom') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                         <span className="material-symbols-outlined text-[13px]">error</span>
@@ -240,7 +239,7 @@ const EditClient = () => {
                             </div>
                             <div>
                                 <label className="label">{t('u.nom')}</label>
-                                <input name="nom" value={formData.nom || ''} onChange={handleChange} className={fieldClass('nom')} type="text" />
+                                <Input invalid={hasError('nom')} name="nom" value={formData.nom || ''} onChange={handleChange} type="text" />
                                 {fieldErrorMsg('nom') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                         <span className="material-symbols-outlined text-[13px]">error</span>
@@ -250,7 +249,7 @@ const EditClient = () => {
                             </div>
                             <div>
                                 <label className="label">{cinLabelFor(formData.nationalite)}</label>
-                                <input name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} onBlur={handleBlurUnique('cin_passport')} className={fieldClass('cin_passport')} type="text" />
+                                <Input invalid={hasError('cin_passport')} name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} onBlur={handleBlurUnique('cin_passport')} type="text" />
                                 {fieldErrorMsg('cin_passport') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                         <span className="material-symbols-outlined text-[13px]">error</span>
@@ -260,7 +259,7 @@ const EditClient = () => {
                             </div>
                             <div>
                                 <label className="label">{t('u.adresse_email')}</label>
-                                <input name="email" value={formData.email || ''} onChange={handleChange} onBlur={handleBlurUnique('email')} className={fieldClass('email')} type="email" />
+                                <Input invalid={hasError('email')} name="email" value={formData.email || ''} onChange={handleChange} onBlur={handleBlurUnique('email')} type="email" />
                                 {fieldErrorMsg('email') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                         <span className="material-symbols-outlined text-[13px]">error</span>
@@ -270,7 +269,7 @@ const EditClient = () => {
                             </div>
                             <div>
                                 <label className="label">{t('u.numro_de_tlphone')}</label>
-                                <input name="telephone" value={formData.telephone || ''} onChange={handleChange} onBlur={handleBlurUnique('telephone')} className={fieldClass('telephone')} type="tel" />
+                                <Input invalid={hasError('telephone')} name="telephone" value={formData.telephone || ''} onChange={handleChange} onBlur={handleBlurUnique('telephone')} type="tel" />
                                 {fieldErrorMsg('telephone') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                         <span className="material-symbols-outlined text-[13px]">error</span>
@@ -280,49 +279,34 @@ const EditClient = () => {
                             </div>
                             <div>
                                 <label className="label">{t('u.sexe')}</label>
-                                <div className="flex gap-3">
-                                    {SEXE_OPTIONS.map(opt => (
-                                        <label
-                                            key={opt.value}
-                                            className="flex-1 flex items-center gap-2.5 px-4 py-2.5 rounded-lg border cursor-pointer transition-all duration-200"
-                                            style={{
-                                                borderColor: formData.sexe === opt.value ? 'var(--primary-container)' : 'var(--stroke)',
-                                                background: formData.sexe === opt.value ? 'var(--info-bg)' : 'var(--slate-bg)'
-                                            }}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="sexe"
-                                                value={opt.value}
-                                                checked={formData.sexe === opt.value}
-                                                onChange={handleChange}
-                                                className="accent-[var(--primary-container)]"
-                                            />
-                                            <span className="text-sm font-semibold" style={{ color: 'var(--on-surface)' }}>{translateOr(t, `sexe.${opt.value}`, opt.label)}</span>
-                                        </label>
-                                    ))}
+                                <div className="w-fit">
+                                    <SegmentedControl label={t('u.sexe')} value={formData.sexe} onChange={(value) => handleChange({ target: { name: 'sexe', value } })}>
+                                        {SEXE_OPTIONS.map((opt) => (
+                                            <SegmentedControlItem key={opt.value} value={opt.value} label={translateOr(t, `sexe.${opt.value}`, opt.label)} />
+                                        ))}
+                                    </SegmentedControl>
                                 </div>
                             </div>
                             <div>
                                 <label className="label">{t('u.nationalit')}</label>
-                                <select name="nationalite" value={formData.nationalite || ''} onChange={handleChange} className={fieldClass('nationalite')}>
+                                <Select invalid={hasError('nationalite')} name="nationalite" value={formData.nationalite || ''} onChange={handleChange}>
                                     <option value="">{t('u.slectionner_2')}</option>
                                     {NATIONALITES.map(n => (
                                         <option key={n} value={n}>{translateOr(t, `nat.${n}`, n)}</option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                             <div>
                                 <label className="label">{t('u.ville')}</label>
-                                <input name="ville" value={formData.ville || ''} onChange={handleChange} className={fieldClass('ville')} type="text" />
+                                <Input invalid={hasError('ville')} name="ville" value={formData.ville || ''} onChange={handleChange} type="text" />
                             </div>
                             <div>
                                 <label className="label">{t('u.pays')}</label>
-                                <input name="pays" value={formData.pays || ''} onChange={handleChange} className={fieldClass('pays')} type="text" />
+                                <Input invalid={hasError('pays')} name="pays" value={formData.pays || ''} onChange={handleChange} type="text" />
                             </div>
                             <div className="sm:col-span-2">
                                 <label className="label">{t('u.adresse')}</label>
-                                <input name="adresse" value={formData.adresse || ''} onChange={handleChange} className={fieldClass('adresse')} type="text" />
+                                <Input invalid={hasError('adresse')} name="adresse" value={formData.adresse || ''} onChange={handleChange} type="text" />
                                 {fieldErrorMsg('adresse') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                         <span className="material-symbols-outlined text-[13px]">error</span>
@@ -343,7 +327,7 @@ const EditClient = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <label className="label">{t('u.n_de_permis')}</label>
-                                        <input name="permis_conduite" value={formData.permis_conduite || ''} onChange={handleChange} onBlur={handleBlurUnique('permis_conduite')} className={fieldClass('permis_conduite')} type="text" />
+                                        <Input invalid={hasError('permis_conduite')} name="permis_conduite" value={formData.permis_conduite || ''} onChange={handleChange} onBlur={handleBlurUnique('permis_conduite')} type="text" />
                                         {fieldErrorMsg('permis_conduite') && (
                                             <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                                 <span className="material-symbols-outlined text-[13px]">error</span>
@@ -353,7 +337,7 @@ const EditClient = () => {
                                     </div>
                                     <div>
                                         <label className="label">{t('u.date_de_dlivrance')}</label>
-                                        <input name="date_delivrance_permis" value={formData.date_delivrance_permis || ''} onChange={handleChange} className={fieldClass('date_delivrance_permis')} type="date" />
+                                        <Input invalid={hasError('date_delivrance_permis')} name="date_delivrance_permis" value={formData.date_delivrance_permis || ''} onChange={handleChange} type="date" />
                                     </div>
                                     <div>
                                         <label className="label">{t('u.scan_du_permis')}</label>
@@ -382,7 +366,7 @@ const EditClient = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <label className="label">{t('u.n_de_document')}</label>
-                                        <input name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} className={fieldClass('cin_passport')} type="text" />
+                                        <Input invalid={hasError('cin_passport')} name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} type="text" />
                                     </div>
                                     <div>
                                         <label className="label">{t('u.scan_d_identit')}</label>
@@ -405,52 +389,27 @@ const EditClient = () => {
                         </div>
 
                     {/* Section 3: Rental History */}
-                    <div className="overflow-x-auto">
-                            <table className="w-full text-start">
-                                <thead>
-                                    <tr className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                        <th className="pb-4 px-2">{t('u.vhicule')}</th>
-                                        <th className="pb-4 px-2">{t('u.priode')}</th>
-                                        <th className="pb-4 px-2 text-end">{t('u.revenu')}</th>
-                                        <th className="pb-4 px-2 text-end">{t('u.statut')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm">
-                                    {contracts.slice(0, 5).map(contract => (
-                                        <tr key={contract.id} className="hover:bg-white transition-colors" style={{ borderTop: '1px solid var(--stroke)' }}>
-                                            <td className="py-4 px-2">
-                                                <span className="font-semibold" style={{ color: 'var(--on-surface)' }}>{contract.vehicle_name}</span>
-                                            </td>
-                                            <td className="py-4 px-2">
-                                                <p className="text-xs" style={{ color: 'var(--on-surface)' }}>
-                                                    {contract.formatted_dates?.range || `${new Date(contract.date_sortie).toLocaleDateString()} - ${new Date(contract.date_retour_prevue).toLocaleDateString()}`}
-                                                </p>
-                                                <p className="text-[10px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{contract.jours} Jours</p>
-                                            </td>
-                                            <td className="py-4 px-2 text-end font-bold" style={{ color: 'var(--primary-container)' }}>{contract.montant_total} MAD</td>
-                                            <td className="py-4 px-2 text-end">
-                                                <span className="text-[10px] px-2 py-1 rounded font-bold" style={
-                                                    contract.statut === 'TERMINE'
-                                                        ? { background: 'var(--slate-bg)', color: 'var(--secondary)' }
-                                                        : contract.statut === 'EN_COURS'
-                                                            ? { background: 'var(--success-bg)', color: 'var(--success)' }
-                                                            : { background: 'var(--info-bg)', color: 'var(--primary-container)' }
-                                                }>
-                                                    {contract.statut}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {contracts.length === 0 && (
-                                        <tr>
-                                            <td colSpan="4" className="py-8 text-center italic" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {t('u.aucun_contrat_trouv_pour_ce_clie')}
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                    <Table
+                        caption={t('u.historique')}
+                        rows={contracts.slice(0, 5)}
+                        emptyTitle={t('u.aucun_contrat_trouv_pour_ce_clie')}
+                        columns={[
+                            { key: 'vehicle_name', label: t('u.vhicule'), className: 'font-semibold' },
+                            {
+                                key: 'formatted_dates', label: t('u.priode'),
+                                render: (_, contract) => (
+                                    <div>
+                                        <p className="text-xs">
+                                            {contract.formatted_dates?.range || `${formatDate(contract.date_sortie)} - ${formatDate(contract.date_retour_prevue)}`}
+                                        </p>
+                                        <p className="text-label-sm font-normal text-text-muted">{t('contracts.days', { n: contract.jours })}</p>
+                                    </div>
+                                ),
+                            },
+                            { key: 'montant_total', label: t('u.revenu'), align: 'right', className: 'font-bold', render: (v) => formatMoney(v) },
+                            { key: 'statut', label: t('u.statut'), align: 'right', render: (v) => <StatusBadge status={v} /> },
+                        ]}
+                    />
                 </form>
 
                 {/* Right Column: Sidebar */}
@@ -498,14 +457,14 @@ const EditClient = () => {
                     {/* Internal Notes */}
                     <div className="card shadow-l1 p-6">
                         <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>{t('u.notes_de_gestion_interne')}</h3>
-                        <textarea
+                        <Textarea invalid={hasError('remarques')}
                             name="remarques"
                             value={formData.remarques || ''}
                             onChange={handleChange}
-                            className="field resize-none"
+                           
                             placeholder={t('u.ajoutez_des_notes_confidentielle')}
                             rows="4"
-                        ></textarea>
+                        ></Textarea>
                     </div>
 
                     {/* Blacklist Toggle */}
@@ -543,15 +502,7 @@ const EditClient = () => {
                         <p className="text-xs mb-6" style={{ color: 'var(--danger)', opacity: 0.7 }}>
                             {t('u.la_suppression_d_un_client_archi')}
                         </p>
-                        <button
-                            onClick={handleDelete}
-                            className="w-full py-3 font-bold text-xs rounded-lg transition-all"
-                            style={{ background: '#fff', color: 'var(--danger)', border: '1px solid var(--danger)', fontWeight: 700 }}
-                            onMouseOver={(e) => { e.currentTarget.style.background = 'var(--danger)'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = 'var(--danger)'; }}
-                        >
-                            {t('u.supprimer_le_profil_client')}
-                        </button>
+                        <Button variant="danger" icon="delete" className="w-full" onClick={handleDelete}>{t('u.supprimer_le_profil_client')}</Button>
                     </div>
                 </div>
             </div>

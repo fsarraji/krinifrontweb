@@ -1,27 +1,27 @@
 import { tNow } from '../i18n/runtime';
+import { Switch } from '@astryxdesign/core';
+import Button from './ui/Button';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
+import { Input, Textarea } from './ui/Input';
 import GeofenceManager from './GeofenceManager';
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
+import Dropdown from './Dropdown';
 import api from '../api';
 import { formatMoney } from '../utils/formatters';
 import { jwtDecode } from 'jwt-decode';
 import { optimizeImageFile } from '../utils/imageUtils';
 import { useI18n } from '../i18n/context';
 
-const ToggleSwitch = ({ checked, onChange, disabled }) => (
-    <label className="relative inline-flex items-center cursor-pointer">
-        <input
-            type="checkbox"
-            className="sr-only peer"
-            checked={checked}
-            onChange={onChange}
-            disabled={disabled}
-        />
-        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"></div>
-    </label>
+// Interrupteur Astryx ; onChange reçoit un pseudo-événement ({ target: { checked } }) comme avant.
+const ToggleSwitch = ({ checked, onChange, disabled, label }) => (
+    <Switch
+        label={label || ' '}
+        isLabelHidden
+        value={Boolean(checked)}
+        isDisabled={disabled}
+        onChange={(next) => onChange({ target: { checked: next } })}
+    />
 );
-
-const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-500";
 
 const fieldLabel = "block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2";
 
@@ -247,21 +247,6 @@ const Settings = () => {
         </div>
     );
 
-    const TabButton = ({ tabKey, icon, label }) => (
-        <button
-            type="button"
-            onClick={() => setActiveTab(tabKey)}
-            className={`px-5 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2.5 ${
-                activeTab === tabKey
-                    ? 'text-slate-900 bg-white rounded-lg shadow-sm ring-1 ring-slate-200/50'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-            }`}
-        >
-            <span className="material-symbols-outlined text-lg">{icon}</span>
-            {label}
-        </button>
-    );
-
     const Message = ({ msg }) =>
         msg.text ? (
             <div className={`p-4 rounded-xl border font-semibold flex items-center gap-3 ${msg.type === 'success' ? 'bg-success-bg border-success-border text-success-dark' : 'bg-danger-bg border-danger-border text-danger-dark'}`}>
@@ -282,8 +267,10 @@ const Settings = () => {
 
             {/* Tabs */}
             <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
-                <TabButton tabKey="agency" icon="storefront" label={t('u.agence')} />
-                <TabButton tabKey="account" icon="person" label={t('u.compte')} />
+                <SegmentedControl label={t('u.configuration')} value={activeTab} onChange={setActiveTab}>
+                    <SegmentedControlItem value="agency" label={t('u.agence')} icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>storefront</span>} />
+                    <SegmentedControlItem value="account" label={t('u.compte')} icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>person</span>} />
+            </SegmentedControl>
             </div>
 
             {activeTab === 'agency' ? (
@@ -295,50 +282,50 @@ const Settings = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className={fieldLabel}>{t('u.nom_de_l_agence')}</label>
-                                <input type="text" value={settings.nom_agence} disabled className={inputClass} />
+                                <Input type="text" value={settings.nom_agence} disabled />
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.email')}</label>
-                                <input
+                                <Input
                                     type="email"
                                     value={settings.email}
                                     onChange={(e) => setSettings({ ...settings, email: e.target.value })}
                                     disabled={!isOwner || saving}
                                     placeholder="contact@agence.com"
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.tlphone')}</label>
-                                <input
+                                <Input
                                     type="tel"
                                     value={settings.telephone}
                                     onChange={(e) => setSettings({ ...settings, telephone: e.target.value })}
                                     disabled={!isOwner || saving}
                                     placeholder="06 00 00 00 00"
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.ville')}</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={settings.ville}
                                     onChange={(e) => setSettings({ ...settings, ville: e.target.value })}
                                     disabled={!isOwner || saving}
                                     placeholder="Casablanca"
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                             <div className="md:col-span-2">
                                 <label className={fieldLabel}>{t('u.adresse')}</label>
-                                <textarea
+                                <Textarea
                                     rows={2}
                                     value={settings.adresse}
                                     onChange={(e) => setSettings({ ...settings, adresse: e.target.value })}
                                     disabled={!isOwner || saving}
                                     placeholder={t('u.adresse_complte_de_l_agence')}
-                                    className={`${inputClass} resize-none`}
+                                   
                                 />
                             </div>
                         </div>
@@ -362,12 +349,12 @@ const Settings = () => {
                             <label className={fieldLabel}>{t('u.montant_de_la_caution_mad')}</label>
                             <div className="relative">
                                 <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">MAD</span>
-                                <input
+                                <Input
                                     type="number" min="0" step="100"
                                     value={settings.caution_montant}
                                     onChange={(e) => setSettings({ ...settings, caution_montant: e.target.value })}
                                     disabled={!isOwner || saving || !settings.caution_active}
-                                    className={`${inputClass} ps-12`}
+                                   
                                 />
                             </div>
                         </div>
@@ -379,12 +366,12 @@ const Settings = () => {
                             <label className={fieldLabel}>{t('u.taux_de_tva')}</label>
                             <div className="relative">
                                 <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
-                                <input
+                                <Input
                                     type="number" min="0" max="100" step="0.01"
                                     value={settings.tva_rate}
                                     onChange={(e) => setSettings({ ...settings, tva_rate: e.target.value })}
                                     disabled={!isOwner || saving}
-                                    className={`${inputClass} ps-12`}
+                                   
                                 />
                             </div>
                             <p className="text-xs text-slate-500 mt-2">{t('u.n_affecte_que_les_nouvelles_fact')}</p>
@@ -410,12 +397,12 @@ const Settings = () => {
                                 <label className={fieldLabel}>{t('u.km_inclus_par_jour')}</label>
                                 <div className="relative">
                                     <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">KM</span>
-                                    <input
+                                    <Input
                                         type="number" min="0" step="10"
                                         value={settings.km_par_jour}
                                         onChange={(e) => setSettings({ ...settings, km_par_jour: e.target.value })}
                                         disabled={!isOwner || saving || !settings.km_extra_active}
-                                        className={`${inputClass} ps-12`}
+                                       
                                     />
                                 </div>
                                 <p className="text-xs text-slate-400 mt-1.5 ms-1">{t('u.dfaut_recommand_250_km_jour')}</p>
@@ -424,12 +411,12 @@ const Settings = () => {
                                 <label className={fieldLabel}>{t('u.tarif_par_km_supplmentaire_mad')}</label>
                                 <div className="relative">
                                     <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">MAD</span>
-                                    <input
+                                    <Input
                                         type="number" min="0" step="0.5"
                                         value={settings.km_tarif_extra_defaut}
                                         onChange={(e) => setSettings({ ...settings, km_tarif_extra_defaut: e.target.value })}
                                         disabled={!isOwner || saving || !settings.km_extra_active}
-                                        className={`${inputClass} ps-12`}
+                                       
                                     />
                                 </div>
                                 <p className="text-xs text-slate-400 mt-1.5 ms-1">{t('u.tarif_par_dfaut_pour_tous_les_vh')}</p>
@@ -468,7 +455,7 @@ const Settings = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                             <div>
                                 <label className={fieldLabel}>{t('u.url_du_serveur')}</label>
-                                <input
+                                <Input
                                     type="url"
                                     value={settings.traccar_url}
                                     onChange={(e) => setSettings(prev => ({ ...prev, traccar_url: e.target.value }))}
@@ -479,7 +466,7 @@ const Settings = () => {
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.utilisateur')}</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={settings.traccar_username}
                                     onChange={(e) => setSettings(prev => ({ ...prev, traccar_username: e.target.value }))}
@@ -490,7 +477,7 @@ const Settings = () => {
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.mot_de_passe')}</label>
-                                <input
+                                <Input
                                     type="password"
                                     value={traccarPassword}
                                     onChange={(e) => setTraccarPassword(e.target.value)}
@@ -521,40 +508,16 @@ const Settings = () => {
                         {allBrands.length === 0 ? (
                             <p className="text-sm text-slate-400">{t('u.aucune_marque_disponible')}</p>
                         ) : (
-                            <Select
+                            <Dropdown
                                 isMulti
                                 isSearchable
-                                isClearable
                                 options={allBrands.map(b => ({ value: String(b.id), label: b.name }))}
-                                value={allBrands
-                                    .filter(b => selectedBrands.includes(String(b.id)))
-                                    .map(b => ({ value: String(b.id), label: b.name }))}
-                                onChange={(selected) => setSelectedBrands((selected || []).map(o => o.value))}
+                                value={selectedBrands}
+                                onChange={(vals) => setSelectedBrands((vals || []).map(String))}
                                 isDisabled={!isOwner || saving}
                                 placeholder={t('u.rechercher_et_slectionner_les_ma')}
                                 noOptionsMessage={() => t('u.aucune_marque')}
-                                className="text-sm"
-                                classNamePrefix="react-select"
-                                styles={{
-                                    control: (base) => ({
-                                        ...base,
-                                        backgroundColor: 'var(--card-white)',
-                                        borderColor: 'var(--stroke)',
-                                        borderRadius: '0.75rem',
-                                        fontSize: '0.875rem',
-                                        padding: '2px 4px',
-                                        minHeight: '46px',
-                                    }),
-                                    multiValue: (base) => ({
-                                        ...base,
-                                        backgroundColor: 'var(--surface-active)',
-                                        borderRadius: '8px',
-                                    }),
-                                    multiValueLabel: (base) => ({ ...base, color: 'var(--primary)', fontWeight: '600' }),
-                                    multiValueRemove: (base) => ({ ...base, color: 'var(--primary)', ':hover': { backgroundColor: 'var(--primary-light)', color: 'var(--primary)' } }),
-                                    menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden', zIndex: 9999 }),
-                                    placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
-                                }}
+                                aria-label={t('u.marques_affiches')}
                             />
                         )}
                         {selectedBrands.length > 0 && (
@@ -666,17 +629,7 @@ const Settings = () => {
                     {/* Save button */}
                     {isOwner && (
                         <div className="flex justify-end pt-2">
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {saving ? (
-                                    <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> {t('u.sauvegarde_en_cours')}</>
-                                ) : (
-                                    <><span className="material-symbols-outlined text-sm">save</span> {t('u.enregistrer_toutes_les_modificat')}</>
-                                )}
-                            </button>
+                            <Button type="submit" icon="save" loading={saving}>{saving ? t('u.sauvegarde_en_cours') : t('u.enregistrer_toutes_les_modificat')}</Button>
                         </div>
                     )}
                 </form>
@@ -689,42 +642,42 @@ const Settings = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className={fieldLabel}>{t('u.nom_d_utilisateur')}</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={account.username}
                                     onChange={(e) => setAccount({ ...account, username: e.target.value })}
                                     placeholder={t('u.nom_d_utilisateur')}
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.email')}</label>
-                                <input
+                                <Input
                                     type="email"
                                     value={account.email}
                                     onChange={(e) => setAccount({ ...account, email: e.target.value })}
                                     placeholder="email@exemple.com"
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.prnom')}</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={account.first_name}
                                     onChange={(e) => setAccount({ ...account, first_name: e.target.value })}
                                     placeholder={t('u.prnom')}
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.nom')}</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={account.last_name}
                                     onChange={(e) => setAccount({ ...account, last_name: e.target.value })}
                                     placeholder={t('u.nom')}
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                         </div>
@@ -735,22 +688,22 @@ const Settings = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className={fieldLabel}>{t('u.mot_de_passe_actuel')}</label>
-                                <input
+                                <Input
                                     type="password"
                                     value={passwordForm.current_password}
                                     onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
                                     placeholder={t('u.mot_de_passe_actuel')}
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                             <div>
                                 <label className={fieldLabel}>{t('u.nouveau_mot_de_passe')}</label>
-                                <input
+                                <Input
                                     type="password"
                                     value={passwordForm.new_password}
                                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
                                     placeholder={t('u.nouveau_mot_de_passe')}
-                                    className={inputClass}
+                                   
                                 />
                             </div>
                         </div>
@@ -758,17 +711,7 @@ const Settings = () => {
 
                     {/* Save button */}
                     <div className="flex justify-end pt-2">
-                        <button
-                            type="submit"
-                            disabled={accountSaving}
-                            className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            {accountSaving ? (
-                                <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> {t('u.sauvegarde_en_cours')}</>
-                            ) : (
-                                <><span className="material-symbols-outlined text-sm">save</span> {t('u.enregistrer_le_compte')}</>
-                            )}
-                        </button>
+                        <Button type="submit" icon="save" loading={accountSaving}>{accountSaving ? t('u.sauvegarde_en_cours') : t('u.enregistrer_le_compte')}</Button>
                     </div>
                 </form>
             )}

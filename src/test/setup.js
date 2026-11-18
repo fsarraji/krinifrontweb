@@ -5,6 +5,12 @@ import { afterEach } from 'vitest';
 // Composants historiques écrits sans import React (JSX classique) : on l'expose pour les tests.
 globalThis.React = React;
 
+// jsdom n'implémente pas matchMedia (utilisé par les composants Astryx : tableau, navigation…).
+window.matchMedia ||= (query) => ({
+    matches: false, media: query, onchange: null,
+    addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false,
+});
+
 // jsdom n'implémente pas <dialog>.showModal()/close() (utilisés par le Dialog Astryx).
 // Le piège de focus, Échap et le clic sur le fond relèvent du navigateur : à vérifier en réel.
 if (typeof HTMLDialogElement !== 'undefined') {

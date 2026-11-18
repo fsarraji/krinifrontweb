@@ -47,7 +47,7 @@ describe('Vehicles page', () => {
     it('renders the grid view without crashing (Link was not imported)', async () => {
         renderPage('fr', <Vehicles />);
         await screen.findByText('Gestion de Flotte');
-        fireEvent.click(screen.getByRole('button', { name: /Grille/ }));
+        fireEvent.click(screen.getByRole('radio', { name: /Grille/ }));
         expect(await screen.findByText(/Gérer le véhicule/)).toBeInTheDocument();
     });
 
@@ -56,7 +56,7 @@ describe('Vehicles page', () => {
         expect(await screen.findByText('إدارة الأسطول')).toBeInTheDocument();
         expect(screen.getByText('إجمالي الأسطول')).toBeInTheDocument();
         expect(screen.getByText('الترقيم')).toBeInTheDocument();
-        expect(screen.getByText('متاحة')).toBeInTheDocument();
+        expect(screen.getAllByText('متاحة').length).toBeGreaterThan(0);
     });
 });
 
@@ -72,7 +72,7 @@ describe('Payments page', () => {
         renderPage('ar', <Payments />);
         expect(await screen.findByText('المدفوعات')).toBeInTheDocument();
         expect(screen.getByText('العقد المرتبط')).toBeInTheDocument();
-        expect(screen.getByText('نقداً')).toBeInTheDocument();
+        expect(screen.getAllByText('نقداً').length).toBeGreaterThan(0);
     });
 
     it('keeps French labels and unknown methods untouched by default', async () => {

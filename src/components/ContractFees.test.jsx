@@ -24,13 +24,13 @@ describe('ContractFees', () => {
 
     it('lists the fees of the contract and requests them by contract id', async () => {
         render(<ContractFees contractId="12" />);
-        expect(await screen.findByText('Retard de restitution')).toBeInTheDocument();
+        expect((await screen.findAllByText('Retard de restitution')).length).toBeGreaterThan(0);
         expect(api.get).toHaveBeenCalledWith('contract-fees/', { params: { contract: '12' } });
     });
 
     it('rejects a zero amount without calling the API', async () => {
         render(<ContractFees contractId="12" />);
-        await screen.findByText('Retard de restitution');
+        await screen.findAllByText('Retard de restitution');
         fireEvent.change(screen.getByPlaceholderText('Ex : 150'), { target: { value: '0' } });
         fireEvent.submit(screen.getByRole('button', { name: 'Ajouter' }).closest('form'));
         expect(await screen.findByText('Le montant doit être supérieur à zéro.')).toBeInTheDocument();
@@ -41,8 +41,10 @@ describe('ContractFees', () => {
         api.post.mockResolvedValue({ data: {} });
         const onChanged = vi.fn();
         render(<ContractFees contractId="12" onChanged={onChanged} />);
-        await screen.findByText('Retard de restitution');
-        fireEvent.change(screen.getByPlaceholderText('Ex : 150'), { target: { value: '75.5' } });
+        await screen.findAllByText('Retard de restitution');
+        const amount = screen.getByPlaceholderText('Ex : 150');
+        fireEvent.change(amount, { target: { value: '75.5' } });
+        fireEvent.blur(amount); // NumberInput Astryx valide la saisie au blur / Entrée
         fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
         await waitFor(() => expect(api.post).toHaveBeenCalled());
         expect(api.post.mock.calls[0][1]).toMatchObject({ contract: 12, kind: 'RETARD', amount: '75.50' });
@@ -52,15 +54,17 @@ describe('ContractFees', () => {
     it('shows the server amount error under the field', async () => {
         api.post.mockRejectedValue({ response: { status: 400, data: { amount: ['Le montant doit être supérieur à zéro.'] } } });
         render(<ContractFees contractId="12" />);
-        await screen.findByText('Retard de restitution');
-        fireEvent.change(screen.getByPlaceholderText('Ex : 150'), { target: { value: '10' } });
+        await screen.findAllByText('Retard de restitution');
+        const amount = screen.getByPlaceholderText('Ex : 150');
+        fireEvent.change(amount, { target: { value: '10' } });
+        fireEvent.blur(amount);
         fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
         expect(await screen.findByText('Le montant doit être supérieur à zéro.')).toBeInTheDocument();
     });
 
     it('hides the delete button for non-owners and shows it for the owner', async () => {
         const { unmount } = render(<ContractFees contractId="12" />);
-        await screen.findByText('Retard de restitution');
+        await screen.findAllByText('Retard de restitution');
         expect(screen.queryByLabelText(/Supprimer le frais/)).toBeNull();
         unmount();
 
@@ -71,7 +75,7 @@ describe('ContractFees', () => {
 
     it('hides the add form when the contract is locked (cancelled)', async () => {
         render(<ContractFees contractId="12" locked />);
-        await screen.findByText('Retard de restitution');
+        await screen.findAllByText('Retard de restitution');
         expect(screen.queryByPlaceholderText('Ex : 150')).toBeNull();
     });
 });

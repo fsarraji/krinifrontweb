@@ -1,73 +1,24 @@
 import React from 'react';
+import { Step, Stepper as AstryxStepper } from '@astryxdesign/core';
 
 /**
- * Stepper réutilisable.
- * Props:
- * - steps: [{ num, label, icon? }]
- * - currentStep: number
- * - onStepClick?: (num) => void (rend les steps cliquables)
+ * Stepper (composant Astryx), API historique.
+ * - steps: [{ num, label, subtitle?, icon? }]  (num commence à 1)
+ * - currentStep: number (1-indexé)
+ * - onStepClick?: (num) => void (rend les étapes cliquables)
  */
-const Stepper = ({ steps, currentStep, onStepClick }) => {
-    const stepState = (num) => {
-        if (currentStep > num) return 'done';
-        if (currentStep === num) return 'active';
-        return 'idle';
-    };
-
-    return (
-        <div className="flex items-center mb-8 overflow-x-auto no-scrollbar">
-            {steps.map((s, i) => {
-                const state = stepState(s.num);
-                const clickable = !!onStepClick;
-                return (
-                    <React.Fragment key={s.num}>
-                        {i > 0 && (
-                            <div
-                                className="step-line mx-2 sm:mx-4 min-w-3"
-                                style={currentStep >= s.num ? { background: 'var(--success)' } : {}}
-                            ></div>
-                        )}
-                        <button
-                            type="button"
-                            onClick={clickable ? () => onStepClick(s.num) : undefined}
-                            disabled={!clickable}
-                            className="flex items-center gap-2.5 shrink-0"
-                            style={{ cursor: clickable ? 'pointer' : 'default' }}
-                        >
-                            <div
-                                className="step-dot text-white"
-                                style={
-                                    state === 'done'
-                                        ? { background: 'var(--success)' }
-                                        : state === 'active'
-                                            ? { background: 'var(--primary-container)' }
-                                            : { background: 'var(--stroke)', color: 'var(--on-surface-variant)' }
-                                }
-                            >
-                                {state === 'done' ? (
-                                    <span className="material-symbols-outlined text-[18px]">check</span>
-                                ) : s.icon ? (
-                                    <span className="material-symbols-outlined text-[18px]">{s.icon}</span>
-                                ) : (
-                                    s.num
-                                )}
-                            </div>
-                            <span
-                                className={`text-[13px] ${state === 'active' ? '' : 'hidden sm:inline'}`}
-                                style={
-                                    state === 'active'
-                                        ? { fontWeight: 700, color: 'var(--primary-container)' }
-                                        : { fontWeight: state === 'done' ? 600 : 500, color: state === 'done' ? 'var(--on-surface)' : 'var(--on-surface-variant)', opacity: state === 'idle' ? 0.6 : 1 }
-                                }
-                            >
-                                {s.label}
-                            </span>
-                        </button>
-                    </React.Fragment>
-                );
-            })}
-        </div>
-    );
-};
+const Stepper = ({ steps, currentStep, onStepClick }) => (
+    <div className="mb-6">
+        <AstryxStepper
+            label="Progression"
+            activeStep={currentStep - 1}
+            onStepClick={onStepClick ? (index) => onStepClick(index + 1) : undefined}
+        >
+            {steps.map((s, i) => (
+                <Step key={s.num} step={i} label={s.label} description={s.subtitle} />
+            ))}
+        </AstryxStepper>
+    </div>
+);
 
 export default Stepper;

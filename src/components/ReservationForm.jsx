@@ -1,7 +1,7 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { Input, Textarea } from './ui/Input';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api, { fetchAllPages } from '../api';
 import { toast } from './Toast';
@@ -251,7 +251,7 @@ const ReservationForm = () => {
                         <div>
                             <div className="flex items-center justify-between mb-6">
                                 <div className="relative">
-                                    <input 
+                                    <Input 
                                         className="ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 w-64" 
                                         placeholder={t('u.rechercher_marque_modle_mat')} 
                                         type="text"
@@ -334,61 +334,25 @@ const ReservationForm = () => {
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.slectionner_le_client_principal')}</label>
-                                    <Select 
-                                        options={clients.map(c => ({
-                                            value: c.id,
-                                            label: `${c.nom} ${c.prenom} (${c.cin_passport})`,
-                                        }))}
-                                        onChange={(opt) => setFormData({...formData, client: opt ? opt.value : ''})}
-                                        value={formData.client ? {
-                                            value: formData.client,
-                                            label: clients.find(c => c.id == formData.client) ? `${clients.find(c => c.id == formData.client).nom} ${clients.find(c => c.id == formData.client).prenom} (${clients.find(c => c.id == formData.client).cin_passport})` : ''
-                                        } : null}
+                                    <Dropdown
+                                        options={clients.map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
+                                        value={formData.client}
+                                        onChange={(v) => setFormData({...formData, client: v})}
                                         placeholder={t('u.rechercher_par_nom_prnom_ou_cin')}
                                         isSearchable
                                         isClearable
-                                        classNamePrefix="react-select"
-                                        styles={{
-                                            control: (base, state) => ({
-                                                ...base,
-                                                backgroundColor: 'var(--card-white)',
-                                                border: '1px solid var(--stroke)',
-                                                borderRadius: '0.75rem',
-                                                padding: '4px',
-                                                borderColor: state.isFocused ? 'var(--primary)' : 'var(--stroke)',
-                                                boxShadow: state.isFocused ? '0 0 0 1px var(--primary)' : 'none'
-                                            })
-                                        }}
                                     />
                                 </div>
 
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.deuxime_conducteur_optionnel')}</label>
-                                    <Select 
-                                        options={clients.filter(c => c.id != formData.client).map(c => ({
-                                            value: c.id,
-                                            label: `${c.nom} ${c.prenom} (${c.cin_passport})`
-                                        }))}
-                                        onChange={(opt) => setFormData({...formData, deuxieme_chauffeur: opt ? opt.value : ''})}
-                                        value={formData.deuxieme_chauffeur ? {
-                                            value: formData.deuxieme_chauffeur,
-                                            label: clients.find(c => c.id == formData.deuxieme_chauffeur) ? `${clients.find(c => c.id == formData.deuxieme_chauffeur).nom} ${clients.find(c => c.id == formData.deuxieme_chauffeur).prenom} (${clients.find(c => c.id == formData.deuxieme_chauffeur).cin_passport})` : ''
-                                        } : null}
+                                    <Dropdown
+                                        options={clients.filter(c => c.id != formData.client).map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
+                                        value={formData.deuxieme_chauffeur}
+                                        onChange={(v) => setFormData({...formData, deuxieme_chauffeur: v})}
                                         placeholder={t('u.rechercher_un_deuxime_chauffeur')}
                                         isSearchable
                                         isClearable
-                                        classNamePrefix="react-select"
-                                        styles={{
-                                            control: (base, state) => ({
-                                                ...base,
-                                                backgroundColor: 'var(--card-white)',
-                                                border: '1px solid var(--stroke)',
-                                                borderRadius: '0.75rem',
-                                                padding: '4px',
-                                                borderColor: state.isFocused ? 'var(--primary)' : 'var(--stroke)',
-                                                boxShadow: state.isFocused ? '0 0 0 1px var(--primary)' : 'none'
-                                            })
-                                        }}
                                     />
                                 </div>
                             </div>
@@ -423,7 +387,7 @@ const ReservationForm = () => {
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.caution')}</label>
                                         <div className="relative">
                                             <span className="absolute start-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
-                                            <input 
+                                            <Input 
                                                 className={`w-full px-4 py-3 rounded-xl border text-sm font-bold ps-12 outline-none transition-all duration-200 ${userRole !== 'OWNER' && userRole !== 'SUPERADMIN' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-200 text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary'}`} 
                                                 type="number" 
                                                 value={formData.caution}
@@ -438,7 +402,7 @@ const ReservationForm = () => {
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.avance_verse')}</label>
                                     <div className="relative">
                                         <span className="absolute start-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
-                                        <input 
+                                        <Input 
                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 text-success-dark bg-success-bg/20 ps-12 text-sm font-extrabold focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200" 
                                             type="number" 
                                             value={formData.montant_paye}
@@ -465,13 +429,13 @@ const ReservationForm = () => {
                             
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.notes_ou_demandes_spciales')}</label>
-                                <textarea 
+                                <Textarea 
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 resize-none" 
                                     placeholder={t('u.entrez_toute_condition_supplment_2')} 
                                     rows="3"
                                     value={formData.notes}
                                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                                ></textarea>
+                                ></Textarea>
                             </div>
                             
                             <div className="flex gap-4 pt-6 border-t border-slate-100">

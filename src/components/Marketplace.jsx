@@ -1,4 +1,6 @@
 import { apiPathFromUrl } from '../utils/pagination';
+import { CheckboxInput } from '@astryxdesign/core';
+import { Input } from './ui/Input';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -102,14 +104,14 @@ const Marketplace = () => {
               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">{t('u.lieu')}</label>
               <div className="bg-slate-50 flex items-center px-4 py-3 rounded-lg border-b-2 border-transparent focus-within:border-primary transition-all">
                 <span className="material-symbols-outlined text-slate-400 me-2">location_on</span>
-                <input className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium" placeholder={t('u.ville_ou_aroport_de_dpart')} type="text"/>
+                <Input className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium" placeholder={t('u.ville_ou_aroport_de_dpart')} type="text"/>
               </div>
             </div>
             <div className="flex-1 w-full">
               <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">{t('u.dates')}</label>
               <div className="bg-slate-50 flex items-center px-4 py-3 rounded-lg border-b-2 border-transparent focus-within:border-primary transition-all">
                 <span className="material-symbols-outlined text-slate-400 me-2">calendar_today</span>
-                <input className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium" placeholder="24 oct. - 28 oct." type="text"/>
+                <Input className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium" placeholder="24 oct. - 28 oct." type="text"/>
               </div>
             </div>
             <div className="flex-1 w-full">
@@ -150,10 +152,7 @@ const Marketplace = () => {
                     <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4">{t('u.agence_de_location')}</span>
                     <div className="space-y-3">
                       {['Vantage Elite', 'Hertz Premium', 'Sixt Luxury'].map(agency => (
-                        <label key={agency} className="flex items-center gap-3 cursor-pointer group">
-                          <input type="checkbox" className="rounded-sm text-primary focus:ring-primary h-4 w-4 border-slate-300" />
-                          <span className="text-sm font-medium group-hover:text-primary transition-colors">{agency}</span>
-                        </label>
+                        <CheckboxInput key={agency} label={agency} value={false} onChange={() => {}} />
                       ))}
                     </div>
                   </div>

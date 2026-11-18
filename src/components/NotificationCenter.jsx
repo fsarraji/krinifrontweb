@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { translateOr } from '../i18n/helpers';
@@ -197,25 +198,12 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                 )}
 
                 {/* Filter Tabs */}
-                <div className="flex bg-slate-100 p-1 mx-6 mt-4 rounded-xl border border-slate-200 shrink-0">
-                    <button
-                        onClick={() => setFilterTab('ALL')}
-                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${filterTab === 'ALL' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                    >
-                        {t('u.toutes')} ({notifications.length})
-                    </button>
-                    <button
-                        onClick={() => setFilterTab('REQUESTS')}
-                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${filterTab === 'REQUESTS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                    >
-                        {t('u.demandes')} ({notifications.filter(n => n.type === 'REQUEST').length})
-                    </button>
-                    <button
-                        onClick={() => setFilterTab('ALERTS')}
-                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${filterTab === 'ALERTS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                    >
-                        {t('u.flotte')} ({notifications.filter(n => n.type !== 'REQUEST').length})
-                    </button>
+                <div className="mx-6 mt-4 shrink-0">
+                    <SegmentedControl label={t('u.centre_de_notifications')} value={filterTab} onChange={setFilterTab} layout="fill">
+                        <SegmentedControlItem value="ALL" label={`${t('u.toutes')} (${notifications.length})`} />
+                        <SegmentedControlItem value="REQUESTS" label={`${t('u.demandes')} (${notifications.filter(n => n.type === 'REQUEST').length})`} />
+                        <SegmentedControlItem value="ALERTS" label={`${t('u.flotte')} (${notifications.filter(n => n.type !== 'REQUEST').length})`} />
+                    </SegmentedControl>
                 </div>
 
                 {/* Notifications List */}

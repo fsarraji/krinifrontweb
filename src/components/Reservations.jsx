@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -266,37 +267,11 @@ const Reservations = () => {
             {/* Filters & Search */}
             <div className="flex flex-col gap-5 mb-6">
                 {/* Tabs */}
-                <div className="flex gap-2 p-1 rounded-token w-fit" style={{ background: 'var(--slate-bg)' }}>
-                    <button
-                        onClick={() => setTab('reservations')}
-                        className={`px-5 py-2 text-[13px] font-semibold rounded-token transition-colors flex items-center gap-2.5 ${
-                            tab === 'reservations'
-                                ? 'card text-on-surface shadow-sm'
-                                : 'hover:bg-slate-100'
-                        }`}
-                        style={{ color: tab === 'reservations' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
-                    >
-                        {t('res.title')}
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>
-                            {allReservations.length}
-                        </span>
-                    </button>
-                    <button
-                        onClick={() => setTab('demandes')}
-                        className={`px-5 py-2 text-[13px] font-semibold rounded-token transition-colors flex items-center gap-2.5 ${
-                            tab === 'demandes'
-                                ? 'card text-on-surface shadow-sm'
-                                : 'hover:bg-slate-100'
-                        }`}
-                        style={{ color: tab === 'demandes' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
-                    >
-                        {t('res.tab.requests')}
-                        {pendingRequests.length > 0 && (
-                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>
-                                {pendingRequests.length}
-                            </span>
-                        )}
-                    </button>
+                <div className="w-fit">
+                    <SegmentedControl label={t('res.title')} value={tab} onChange={setTab}>
+                        <SegmentedControlItem value="reservations" label={`${t('res.title')} (${allReservations.length})`} />
+                        <SegmentedControlItem value="demandes" label={pendingRequests.length > 0 ? `${t('res.tab.requests')} (${pendingRequests.length})` : t('res.tab.requests')} />
+                    </SegmentedControl>
                 </div>
 
                 {/* Search & Filter */}

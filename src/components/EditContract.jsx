@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { translateOr } from '../i18n/helpers';
+import Table from './ui/Table';
 import { useParams, useNavigate } from 'react-router-dom';
-import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api from '../api';
 import { toast } from './Toast';
@@ -210,35 +211,16 @@ const EditContract = () => {
         <div className="space-y-6">
           {/* Status Section */}
           <div>
-            <Select
-              options={[
-                { value: 'RESERVE', label: t('u.rserv') },
-                { value: 'EN_COURS', label: t('u.en_cours') },
-                { value: 'TERMINE', label: t('u.termin') },
-                { value: 'ANNULE', label: t('u.annul') }
-              ]}
-              value={
-                {
-                  value: formData.statut,
-                  label: {
-                    RESERVE: t('u.rserv'),
-                    EN_COURS: t('u.en_cours'),
-                    TERMINE: t('u.termin'),
-                    ANNULE: t('u.annul')
-                  }[formData.statut] || ''
-                }
-              }
-              onChange={(opt) => setFormData({ ...formData, statut: opt?.value || '' })}
-              classNamePrefix="react-select"
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  backgroundColor: 'var(--surface-container-low)',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  padding: '2px'
-                })
-              }}
+            <Dropdown
+                options={[
+                    { value: 'RESERVE', label: t('u.rserv') },
+                    { value: 'EN_COURS', label: t('u.en_cours') },
+                    { value: 'TERMINE', label: t('u.termin') },
+                    { value: 'ANNULE', label: t('u.annul') },
+                ]}
+                value={formData.statut}
+                onChange={(v) => setFormData({ ...formData, statut: v || '' })}
+                aria-label={t('u.statut')}
             />
           </div>
 
@@ -301,42 +283,24 @@ const EditContract = () => {
             </dl>
             {/* Payments List */}
             {paymentsHistory.length > 0 && (
-              <div className="border border-slate-100 rounded-lg overflow-hidden">
-                <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 text-xs font-bold uppercase text-slate-500">
-                  {t('u.historique_des_transactions')}
-                </div>
-                <table className="w-full text-start text-sm">
-                  <thead className="bg-white text-xs uppercase text-slate-400 font-bold border-b border-slate-100">
-                    <tr>
-                      <th className="px-4 py-2">{t('u.date')}</th>
-                      <th className="px-4 py-2">{t('u.mthode')}</th>
-                      <th className="px-4 py-2">{t('u.rf_notes')}</th>
-                      <th className="px-4 py-2 text-end">{t('u.montant')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paymentsHistory.map(pay => (
-                      <tr key={pay.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-2 text-slate-600 font-medium">
-                          {formatDateTime(pay.payment_date || pay.created_at)}
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold">
-                            {pay.payment_method}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-slate-500 text-xs">
-                          {pay.reference || '-'}
-                          {pay.notes && <span className="block text-xs text-slate-400">{pay.notes}</span>}
-                        </td>
-                        <td className="px-4 py-2 text-end font-bold text-success whitespace-nowrap">
-                          +{formatMoney(pay.amount)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                caption={t('u.historique_des_transactions')}
+                rows={paymentsHistory}
+                columns={[
+                  { key: 'payment_date', label: t('u.date'), render: (_, pay) => formatDateTime(pay.payment_date || pay.created_at) },
+                  { key: 'payment_method', label: t('u.mthode'), render: (v) => translateOr(t, `method.${v}`, v) },
+                  {
+                    key: 'reference', label: t('u.rf_notes'),
+                    render: (_, pay) => (
+                      <div>
+                        <p className="text-xs">{pay.reference || '-'}</p>
+                        {pay.notes && <p className="text-label-sm font-normal text-text-muted">{pay.notes}</p>}
+                      </div>
+                    ),
+                  },
+                  { key: 'amount', label: t('u.montant'), align: 'right', render: (v) => <strong className="text-success">+{formatMoney(v)}</strong> },
+                ]}
+              />
             )}
           </div>
         </div>

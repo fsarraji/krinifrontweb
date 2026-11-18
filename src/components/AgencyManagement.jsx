@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Table from './ui/Table';
+import { Input, Textarea } from './ui/Input';
 import api from '../api';
 import useFetchAll from '../hooks/useFetchAll';
 import Dropdown from './Dropdown';
@@ -104,67 +106,52 @@ const AgencyManagement = () => {
                 }
             />
 
-            <div className="card rounded-token shadow-l1 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="text-start border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-4">{t('u.agence')}</th>
-                                <th className="px-6 py-4">{t('u.contact')}</th>
-                                <th className="px-6 py-4">{t('u.statut')}</th>
-                                <th className="px-6 py-4 text-end">{t('u.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stroke">
-                            {agencies.length === 0 ? (
-                                <tr>
-                                    <td colSpan="4" className="px-6 py-4">
-                                        <EmptyState
-                                            icon="storefront"
-                                            title={t('u.aucune_agence')}
-                                            description={t('u.crez_une_premire_agence_pour_com')}
-                                        />
-                                    </td>
-                                </tr>
-                            ) : agencies.map(agency => (
-                                <tr key={agency.id} className="group hover:bg-surface-hover transition-colors">
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center font-bold text-lg text-primary overflow-hidden">
-                                                {agency.logo
-                                                    ? <img src={agency.logo} alt="logo" className="w-full h-full object-cover" />
-                                                    : agency.nom_agence[0]}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-on-surface">{agency.nom_agence}</p>
-                                                <p className="text-[10px] text-on-surface-variant uppercase font-semibold">ICE: {agency.ice || '-'}</p>
-                                                {agency.ville && <p className="text-[10px] text-on-surface-variant/60 font-medium">{agency.ville}</p>}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <p className="text-sm font-medium">{agency.email}</p>
-                                        <p className="text-xs text-on-surface-variant">{agency.telephone}</p>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <StatusBadge
-                                            variant={agency.is_active ? 'success' : 'neutral'}
-                                            appearance="dot"
-                                            label={agency.is_active ? t('u.actif') : t('u.inactif')}
-                                        />
-                                    </td>
-                                    <td className="px-6 py-5 text-end">
-                                        <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity justify-end">
-                                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(agency)} />
-                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label={t('u.supprimer')} onClick={() => handleDelete(agency.id)} />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <Table
+                caption={t('u.gestion_des_agences')}
+                rows={agencies}
+                emptyTitle={t('u.aucune_agence')}
+                emptyDescription={t('u.crez_une_premire_agence_pour_com')}
+                columns={[
+                    {
+                        key: 'nom_agence', label: t('u.agence'),
+                        render: (_, agency) => (
+                            <div className="flex items-center gap-3">
+                                <span className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center font-bold text-primary overflow-hidden shrink-0">
+                                    {agency.logo
+                                        ? <img src={agency.logo} alt="logo" className="w-full h-full object-cover" />
+                                        : agency.nom_agence[0]}
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-on-surface">{agency.nom_agence}</p>
+                                    <p className="text-label-sm font-normal text-text-muted">ICE: {agency.ice || '-'}{agency.ville ? ` · ${agency.ville}` : ''}</p>
+                                </div>
+                            </div>
+                        ),
+                    },
+                    {
+                        key: 'email', label: t('u.contact'),
+                        render: (_, agency) => (
+                            <div>
+                                <p className="text-sm font-medium">{agency.email}</p>
+                                <p className="text-label-sm font-normal text-text-muted">{agency.telephone}</p>
+                            </div>
+                        ),
+                    },
+                    {
+                        key: 'is_active', label: t('u.statut'),
+                        render: (v) => <StatusBadge variant={v ? 'success' : 'neutral'} appearance="dot" label={v ? t('u.actif') : t('u.inactif')} />,
+                    },
+                    {
+                        key: 'actions', label: t('u.actions'), align: 'right',
+                        render: (_, agency) => (
+                        <div className="flex items-center gap-1 justify-end">
+                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(agency)} />
+                            <Button variant="ghost" iconOnly icon="delete" aria-label={t('u.supprimer')} onClick={() => handleDelete(agency.id)} />
+                        </div>
+                        ),
+                    },
+                ]}
+            />
 
             <Modal
                 isOpen={showModal}
@@ -181,13 +168,13 @@ const AgencyManagement = () => {
                 <form id="agency-form" onSubmit={handleSave} className="space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <Field label={t('u.nom_de_l_agence')} required>
-                            <input className="field w-full" type="text" value={form.name} onChange={(e) => setField('name', e.target.value)} required />
+                            <Input type="text" value={form.name} onChange={(e) => setField('name', e.target.value)} required />
                         </Field>
                         <Field label={t('u.tlphone')} required>
-                            <input className="field w-full" type="text" value={form.telephone} onChange={(e) => setField('telephone', e.target.value)} required />
+                            <Input type="text" value={form.telephone} onChange={(e) => setField('telephone', e.target.value)} required />
                         </Field>
                         <Field label={t('u.email')}>
-                            <input className="field w-full" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
+                            <Input type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
                         </Field>
                         <Field label={t('u.statut')}>
                             <Dropdown
@@ -197,16 +184,16 @@ const AgencyManagement = () => {
                             />
                         </Field>
                         <Field label="RC">
-                            <input className="field w-full" type="text" value={form.rc} onChange={(e) => setField('rc', e.target.value)} />
+                            <Input type="text" value={form.rc} onChange={(e) => setField('rc', e.target.value)} />
                         </Field>
                         <Field label="ICE">
-                            <input className="field w-full" type="text" value={form.ice} onChange={(e) => setField('ice', e.target.value)} />
+                            <Input type="text" value={form.ice} onChange={(e) => setField('ice', e.target.value)} />
                         </Field>
                         <Field label={t('u.ville')} className="md:col-span-2">
-                            <input className="field w-full" type="text" value={form.city} onChange={(e) => setField('city', e.target.value)} />
+                            <Input type="text" value={form.city} onChange={(e) => setField('city', e.target.value)} />
                         </Field>
                         <Field label={t('u.adresse')} required className="md:col-span-2">
-                            <textarea className="field w-full min-h-[100px]" value={form.address} onChange={(e) => setField('address', e.target.value)} required />
+                            <Textarea value={form.address} onChange={(e) => setField('address', e.target.value)} required />
                         </Field>
                     </div>
                 </form>

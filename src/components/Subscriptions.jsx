@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Table from './ui/Table';
+import { Input } from './ui/Input';
 import api from '../api';
 import { formatMoney } from '../utils/formatters';
 import useFetchAll from '../hooks/useFetchAll';
@@ -147,79 +149,61 @@ const Subscriptions = () => {
                 }
             />
 
-            <div className="card rounded-token shadow-l1 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="text-start border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-4">{t('u.agence')}</th>
-                                <th className="px-6 py-4">{t('u.plan')}</th>
-                                <th className="px-6 py-4">Prix / mois</th>
-                                <th className="px-6 py-4">{t('u.priode')}</th>
-                                <th className="px-6 py-4">{t('u.statut')}</th>
-                                <th className="px-6 py-4 text-end">{t('u.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stroke">
-                            {subscriptions.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-4">
-                                        <EmptyState
-                                            icon="workspace_premium"
-                                            title={t('u.aucun_abonnement')}
-                                            description={t('u.crez_un_premier_abonnement_pour_')}
-                                        />
-                                    </td>
-                                </tr>
-                            ) : subscriptions.map(sub => (
-                                <tr key={sub.id} className="group hover:bg-surface-hover transition-colors">
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center font-bold text-primary">
-                                                {(sub.agency_name || 'A')[0].toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-on-surface">{sub.agency_name}</p>
-                                                <p className="text-[10px] text-on-surface-variant">Abonnement #{sub.id}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <span className="px-3 py-1 rounded-full bg-primary-light text-primary text-[11px] font-bold uppercase tracking-wide">
-                                            {planLabel(sub.plan)}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <p className="text-sm font-bold text-on-surface">{formatMoney(sub.price)}</p>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <p className="text-sm font-medium">{sub.start_date}</p>
-                                        <p className="text-[10px] text-on-surface-variant">→ {sub.end_date}</p>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-2">
-                                            <StatusBadge
-                                                variant={STATUS_BADGES[sub.status] || 'neutral'}
-                                                appearance="dot"
-                                                label={statusOptions.find(s => s.value === sub.status)?.label || sub.status}
-                                            />
-                                            {sub.is_current && (
-                                                <StatusBadge variant="success" appearance="pill" label={t('u.en_cours')} />
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5 text-end">
-                                        <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity justify-end">
-                                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(sub)} />
-                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label={t('u.supprimer')} onClick={() => handleDelete(sub.id)} />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <Table
+                caption={t('u.gestion_des_abonnements')}
+                rows={subscriptions}
+                emptyTitle={t('u.aucun_abonnement')}
+                emptyDescription={t('u.crez_un_premier_abonnement_pour_')}
+                columns={[
+                    {
+                        key: 'agency_name', label: t('u.agence'),
+                        render: (_, sub) => (
+                            <div className="flex items-center gap-3">
+                                <span className="w-9 h-9 rounded-lg bg-primary-light flex items-center justify-center font-bold text-primary shrink-0">
+                                    {(sub.agency_name || 'A')[0].toUpperCase()}
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-on-surface">{sub.agency_name}</p>
+                                    <p className="text-label-sm font-normal text-text-muted">#{sub.id}</p>
+                                </div>
+                            </div>
+                        ),
+                    },
+                    { key: 'plan', label: t('u.plan'), render: (v) => <StatusBadge variant="info" label={planLabel(v)} /> },
+                    { key: 'price', label: t('u.prix_mensuel_mad'), render: (v) => <strong>{formatMoney(v)}</strong> },
+                    {
+                        key: 'start_date', label: t('u.priode'),
+                        render: (_, sub) => (
+                            <div>
+                                <p className="text-sm font-medium">{sub.start_date}</p>
+                                <p className="text-label-sm font-normal text-text-muted">→ {sub.end_date}</p>
+                            </div>
+                        ),
+                    },
+                    {
+                        key: 'status', label: t('u.statut'),
+                        render: (_, sub) => (
+                            <div className="flex items-center gap-2">
+                                <StatusBadge
+                                    variant={STATUS_BADGES[sub.status] || 'neutral'}
+                                    appearance="dot"
+                                    label={statusOptions.find(s => s.value === sub.status)?.label || sub.status}
+                                />
+                                {sub.is_current && <StatusBadge variant="success" label={t('u.en_cours')} />}
+                            </div>
+                        ),
+                    },
+                    {
+                        key: 'actions', label: t('u.actions'), align: 'right',
+                        render: (_, sub) => (
+                        <div className="flex items-center gap-1 justify-end">
+                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(sub)} />
+                            <Button variant="ghost" iconOnly icon="delete" aria-label={t('u.supprimer')} onClick={() => handleDelete(sub.id)} />
+                        </div>
+                        ),
+                    },
+                ]}
+            />
 
             <Modal
                 isOpen={showModal}
@@ -251,8 +235,8 @@ const Subscriptions = () => {
                             />
                         </Field>
                         <Field label={t('u.prix_mensuel_mad')} required>
-                            <input
-                                className="field w-full"
+                            <Input
+                               
                                 type="number"
                                 step="0.01"
                                 min="0"
@@ -262,8 +246,8 @@ const Subscriptions = () => {
                             />
                         </Field>
                         <Field label={t('u.date_de_dbut')} required>
-                            <input
-                                className="field w-full"
+                            <Input
+                               
                                 type="date"
                                 value={form.startDate}
                                 onChange={(e) => setField('startDate', e.target.value)}
@@ -271,8 +255,8 @@ const Subscriptions = () => {
                             />
                         </Field>
                         <Field label={t('u.date_de_fin')} required>
-                            <input
-                                className="field w-full"
+                            <Input
+                               
                                 type="date"
                                 value={form.endDate}
                                 onChange={(e) => setField('endDate', e.target.value)}

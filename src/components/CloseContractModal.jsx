@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { Input, Textarea } from './ui/Input';
 import { translateOr } from '../i18n/helpers';
 import React, { useState, useEffect } from 'react';
 import api from '../api';
@@ -349,12 +350,12 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                     {t('u.date_et_heure_de_retour_relle')}
                     <span style={{ color: 'var(--danger)' }}>*</span>
                   </label>
-                  <input
+                  <Input
                     type="datetime-local"
                     value={dateRetour}
                     onChange={e => { setDateRetour(e.target.value); clearFieldError('dateRetour'); }}
-                    className="field"
-                    style={fieldErrors.dateRetour ? { borderColor: 'var(--danger)', background: 'var(--error-bg)' } : {}}
+                   
+                   
                   />
                   <FieldError message={fieldErrors.dateRetour} />
                   {isEarlyReturn && (
@@ -373,14 +374,14 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <span className="absolute end-4 top-3 text-slate-400 text-xs font-bold uppercase tracking-widest">KM</span>
-                      <input
+                      <Input
                         type="number"
                         value={kmRetour}
                         min={contract.km_sortie + 1}
                         onChange={e => { setKmRetour(e.target.value); clearFieldError('kmRetour'); }}
                         placeholder={`min. ${formatNumber(contract.km_sortie)} km`}
-                        className="field font-bold pe-12"
-                        style={fieldErrors.kmRetour ? { borderColor: 'var(--danger)', background: 'var(--error-bg)' } : {}}
+                       
+                       
                       />
                     </div>
                     <button
@@ -470,12 +471,12 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
               {/* Row 2: État Général & Observations */}
               <div className="mt-4 pt-4 sm:border-t sm:border-outline-variant/30">
                 <SectionTitle icon="notes" title={t('u.tat_gnral_observations')} />
-                <textarea
+                <Textarea
                   value={etatGeneral}
                   onChange={e => setEtatGeneral(e.target.value)}
                   placeholder={t('u.notes_sur_la_propret_l_tat_intri')}
                   rows={2}
-                  className="field resize-none"
+                 
                 />
               </div>
             </section>
@@ -566,20 +567,14 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                 <div>
                   <label className="label mb-1">{t('u.montant_vers_mad')}</label>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       value={paymentAmount}
                       onChange={e => { setPaymentAmount(e.target.value); clearFieldError('paymentAmount'); }}
-                      className="field font-bold"
-                      style={fieldErrors.paymentAmount ? { borderColor: 'var(--danger)', background: 'var(--error-bg)' } : {}}
+                     
+                     
                     />
-                    <button
-                      onClick={() => setPaymentAmount(Math.max(0, newBalance).toString())}
-                      className="absolute end-3 top-2 text-[11px] font-bold px-2 py-1 rounded-lg hover:opacity-80"
-                      style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
-                    >
-                      {t('u.solde')}
-                    </button>
+                    <Button size="sm" variant="secondary" onClick={() => setPaymentAmount(Math.max(0, newBalance).toString())}>{t('u.solde')}</Button>
                   </div>
                   <FieldError message={fieldErrors.paymentAmount} />
                 </div>

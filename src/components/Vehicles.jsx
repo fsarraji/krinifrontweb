@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { Link, useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n/context';
 import api, { fetchAllPages } from '../api';
@@ -220,31 +221,11 @@ const Vehicles = () => {
                 </div>
 
                 {/* View switcher */}
-                <div className="flex items-center p-1 rounded-token shrink-0" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
-                    <button
-                        onClick={() => setViewMode('table')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-token text-[13px] font-semibold transition-all ${
-                            viewMode === 'table'
-                                ? 'card text-on-surface shadow-sm'
-                                : 'hover:bg-slate-100'
-                        }`}
-                        style={{ color: viewMode === 'table' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">table_rows</span>
-                        {t('clients.view.table')}
-                    </button>
-                    <button
-                        onClick={() => setViewMode('grid')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-token text-[13px] font-semibold transition-all ${
-                            viewMode === 'grid'
-                                ? 'card text-on-surface shadow-sm'
-                                : 'hover:bg-slate-100'
-                        }`}
-                        style={{ color: viewMode === 'grid' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">grid_view</span>
-                        {t('clients.view.grid')}
-                    </button>
+                <div className="shrink-0">
+                    <SegmentedControl label={t('clients.view.table')} value={viewMode} onChange={setViewMode}>
+                        <SegmentedControlItem value="table" icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>table_rows</span>} label={t('clients.view.table')} />
+                        <SegmentedControlItem value="grid" icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>grid_view</span>} label={t('clients.view.grid')} />
+                    </SegmentedControl>
                 </div>
             </div>
 

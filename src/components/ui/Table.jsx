@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
+import { Card, Table as AstryxTable, proportional, useTablePagination, useTableSortable } from '@astryxdesign/core';
 import { SkeletonTable } from '../Skeleton';
 import EmptyState from './EmptyState';
-import Pagination from '../Pagination';
 import { useI18n } from '../../i18n/context';
 
-// Tableau de données : en-tête collant, colonnes triables, états chargement/vide intégrés,
-// défilement horizontal sur mobile. Spec DESIGN.md : padding 16px horizontal / 12px vertical.
+// Adaptateur : API historique (columns/rows/render/sortable/paginate…) au-dessus du Table Astryx
+// (plugins de tri et de pagination). Le tri est « global puis découpage en pages ».
 //
 // columns : [{ key, label, align?: 'left'|'right'|'center', sortable?, sortValue?(row), render?(value,row), className? }]
-// start/end suivent le sens de lecture (ltr/rtl) ; les valeurs d'API restent 'left'/'right'.
-const ALIGN = { left: 'text-start', right: 'text-end', center: 'text-center' };
+const ALIGN = { left: 'start', right: 'end', center: 'center' };
+const PAGE_SIZES = [10, 25, 50];
 
 const compare = (a, b) => {
     if (a == null && b == null) return 0;
@@ -28,12 +28,11 @@ const Table = ({
     loading = false,
     emptyTitle,
     emptyDescription,
-    onRowClick,
     caption,
     footer,
     className = '',
     defaultSort = null, // { key, dir: 'asc'|'desc' }
-    paginate = false, // pagination intégrée : tri global PUIS découpage en pages
+    paginate = false, // pagination intégrée
     initialPageSize = 10,
 }) => {
     const { t } = useI18n();
@@ -54,82 +53,59 @@ const Table = ({
     const safePage = Math.min(page, totalPages);
     const shown = paginate ? sorted.slice((safePage - 1) * pageSize, safePage * pageSize) : sorted;
 
-    const toggleSort = (col) => {
-        if (!col.sortable) return;
-        setSort((prev) => {
-            if (!prev || prev.key !== col.key) return { key: col.key, dir: 'asc' };
-            if (prev.dir === 'asc') return { key: col.key, dir: 'desc' };
-            return null;
-        });
-    };
+    const sortablePlugin = useTableSortable({
+        sort: sort ? [{ sortKey: sort.key, direction: sort.dir === 'asc' ? 'ascending' : 'descending' }] : [],
+        onSortChange: (next) => {
+            const first = next[0];
+            setSort(first ? { key: first.sortKey, dir: first.direction === 'ascending' ? 'asc' : 'desc' } : null);
+        },
+    });
+    const paginationPlugin = useTablePagination({
+        page: safePage,
+        onPageChange: setPage,
+        totalItems: sorted.length,
+        pageSize,
+        pageSizeOptions: PAGE_SIZES,
+        onPageSizeChange: (size) => { setPageSize(size); setPage(1); },
+        position: 'below',
+        align: 'end',
+    });
 
     if (loading) return <SkeletonTable cols={columns.length} />;
 
+    const astryxColumns = columns.map((col, index) => ({
+        key: col.key,
+        header: col.label,
+        // 1re colonne plus large (identité), colonne d'actions étroite, les autres égales
+        width: col.width ?? (index === 0 ? proportional(2) : col.key === 'actions' ? proportional(0.6) : proportional(1)),
+        align: ALIGN[col.align || 'left'],
+        sortable: Boolean(col.sortable),
+        renderCell: (row) => {
+            const content = col.render ? col.render(row[col.key], row) : row[col.key];
+            return col.className ? <span className={col.className}>{content}</span> : content;
+        },
+        // première colonne : libellé de ligne pour les lecteurs d'écran
+        ...(index === 0 ? {} : {}),
+    }));
+
     return (
-        <div className={`bg-surface-bright border border-stroke rounded-xl overflow-hidden ${className}`}>
+        <Card variant="default" padding={0} className={className}>
             {sorted.length === 0 ? (
                 <EmptyState title={emptyTitle ?? t('common.noResult')} description={emptyDescription} />
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        {caption && <caption className="sr-only">{caption}</caption>}
-                        <thead className="bg-surface-container-low text-label-sm uppercase tracking-wider text-text-muted border-b border-stroke">
-                            <tr>
-                                {columns.map((col) => {
-                                    const active = sort?.key === col.key;
-                                    return (
-                                        <th
-                                            key={col.key}
-                                            scope="col"
-                                            aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
-                                            className={`px-4 py-2.5 font-semibold whitespace-nowrap ${ALIGN[col.align || 'left']} ${col.className || ''}`}
-                                        >
-                                            {col.sortable ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => toggleSort(col)}
-                                                    className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 rounded"
-                                                >
-                                                    {col.label}
-                                                    <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
-                                                        {active ? (sort.dir === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}
-                                                    </span>
-                                                </button>
-                                            ) : col.label}
-                                        </th>
-                                    );
-                                })}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {shown.map((row, i) => (
-                                <tr
-                                    key={row[rowKey] ?? i}
-                                    onClick={onRowClick ? () => onRowClick(row) : undefined}
-                                    className={`border-t border-stroke first:border-t-0 ${onRowClick ? 'cursor-pointer' : ''} hover:bg-surface-hover transition-colors`}
-                                >
-                                    {columns.map((col) => (
-                                        <td key={col.key} className={`px-4 py-3 tabular-nums ${col.align === 'right' ? 'whitespace-nowrap ' : ''}${ALIGN[col.align || 'left']} ${col.className || ''}`}>
-                                            {col.render ? col.render(row[col.key], row) : row[col.key]}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-            {footer}
-            {paginate && sorted.length > 0 && (
-                <Pagination
-                    currentPage={safePage}
-                    totalItems={sorted.length}
-                    pageSize={pageSize}
-                    onPageChange={setPage}
-                    onPageSizeChange={setPageSize}
+                <AstryxTable
+                    aria-label={caption}
+                    data={shown}
+                    columns={astryxColumns}
+                    idKey={(row) => row[rowKey] ?? JSON.stringify(row)}
+                    density="compact"
+                    dividers="rows"
+                    hasHover
+                    plugins={{ sortable: sortablePlugin, ...(paginate ? { pagination: paginationPlugin } : {}) }}
                 />
             )}
-        </div>
+            {footer}
+        </Card>
     );
 };
 

@@ -1,7 +1,7 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { Input, Textarea } from './ui/Input';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api, { fetchAllPages } from '../api';
 import DamageSelector from './DamageSelector';
@@ -271,18 +271,6 @@ const ContractForm = () => {
 
         const fieldClass = (name) => `field transition-all duration-200 ${hasError(name) ? 'border-danger bg-danger-bg/40' : 'focus:bg-white'}`;
 
-        const selectStyles = (name) => ({
-            control: (base, state) => ({
-                ...base,
-                backgroundColor: state.isDisabled ? 'var(--surface-container)' : 'var(--surface-container-low)',
-                border: '1px solid',
-                borderRadius: '0.5rem',
-                padding: '4px',
-                borderColor: hasError(name) ? 'var(--danger)' : (state.isFocused ? 'var(--primary)' : 'var(--stroke)'),
-                boxShadow: hasError(name) ? '0 0 0 1px var(--danger)' : (state.isFocused ? '0 0 0 2px color-mix(in srgb, var(--color-accent) 18%, transparent)' : 'none'),
-            }),
-            placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
-        });
 
 
         const selectedClient = clients.find(c => c.id == formData.client);
@@ -326,8 +314,8 @@ const ContractForm = () => {
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="relative">
                                         <span className="material-symbols-outlined absolute start-3 top-3 text-slate-400 text-[16px]">search</span>
-                                        <input
-                                            className="field ps-9"
+                                        <Input
+                                           
                                             placeholder={t('u.rechercher_dans_la_flotte')}
                                             type="text"
                                             value={searchTerm}
@@ -389,25 +377,17 @@ const ContractForm = () => {
                                 </div>
                                 <div>
                                     <label className="label mb-2">{t('u.slectionner_un_client_existant')}</label>
-                                    <Select
-                                        options={clients.map(c => ({
-                                            value: c.id,
-                                            label: `${c.nom} ${c.prenom} (${c.cin_passport})`,
-                                            clientData: c
-                                        }))}
-                                        onChange={(opt) => {
-                                            setFormData({...formData, client: opt ? opt.value : ''});
+                                    <Dropdown
+                                        options={clients.map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
+                                        value={formData.client}
+                                        onChange={(v) => {
+                                            setFormData({...formData, client: v});
                                             setFieldErrors((prev) => ({ ...prev, client: false }));
                                         }}
-                                        value={formData.client ? {
-                                            value: formData.client,
-                                            label: selectedClient ? `${selectedClient.nom} ${selectedClient.prenom} (${selectedClient.cin_passport})` : ''
-                                        } : null}
                                         placeholder={t('u.rechercher_par_nom_prnom_ou_cin')}
                                         isSearchable
                                         isClearable
-                                        classNamePrefix="react-select"
-                                        styles={selectStyles('client')}
+                                        status={hasError('client') ? { type: 'error' } : undefined}
                                     />
                                 </div>
 
@@ -426,21 +406,13 @@ const ContractForm = () => {
 
                                 <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--stroke)' }}>
                                     <label className="label mb-2">{t('u.deuxime_conducteur_optionnel')}</label>
-                                    <Select
-                                        options={clients.filter(c => c.id != formData.client).map(c => ({
-                                            value: c.id,
-                                            label: `${c.nom} ${c.prenom} (${c.cin_passport})`
-                                        }))}
-                                        onChange={(opt) => setFormData({...formData, deuxieme_chauffeur: opt ? opt.value : ''})}
-                                        value={formData.deuxieme_chauffeur ? {
-                                            value: formData.deuxieme_chauffeur,
-                                            label: clients.find(c => c.id == formData.deuxieme_chauffeur) ? `${clients.find(c => c.id == formData.deuxieme_chauffeur).nom} ${clients.find(c => c.id == formData.deuxieme_chauffeur).prenom} (${clients.find(c => c.id == formData.deuxieme_chauffeur).cin_passport})` : ''
-                                        } : null}
+                                    <Dropdown
+                                        options={clients.filter(c => c.id != formData.client).map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
+                                        value={formData.deuxieme_chauffeur}
+                                        onChange={(v) => setFormData({...formData, deuxieme_chauffeur: v})}
                                         placeholder={t('u.rechercher_un_deuxime_chauffeur')}
                                         isSearchable
                                         isClearable
-                                        classNamePrefix="react-select"
-                                        styles={selectStyles('deuxieme_chauffeur')}
                                     />
                                 </div>
                             </div>
@@ -506,8 +478,8 @@ const ContractForm = () => {
                                             </div>
                                             <div className="relative">
                                                 <span className="absolute start-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
-                                                <input
-                                                    className={`field ps-10 ${!isCautionActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                <Input
+                                                   
                                                     type="number"
                                                     value={formData.caution}
                                                     onChange={(e) => setFormData({...formData, caution: e.target.value})}
@@ -521,8 +493,8 @@ const ContractForm = () => {
                                                 <label className="label mb-2">{t('u.montant_vers')}</label>
                                                 <div className="relative">
                                                     <span className="absolute start-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
-                                                    <input
-                                                        className="field ps-10"
+                                                    <Input
+                                                       
                                                         type="number"
                                                         min="0"
                                                         max={totalEstimate() || undefined}
@@ -562,8 +534,8 @@ const ContractForm = () => {
                                     <div>
                                         <label className="label mb-3">{t('u.kilomtrage_de_sortie')}</label>
                                         <div className="flex gap-2">
-                                            <input
-                                                className="field flex-1"
+                                            <Input
+                                               
                                                 type="number"
                                                 value={formData.km_sortie}
                                                 onChange={(e) => setFormData({...formData, km_sortie: e.target.value})}
@@ -594,13 +566,13 @@ const ContractForm = () => {
 
                                 <div className="mt-4">
                                     <label className="label mb-2">{t('u.observation_gnrale_optionnel')}</label>
-                                    <textarea
-                                        className="field resize-none"
+                                    <Textarea
+                                       
                                         placeholder={t('u.note_supplmentaire_sur_l_tat_gnr')}
                                         rows="2"
                                         value={formData.degats_depart}
                                         onChange={(e) => setFormData({...formData, degats_depart: e.target.value})}
-                                    ></textarea>
+                                    ></Textarea>
                                 </div>
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -630,13 +602,13 @@ const ContractForm = () => {
                                     ))}
                                 </div>
 
-                                <textarea
-                                    className="field resize-none"
+                                <Textarea
+                                   
                                     placeholder={t('u.entrez_toute_condition_supplment')}
                                     rows="3"
                                     value={formData.notes}
                                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                                ></textarea>
+                                ></Textarea>
                             </>
                         )}
                     </div>

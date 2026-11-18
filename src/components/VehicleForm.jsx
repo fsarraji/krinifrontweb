@@ -1,11 +1,11 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { Input, Select } from './ui/Input';
 import React, { useState, useEffect } from 'react';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Button from './ui/Button';
 import Spinner from './ui/Spinner';
 // Force Vercel redeploy - fix vehicle edit image issue
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import Select from 'react-select';
 import Dropdown from './Dropdown';
 import api from '../api';
 import { toast } from './Toast';
@@ -156,35 +156,6 @@ const VehicleForm = () => {
 
     const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? t('u.champ_requis') : '');
 
-    const inputClass = (name) => `w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition-all duration-200 ${
-        hasError(name)
-            ? 'border-danger bg-danger-bg/40 hover:border-danger focus:border-danger focus:ring-4 focus:ring-danger/10'
-            : 'border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-4 focus:ring-primary/10'
-    }`;
-
-    const selectStyles = (name) => ({
-        control: (base, state) => ({
-            ...base,
-            backgroundColor: state.isDisabled ? 'var(--surface-container)' : 'var(--card-white)',
-            border: '1px solid',
-            borderRadius: '0.75rem',
-            padding: '5px 6px',
-            minHeight: '46px',
-            borderColor: hasError(name) ? 'var(--danger)' : (state.isFocused ? 'var(--primary)' : 'var(--stroke)'),
-            boxShadow: hasError(name) ? '0 0 0 3px color-mix(in srgb, var(--color-error) 14%, transparent)' : (state.isFocused ? '0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent)' : 'none'),
-            '&:hover': { borderColor: state.isFocused ? 'var(--primary)' : 'var(--text-disabled)' },
-        }),
-        placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
-        menu: (base) => ({ ...base, borderRadius: '0.75rem', overflow: 'hidden' }),
-        option: (base, state) => ({
-            ...base,
-            backgroundColor: state.isFocused ? 'var(--surface-active)' : 'white',
-            color: state.isSelected ? 'var(--primary)' : 'var(--on-surface)',
-            fontWeight: state.isSelected || state.isFocused ? '600' : '400',
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-        }),
-    });
     useEffect(() => {
         const fetchBrands = async () => {
             try {
@@ -524,12 +495,12 @@ const VehicleForm = () => {
                         <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Immatriculation (matricule)</span>
-                                    <input
+                                    <Input invalid={hasError('matricule')}
                                         name="matricule"
                                         value={formData.matricule}
                                         onChange={handleChange}
                                         onBlur={handleBlurUnique('matricule')}
-                                        className={inputClass('matricule')}
+                                       
                                         type="text"
                                         placeholder="Ex: 12345-A-50"
                                     />
@@ -548,18 +519,17 @@ const VehicleForm = () => {
                                 </label>
                                 <div>
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.marque')}</span>
-                                    <Select
+                                    <Dropdown
                                         options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
-                                        onChange={(opt) => {
-                                            setFormData(prev => ({ ...prev, marque: opt ? opt.value : '', modele: '' }));
+                                        value={formData.marque}
+                                        onChange={(v) => {
+                                            setFormData(prev => ({ ...prev, marque: v, modele: '' }));
                                             setFieldErrors(prev => ({ ...prev, marque: false, modele: false }));
                                         }}
-                                        value={formData.marque ? { value: formData.marque, label: brands.find(b => b.id == formData.marque)?.name || '' } : null}
                                         placeholder={t('u.slectionner_une_marque')}
                                         isSearchable
                                         isClearable
-                                        classNamePrefix="react-select"
-                                        styles={selectStyles('marque')}
+                                        status={hasError('marque') ? { type: 'error' } : undefined}
                                     />
                                     {fieldErrorMsg('marque') && (
                                         <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
@@ -570,19 +540,18 @@ const VehicleForm = () => {
                                 </div>
                                 <div>
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.modle')}</span>
-                                    <Select
+                                    <Dropdown
                                         options={(formData.marque ? models : []).map(model => ({ value: model.id, label: model.name }))}
-                                        onChange={(opt) => {
-                                            setFormData(prev => ({ ...prev, modele: opt ? opt.value : '' }));
+                                        value={formData.modele}
+                                        onChange={(v) => {
+                                            setFormData(prev => ({ ...prev, modele: v }));
                                             setFieldErrors(prev => ({ ...prev, modele: false }));
                                         }}
-                                        value={formData.modele ? { value: formData.modele, label: (formData.marque ? models : []).find(m => m.id == formData.modele)?.name || '' } : null}
                                         placeholder={t('u.slectionner_un_modle')}
                                         isSearchable
                                         isClearable
                                         isDisabled={!formData.marque}
-                                        classNamePrefix="react-select"
-                                        styles={selectStyles('modele')}
+                                        status={hasError('modele') ? { type: 'error' } : undefined}
                                     />
                                     {fieldErrorMsg('modele') && (
                                         <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-rose-600">
@@ -593,11 +562,11 @@ const VehicleForm = () => {
                                 </div>
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.anne')}</span>
-                                    <input
+                                    <Input invalid={hasError('annee')}
                                         name="annee"
                                         value={formData.annee}
                                         onChange={handleChange}
-                                        className={inputClass('annee')}
+                                       
                                         type="number"
                                     />
                                     {fieldErrorMsg('annee') && (
@@ -609,12 +578,12 @@ const VehicleForm = () => {
                                 </label>
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.plaque_dfinitive_optionnel')}</span>
-                                    <input
+                                    <Input invalid={hasError('matricule_definitif')}
                                         name="matricule_definitif"
                                         value={formData.matricule_definitif}
                                         onChange={handleChange}
                                         onBlur={handleBlurUnique('matricule_definitif')}
-                                        className={inputClass('matricule_definitif')}
+                                       
                                         type="text"
                                         placeholder="Ex: 00000-A-50"
                                     />
@@ -634,21 +603,21 @@ const VehicleForm = () => {
                                 </label>
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.date_de_mise_en_circulation')}</span>
-                                    <input
+                                    <Input invalid={hasError('date_mise_en_circulation')}
                                         name="date_mise_en_circulation"
                                         value={formData.date_mise_en_circulation}
                                         onChange={handleChange}
-                                        className={inputClass('date_mise_en_circulation')}
+                                       
                                         type="date"
                                     />
                                 </label>
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.date_d_autorisation_de_circulati')}</span>
-                                    <input
+                                    <Input invalid={hasError('date_autorisation_circulation')}
                                         name="date_autorisation_circulation"
                                         value={formData.date_autorisation_circulation}
                                         onChange={handleChange}
-                                        className={inputClass('date_autorisation_circulation')}
+                                       
                                         type="date"
                                     />
                                 </label>
@@ -660,11 +629,11 @@ const VehicleForm = () => {
                             <div className="grid gap-6 md:grid-cols-2">
                                     <label className="block">
                                         <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.couleur')}</span>
-                                        <input
+                                        <Input invalid={hasError('couleur')}
                                             name="couleur"
                                             value={formData.couleur}
                                             onChange={handleChange}
-                                            className={inputClass('couleur')}
+                                           
                                             type="text"
                                             placeholder={t('u.ex_noir_mtallis')}
                                         />
@@ -685,11 +654,11 @@ const VehicleForm = () => {
                                     </div>
                                     <label className="block">
                                         <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.kilomtrage_actuel')}</span>
-                                        <input
+                                        <Input invalid={hasError('kilometrage')}
                                             name="kilometrage"
                                             value={formData.kilometrage}
                                             onChange={handleChange}
-                                            className={inputClass('kilometrage')}
+                                           
                                             type="number"
                                         />
                                         {fieldErrorMsg('kilometrage') && (
@@ -701,21 +670,21 @@ const VehicleForm = () => {
                                     </label>
                                     <label className="block">
                                         <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.prochaine_vidange_km')}</span>
-                                        <input
+                                        <Input invalid={hasError('prochain_vidange_km')}
                                             name="prochain_vidange_km"
                                             value={formData.prochain_vidange_km}
                                             onChange={handleChange}
-                                            className={inputClass('prochain_vidange_km')}
+                                           
                                             type="number"
                                         />
                                     </label>
                                     <label className="block">
                                         <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.puissance_fiscale_cv')}</span>
-                                        <input
+                                        <Input invalid={hasError('puissance_fiscale')}
                                             name="puissance_fiscale"
                                             value={formData.puissance_fiscale}
                                             onChange={handleChange}
-                                            className={inputClass('puissance_fiscale')}
+                                           
                                             type="number"
                                             min="1"
                                             placeholder="Ex: 8"
@@ -730,11 +699,11 @@ const VehicleForm = () => {
                             <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.prix_journalier_dh')}</span>
-                                    <input
+                                    <Input invalid={hasError('prix_par_jour')}
                                         name="prix_par_jour"
                                         value={formData.prix_par_jour}
                                         onChange={handleChange}
-                                        className={inputClass('prix_par_jour')}
+                                       
                                         type="number"
                                         step="0.01"
                                     />
@@ -760,11 +729,11 @@ const VehicleForm = () => {
                                 </div>
                                 <div className="md:col-span-2">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.tarif_km_suppl_spcifique_ce_vhic')}</span>
-                                    <input
+                                    <Input invalid={hasError('tarif_km_extra')}
                                         name="tarif_km_extra"
                                         value={formData.tarif_km_extra || ''}
                                         onChange={handleChange}
-                                        className={inputClass('tarif_km_extra')}
+                                       
                                         type="number"
                                         step="0.5"
                                         min="0"
@@ -821,13 +790,13 @@ const VehicleForm = () => {
                                                 </div>
                                                 <label className="block">
                                                     <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Prix / jour (DH)</span>
-                                                    <input
+                                                    <Input
                                                         type="number"
                                                         step="0.01"
                                                         min="0"
                                                         value={interval.prix}
                                                         onChange={(e) => updateInterval(index, { prix: e.target.value })}
-                                                        className={inputClass('price_intervals')}
+                                                       
                                                         placeholder="Ex: 400"
                                                     />
                                                 </label>
@@ -836,43 +805,43 @@ const VehicleForm = () => {
                                                         <div>
                                                             <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('u.dbut_mois_jour')}</span>
                                                             <div className="flex gap-2">
-                                                                <select
+                                                                <Select
                                                                     value={interval.mois_debut}
                                                                     onChange={(e) => updateInterval(index, { mois_debut: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
                                                                     <option value="">{t('u.mois')}</option>
                                                                     {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                                                                </select>
-                                                                <select
+                                                                </Select>
+                                                                <Select
                                                                     value={interval.jour_debut}
                                                                     onChange={(e) => updateInterval(index, { jour_debut: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
                                                                     <option value="">{t('u.jour')}</option>
                                                                     {DAYS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                                                                </select>
+                                                                </Select>
                                                             </div>
                                                         </div>
                                                         <div>
                                                             <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Fin (mois / jour)</span>
                                                             <div className="flex gap-2">
-                                                                <select
+                                                                <Select
                                                                     value={interval.mois_fin}
                                                                     onChange={(e) => updateInterval(index, { mois_fin: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
                                                                     <option value="">{t('u.mois')}</option>
                                                                     {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                                                                </select>
-                                                                <select
+                                                                </Select>
+                                                                <Select
                                                                     value={interval.jour_fin}
                                                                     onChange={(e) => updateInterval(index, { jour_fin: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
                                                                     <option value="">{t('u.jour')}</option>
                                                                     {DAYS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                                                                </select>
+                                                                </Select>
                                                             </div>
                                                         </div>
                                                         <p className="text-[11px] text-slate-400 md:col-span-2">{t('u.peut_chevaucher_la_fin_d_anne_ex')}</p>
@@ -881,20 +850,20 @@ const VehicleForm = () => {
                                                     <>
                                                         <label className="block">
                                                             <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('u.date_de_dbut')}</span>
-                                                            <input
+                                                            <Input
                                                                 type="date"
                                                                 value={interval.date_debut}
                                                                 onChange={(e) => updateInterval(index, { date_debut: e.target.value })}
-                                                                className={inputClass('price_intervals')}
+                                                               
                                                             />
                                                         </label>
                                                         <label className="block">
                                                             <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('u.date_de_fin')}</span>
-                                                            <input
+                                                            <Input
                                                                 type="date"
                                                                 value={interval.date_fin}
                                                                 onChange={(e) => updateInterval(index, { date_fin: e.target.value })}
-                                                                className={inputClass('price_intervals')}
+                                                               
                                                             />
                                                         </label>
                                                     </>
@@ -912,11 +881,11 @@ const VehicleForm = () => {
                             <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.expiration_assurance')}</span>
-                                    <input
+                                    <Input invalid={hasError('date_assurance')}
                                         name="date_assurance"
                                         value={formData.date_assurance}
                                         onChange={handleChange}
-                                        className={inputClass('date_assurance')}
+                                       
                                         type="date"
                                     />
                                     {fieldErrorMsg('date_assurance') && (
@@ -928,11 +897,11 @@ const VehicleForm = () => {
                                 </label>
                                 <label className="block">
                                     <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.visite_technique')}</span>
-                                    <input
+                                    <Input invalid={hasError('date_visite_technique')}
                                         name="date_visite_technique"
                                         value={formData.date_visite_technique}
                                         onChange={handleChange}
-                                        className={inputClass('date_visite_technique')}
+                                       
                                         type="date"
                                     />
                                     {fieldErrorMsg('date_visite_technique') && (

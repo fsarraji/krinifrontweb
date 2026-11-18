@@ -137,14 +137,7 @@ const ContractPhotos = ({ contractId, locked = false }) => {
                                 </a>
                                 <p className="px-2 py-1 text-[11px] font-semibold text-slate-600">{KIND_LABEL[photo.kind] || photo.kind}</p>
                                 {!locked && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(photo)}
-                                        aria-label={t('u.supprimer_la_photo', { kind: KIND_LABEL[photo.kind] || '' }).trim()}
-                                        className="absolute top-1 end-1 rounded-full bg-white/90 p-1 text-danger shadow"
-                                    >
-                                        <span className="material-symbols-outlined text-[16px]" aria-hidden="true">delete</span>
-                                    </button>
+                                    <Button variant="ghost" size="sm" iconOnly icon="delete" className="!text-danger" onClick={() => handleDelete(photo)} aria-label={t('u.supprimer_la_photo', { kind: KIND_LABEL[photo.kind] || '' }).trim()} />
                                 )}
                             </li>
                         ))}
