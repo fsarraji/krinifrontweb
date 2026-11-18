@@ -14,6 +14,12 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        // Langue de l'interface : le serveur rend les textes d'alertes dans cette langue.
+        try {
+            config.headers['Accept-Language'] = localStorage.getItem('lang') === 'ar' ? 'ar' : 'fr';
+        } catch {
+            /* stockage indisponible : langue par défaut du serveur */
+        }
         return config;
     },
     (error) => {

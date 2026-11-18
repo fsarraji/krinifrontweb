@@ -49,3 +49,19 @@ describe('fetchAllPages : suit les pages via des chemins relatifs', () => {
         expect(urls).toEqual(['contracts/', 'contracts/?page=2']);
     });
 });
+
+describe('api : langue envoyée au serveur', () => {
+    it("ajoute l'en-tête Accept-Language selon la langue choisie", async () => {
+        const seen = [];
+        api.defaults.adapter = async (config) => {
+            seen.push(config.headers['Accept-Language']);
+            return { data: {}, status: 200, statusText: 'OK', headers: {}, config };
+        };
+        localStorage.removeItem('lang');
+        await api.get('x/');
+        localStorage.setItem('lang', 'ar');
+        await api.get('x/');
+        localStorage.removeItem('lang');
+        expect(seen).toEqual(['fr', 'ar']);
+    });
+});
