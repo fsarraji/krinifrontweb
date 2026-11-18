@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { tNow } from '../i18n/runtime';
 
 // Event-bus for Message Boxes (modals)
 const LISTENERS = new Set();
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const messageBox = {
-    info: (message, title = 'Information') => open('info', title, message),
-    success: (message, title = 'Succès') => open('success', title, message),
-    error: (message, title = 'Erreur') => open('error', title, message),
-    warning: (message, title = 'Attention') => open('warning', title, message),
-    confirm: (message, title = 'Confirmation', options = {}) => open(
+    info: (message, title = tNow('u.information')) => open('info', title, message),
+    success: (message, title = tNow('u.succs')) => open('success', title, message),
+    error: (message, title = tNow('u.erreur')) => open('error', title, message),
+    warning: (message, title = tNow('u.attention')) => open('warning', title, message),
+    confirm: (message, title = tNow('u.confirmation'), options = {}) => open(
         'confirm',
         title,
         message,
@@ -18,25 +19,25 @@ export const messageBox = {
         options.destructive
     ).then((confirmed) => { if (confirmed && options.onConfirm) options.onConfirm(confirmed); }),
     // Variante « promesse » : resolve(true/false) — remplace window.confirm.
-    ask: (message, title = 'Confirmation', options = {}) => open(
+    ask: (message, title = tNow('u.confirmation'), options = {}) => open(
         options.destructive ? 'danger' : 'confirm',
         title,
         message,
-        options.confirmText || 'Confirmer',
-        options.cancelText || 'Annuler',
+        options.confirmText || tNow('u.confirmer'),
+        options.cancelText || tNow('u.annuler'),
         Boolean(options.destructive)
     ),
-    danger: (message, title = 'Suppression', options = {}) => open(
+    danger: (message, title = tNow('u.suppression'), options = {}) => open(
         'danger',
         title,
         message,
-        options.confirmText || 'Supprimer',
-        options.cancelText || 'Annuler',
+        options.confirmText || tNow('u.supprimer'),
+        options.cancelText || tNow('u.annuler'),
         true
     ).then((confirmed) => { if (confirmed && options.onConfirm) options.onConfirm(confirmed); }),
 };
 
-function open(type, title, message, confirmText = 'OK', cancelText = 'Annuler', destructive = false) {
+function open(type, title, message, confirmText = 'OK', cancelText = tNow('u.annuler'), destructive = false) {
     const id = Date.now() + Math.random().toString(36).substring(2, 5);
     const item = { id, type, title, message, confirmText, cancelText, destructive };
     LISTENERS.forEach(fn => fn(item));

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useI18n } from '../i18n/context';
 
 const FuelGaugeSelector = ({ value, onChange, compact = false }) => {
+    const { t } = useI18n();
     // value expected format: "2/8", "0/8", etc.
     const [isDragging, setIsDragging] = useState(false);
     const svgRef = useRef(null);
@@ -179,7 +181,7 @@ const FuelGaugeSelector = ({ value, onChange, compact = false }) => {
             
             {/* Quick helper text */}
             <div className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 text-slate-400 font-medium bg-white/90 rounded-full pointer-events-none uppercase tracking-wider ${compact ? 'text-[6px] px-1.5 py-px' : 'bottom-2 text-[9px] px-3 py-0.5'}`}>
-                Glisser ou Cliquer
+                {t('u.glisser_ou_cliquer')}
             </div>
         </div>
     );

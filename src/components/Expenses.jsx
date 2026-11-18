@@ -13,8 +13,10 @@ import Modal from './ui/Modal';
 import PageHeader from './ui/PageHeader';
 import Table from './ui/Table';
 import { formatDate, formatMoney } from '../utils/formatters';
+import { useI18n } from '../i18n/context';
 
 const Expenses = () => {
+    const { t } = useI18n();
     const [expenses, setExpenses] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -26,9 +28,9 @@ const Expenses = () => {
     const [pageSize, setPageSize] = useState(10);
 
     const TYPE_FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
-        { value: 'AGENCY', label: 'Agence', dot: 'bg-danger' },
-        { value: 'VEHICLE', label: 'Véhicule', dot: 'bg-indigo-500' },
+        { value: 'ALL', label: t('u.tous'), dot: 'bg-primary' },
+        { value: 'AGENCY', label: t('u.agence'), dot: 'bg-danger' },
+        { value: 'VEHICLE', label: t('u.vhicule'), dot: 'bg-indigo-500' },
     ];
 
     const [formData, setFormData] = useState({
@@ -41,18 +43,18 @@ const Expenses = () => {
     });
 
     const AGENCY_CATEGORIES = [
-        { value: 'Salaries', label: 'Salaires du personnel' },
-        { value: 'Rent', label: 'Loyer de l\'agence' },
-        { value: 'Utilities', label: 'Électricité / Eau / Internet' },
-        { value: 'Taxes', label: 'Taxes & Assurances' },
-        { value: 'Other', label: 'Autres charges agence' }
+        { value: 'Salaries', label: t('u.salaires_du_personnel') },
+        { value: 'Rent', label: t('u.loyer_de_l_agence') },
+        { value: 'Utilities', label: t('u.lectricit_eau_internet') },
+        { value: 'Taxes', label: t('u.taxes_assurances') },
+        { value: 'Other', label: t('u.autres_charges_agence') }
     ];
 
     const VEHICLE_CATEGORIES = [
-        { value: 'Maintenance', label: 'Entretien & Réparation' },
-        { value: 'Fuel', label: 'Carburant' },
-        { value: 'Taxes', label: 'Vignette & Assurance véhicule' },
-        { value: 'Other', label: 'Autres charges véhicule' }
+        { value: 'Maintenance', label: t('u.entretien_rparation') },
+        { value: 'Fuel', label: t('u.carburant') },
+        { value: 'Taxes', label: t('u.vignette_assurance_vhicule') },
+        { value: 'Other', label: t('u.autres_charges_vhicule') }
     ];
 
     const CATEGORIES = expenseType === 'VEHICLE' ? VEHICLE_CATEGORIES : AGENCY_CATEGORIES;
@@ -92,14 +94,14 @@ const Expenses = () => {
             const expenses = await fetchAllPages('expenses/');
             setExpenses(expenses);
             setShowModal(false);
-            toast.success("La dépense a été enregistrée avec succès.");
+            toast.success(t('u.la_dpense_a_t_enregistre_avec_su'));
             setFormData({
                 title: '', category: 'Other', amount: '', vehicle: '', 
                 expense_date: new Date().toISOString().split('T')[0], notes: ''
             });
         } catch (error) {
             console.error("Erreur ajout dépense", error);
-            toast.error("Erreur lors de l'ajout de la dépense.");
+            toast.error(t('u.erreur_lors_de_l_ajout_de_la_dpe'));
         }
     };
 
@@ -108,11 +110,11 @@ const Expenses = () => {
             visibleExpenses,
             'journal_depenses',
             [
-                { key: 'expense_date', label: 'Date' },
-                { key: 'title', label: 'Titre' },
-                { key: 'category', label: 'Catégorie' },
-                { key: 'amount', label: 'Montant (MAD)' },
-                { key: 'notes', label: 'Notes' },
+                { key: 'expense_date', label: t('u.date') },
+                { key: 'title', label: t('u.titre') },
+                { key: 'category', label: t('u.catgorie') },
+                { key: 'amount', label: t('u.montant_mad') },
+                { key: 'notes', label: t('u.notes') },
             ]
         );
     };
@@ -147,12 +149,12 @@ const Expenses = () => {
             {/* Header */}
             <PageHeader
                 className="!mb-0"
-                eyebrow="Comptabilité"
-                title="Dépenses"
+                eyebrow={t('u.comptabilit')}
+                title={t('u.dpenses')}
                 actions={(
                     <>
-                        <Button variant="outline" icon="download" onClick={handleExport} title="Exporter en CSV (Excel)">Exporter (CSV)</Button>
-                        <Button icon="add" onClick={() => setShowModal(true)}>Ajouter une dépense</Button>
+                        <Button variant="outline" icon="download" onClick={handleExport} title={t('u.exporter_en_csv_excel')}>{t('u.exporter_csv')}</Button>
+                        <Button icon="add" onClick={() => setShowModal(true)}>{t('u.ajouter_une_dpense')}</Button>
                     </>
                 )}
             />
@@ -165,7 +167,7 @@ const Expenses = () => {
                             <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] font-bold text-primary-light uppercase tracking-widest truncate">Total des Dépenses</p>
+                            <p className="text-[10px] font-bold text-primary-light uppercase tracking-widest truncate">{t('u.total_des_dpenses')}</p>
                             <p className="text-xl font-extrabold mt-1 leading-none">{formatMoney(totalGlobal)}</p>
                         </div>
                     </div>
@@ -177,7 +179,7 @@ const Expenses = () => {
                             <span className="material-symbols-outlined text-xl">storefront</span>
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Charges Agence</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{t('u.charges_agence')}</p>
                             <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalAgency)}</p>
                         </div>
                     </div>
@@ -189,7 +191,7 @@ const Expenses = () => {
                             <span className="material-symbols-outlined text-xl">directions_car</span>
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Charges Flotte</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{t('u.charges_flotte')}</p>
                             <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalVehicles)}</p>
                         </div>
                     </div>
@@ -199,7 +201,7 @@ const Expenses = () => {
             {/* Search & Filter */}
             <div>
                 <SearchFilterBar
-                    placeholder="Rechercher (titre, notes, catégorie)..."
+                    placeholder={t('u.rechercher_titre_notes_catgorie')}
                     search={search}
                     onSearchChange={setSearch}
                     options={TYPE_FILTER_OPTIONS}
@@ -210,13 +212,13 @@ const Expenses = () => {
 
             {/* List */}
             <Table
-                caption="Liste des dépenses"
+                caption={t('u.liste_des_dpenses')}
                 rows={paginatedExpenses}
-                emptyTitle="Aucune dépense enregistrée."
+                emptyTitle={t('u.aucune_dpense_enregistre')}
                 columns={[
-                    { key: 'expense_date', label: 'Date', className: 'whitespace-nowrap font-medium', render: (v) => formatDate(v) },
+                    { key: 'expense_date', label: t('u.date'), className: 'whitespace-nowrap font-medium', render: (v) => formatDate(v) },
                     {
-                        key: 'title', label: 'Titre / Description',
+                        key: 'title', label: t('u.titre_description'),
                         render: (v, e) => (
                             <>
                                 <p className="font-semibold text-on-surface">{v}</p>
@@ -225,18 +227,18 @@ const Expenses = () => {
                         ),
                     },
                     {
-                        key: 'category', label: 'Type & catégorie',
+                        key: 'category', label: t('u.type_catgorie'),
                         render: (_, e) => (
                             <div className="flex flex-col gap-1 items-start">
                                 {e.vehicle ? (
                                     <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-primary-light text-primary-deep ring-1 ring-primary-border">
                                         <span className="material-symbols-outlined text-xs" aria-hidden="true">directions_car</span>
-                                        Véhicule #{e.vehicle}
+                                        {t('u.vhicule_2', { id: e.vehicle })}
                                     </span>
                                 ) : (
                                     <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-danger-bg text-danger-dark ring-1 ring-danger-border">
                                         <span className="material-symbols-outlined text-xs" aria-hidden="true">storefront</span>
-                                        Agence
+                                        {t('u.agence')}
                                     </span>
                                 )}
                                 <span className="text-xs text-text-muted font-medium">
@@ -245,7 +247,7 @@ const Expenses = () => {
                             </div>
                         ),
                     },
-                    { key: 'amount', label: 'Montant', align: 'right', render: (v) => <span className="font-extrabold text-danger">-{formatMoney(v)}</span> },
+                    { key: 'amount', label: t('u.montant'), align: 'right', render: (v) => <span className="font-extrabold text-danger">-{formatMoney(v)}</span> },
                 ]}
                 footer={visibleExpenses.length > 0 && (
                     <Pagination
@@ -263,19 +265,19 @@ const Expenses = () => {
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 size="md"
-                title="Enregistrer une dépense"
+                title={t('u.enregistrer_une_dpense')}
                 footer={(
                     <>
-                        <Button variant="outline" onClick={() => setShowModal(false)}>Annuler</Button>
-                        <Button type="submit" form="expenseForm" variant="danger" icon="check_circle">Valider</Button>
+                        <Button variant="outline" onClick={() => setShowModal(false)}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="expenseForm" variant="danger" icon="check_circle">{t('u.valider')}</Button>
                     </>
                 )}
             >
                 <div className="space-y-4">
-                    <div role="group" aria-label="Type de dépense" className="flex bg-surface-container p-1 rounded-token">
+                    <div role="group" aria-label={t('u.type_de_dpense')} className="flex bg-surface-container p-1 rounded-token">
                         {[
-                            ['AGENCY', 'storefront', 'Dépense agence', 'Salaries', { vehicle: '' }],
-                            ['VEHICLE', 'directions_car', 'Dépense véhicule', 'Maintenance', {}],
+                            ['AGENCY', 'storefront', t('u.dpense_agence'), 'Salaries', { vehicle: '' }],
+                            ['VEHICLE', 'directions_car', t('u.dpense_vhicule'), 'Maintenance', {}],
                         ].map(([type, icon, label, cat, extra]) => (
                             <button
                                 key={type}
@@ -290,21 +292,21 @@ const Expenses = () => {
                     </div>
 
                     <form id="expenseForm" onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Field label="Titre de la dépense" required className="sm:col-span-2">
-                            <Input type="text" required placeholder="Ex : Facture électricité janvier" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+                        <Field label={t('u.titre_de_la_dpense')} required className="sm:col-span-2">
+                            <Input type="text" required placeholder={t('u.ex_facture_lectricit_janvier')} value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
                         </Field>
-                        <Field label="Montant (MAD)" required>
-                            <Input type="number" required min="0" step="0.01" placeholder="Ex : 500" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
+                        <Field label={t('u.montant_mad')} required>
+                            <Input type="number" required min="0" step="0.01" placeholder={t('u.ex_500')} value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
                         </Field>
-                        <Field label="Date" required>
+                        <Field label={t('u.date')} required>
                             <Input type="date" required value={formData.expense_date} onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })} />
                         </Field>
 
                         <div className={`sm:col-span-2 ${expenseType === 'VEHICLE' ? '' : 'hidden'}`}>
-                            <p className="label mb-1.5">Véhicule concerné <span className="text-danger" aria-hidden="true">*</span></p>
+                            <p className="label mb-1.5">{t('u.vhicule_concern')} <span className="text-danger" aria-hidden="true">*</span></p>
                             <Dropdown
                                 isSearchable
-                                placeholder="-- Sélectionner un véhicule --"
+                                placeholder={t('u.slectionner_un_vhicule')}
                                 options={vehicles.map((v) => ({ value: String(v.id), label: `${v.marque} ${v.modele} - ${v.matricule}` }))}
                                 value={formData.vehicle}
                                 onChange={(v) => setFormData({ ...formData, vehicle: v || '' })}
@@ -312,12 +314,12 @@ const Expenses = () => {
                         </div>
 
                         <div className="sm:col-span-2">
-                            <p className="label mb-1.5">Catégorie <span className="text-danger" aria-hidden="true">*</span></p>
+                            <p className="label mb-1.5">{t('u.catgorie')} <span className="text-danger" aria-hidden="true">*</span></p>
                             <Dropdown options={CATEGORIES} value={formData.category} onChange={(v) => setFormData({ ...formData, category: v })} />
                         </div>
 
-                        <Field label="Notes" className="sm:col-span-2">
-                            <Textarea rows={2} placeholder="Détails (facultatif)…" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                        <Field label={t('u.notes')} className="sm:col-span-2">
+                            <Textarea rows={2} placeholder={t('u.dtails_facultatif')} value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
                         </Field>
                     </form>
                 </div>

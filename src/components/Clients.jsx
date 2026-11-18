@@ -132,34 +132,34 @@ const Clients = () => {
     const withEmailCount = allClients.filter(c => c.email).length;
 
     const EXPORT_COLUMNS = [
-        { key: 'prenom', label: 'Prénom' },
-        { key: 'nom', label: 'Nom' },
-        { key: 'telephone', label: 'Téléphone' },
-        { key: 'email', label: 'Email' },
-        { key: 'cin_passport', label: 'CIN / Passeport' },
-        { key: 'date_expiration_cin', label: 'Expiration CIN' },
-        { key: 'permis_conduite', label: 'Permis de conduire' },
-        { key: 'nationalite', label: 'Nationalité' },
-        { key: 'sexe', label: 'Sexe' },
-        { key: 'ville', label: 'Ville' },
-        { key: 'pays', label: 'Pays' },
-        { key: 'liste_noire', label: 'Liste Noire' },
+        { key: 'prenom', label: tr('u.prnom') },
+        { key: 'nom', label: tr('u.nom') },
+        { key: 'telephone', label: tr('u.tlphone') },
+        { key: 'email', label: tr('u.email') },
+        { key: 'cin_passport', label: tr('u.cin_passeport') },
+        { key: 'date_expiration_cin', label: tr('u.expiration_cin') },
+        { key: 'permis_conduite', label: tr('u.permis_de_conduire') },
+        { key: 'nationalite', label: tr('u.nationalit') },
+        { key: 'sexe', label: tr('u.sexe') },
+        { key: 'ville', label: tr('u.ville') },
+        { key: 'pays', label: tr('u.pays') },
+        { key: 'liste_noire', label: tr('u.liste_noire_2') },
     ];
 
     const handleDelete = (c) => {
         messageBox.danger(
-            `Le client ${c.prenom} ${c.nom} sera retiré de l'annuaire et ne sera plus visible. Il pourra être restauré par le super admin.`,
-            'Confirmer la suppression',
+            tr('u.le_client_sera_retir_de_l_annuai', { name: `${c.prenom} ${c.nom}` }),
+            tr('u.confirmer_la_suppression'),
             {
-                confirmText: 'Supprimer',
+                confirmText: tr('clients.menu.delete'),
                 onConfirm: async () => {
                     try {
                         await api.patch(`clients/${c.id}/`, { is_deleted: true });
-                        toast.success('Client supprimé.');
+                        toast.success(tr('u.client_supprim'));
                         fetchClients(page);
                         fetchAllClientsStats();
                     } catch (err) {
-                        toast.error(err.response?.data?.detail || 'Impossible de supprimer le client.');
+                        toast.error(err.response?.data?.detail || tr('u.impossible_de_supprimer_le_clien'));
                     }
                 },
             }
@@ -168,18 +168,18 @@ const Clients = () => {
 
     const handleRestore = (c) => {
         messageBox.confirm(
-            `Restaurer le client ${c.prenom} ${c.nom} ? Il réapparaîtra dans l'annuaire.`,
-            'Restaurer le client',
+            tr('u.restaurer_le_client_il_rapparatr', { name: `${c.prenom} ${c.nom}` }),
+            tr('u.restaurer_le_client'),
             {
-                confirmText: 'Restaurer',
+                confirmText: tr('clients.menu.restore'),
                 onConfirm: async () => {
                     try {
                         await api.patch(`clients/${c.id}/`, { is_deleted: false });
-                        toast.success('Client restauré.');
+                        toast.success(tr('u.client_restaur'));
                         fetchClients(page);
                         fetchAllClientsStats();
                     } catch (err) {
-                        toast.error(err.response?.data?.detail || 'Impossible de restaurer le client.');
+                        toast.error(err.response?.data?.detail || tr('u.impossible_de_restaurer_le_clien'));
                     }
                 },
             }

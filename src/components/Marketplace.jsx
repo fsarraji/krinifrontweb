@@ -5,8 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { resolveImage } from '../imageUrl';
 import Dropdown from './Dropdown';
 import { formatMoney } from '../utils/formatters';
+import { useI18n } from '../i18n/context';
 
 const Marketplace = () => {
+  const { t } = useI18n();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -57,10 +59,10 @@ const Marketplace = () => {
           <div className="flex items-center gap-12">
             <span className="text-2xl font-bold tracking-tighter text-primary dark:text-white font-manrope cursor-pointer" onClick={() => navigate('/')}>Kricar Marketplace</span>
             <div className="hidden md:flex items-center gap-8 font-manrope text-sm font-semibold tracking-tight">
-              <a className="text-primary dark:text-white border-b-2 border-primary dark:border-blue-400 pb-1" href="#">Parcourir</a>
-              <a className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors" href="#">Agences</a>
-              <a className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors" href="#">Assurance</a>
-              <a className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors" href="#">Assistance</a>
+              <a className="text-primary dark:text-white border-b-2 border-primary dark:border-blue-400 pb-1" href="#">{t('u.parcourir')}</a>
+              <a className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors" href="#">{t('u.agences')}</a>
+              <a className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors" href="#">{t('u.assurance')}</a>
+              <a className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors" href="#">{t('u.assistance')}</a>
             </div>
           </div>
           <div className="flex items-center gap-6">
@@ -72,7 +74,7 @@ const Marketplace = () => {
               onClick={() => navigate('/login')}
               className="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold tracking-wide active:scale-95 duration-150 ease-in-out transition-all"
             >
-              Se connecter
+              {t('u.se_connecter')}
             </button>
           </div>
         </div>
@@ -89,37 +91,37 @@ const Marketplace = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
             <div className="relative z-10 text-center px-4">
-              <h1 className="text-white text-5xl md:text-6xl font-extrabold tracking-tight mb-4 font-manrope">Le concierge de précision.</h1>
-              <p className="text-white/90 text-xl max-w-2xl mx-auto">Découvrez une flotte exclusive, sélectionnée pour votre voyage.</p>
+              <h1 className="text-white text-5xl md:text-6xl font-extrabold tracking-tight mb-4 font-manrope">{t('u.le_concierge_de_prcision')}</h1>
+              <p className="text-white/90 text-xl max-w-2xl mx-auto">{t('u.dcouvrez_une_flotte_exclusive_sl')}</p>
             </div>
           </div>
 
           {/* Search Bar Overlay */}
           <div className="relative z-20 max-w-5xl mx-auto bg-white p-4 rounded-xl shadow-xl flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1 w-full">
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">Lieu</label>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">{t('u.lieu')}</label>
               <div className="bg-slate-50 flex items-center px-4 py-3 rounded-lg border-b-2 border-transparent focus-within:border-primary transition-all">
-                <span className="material-symbols-outlined text-slate-400 mr-2">location_on</span>
-                <input className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium" placeholder="Ville ou aéroport de départ" type="text"/>
+                <span className="material-symbols-outlined text-slate-400 me-2">location_on</span>
+                <input className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium" placeholder={t('u.ville_ou_aroport_de_dpart')} type="text"/>
               </div>
             </div>
             <div className="flex-1 w-full">
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">Dates</label>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">{t('u.dates')}</label>
               <div className="bg-slate-50 flex items-center px-4 py-3 rounded-lg border-b-2 border-transparent focus-within:border-primary transition-all">
-                <span className="material-symbols-outlined text-slate-400 mr-2">calendar_today</span>
+                <span className="material-symbols-outlined text-slate-400 me-2">calendar_today</span>
                 <input className="bg-transparent border-none focus:ring-0 text-sm w-full font-medium" placeholder="24 oct. - 28 oct." type="text"/>
               </div>
             </div>
             <div className="flex-1 w-full">
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">Catégorie de véhicule</label>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1 px-1">{t('u.catgorie_de_vhicule')}</label>
               <div className="bg-slate-50 flex items-center px-4 py-3 rounded-lg border-b-2 border-transparent focus-within:border-primary transition-all">
-                <span className="material-symbols-outlined text-slate-400 mr-2">directions_car</span>
+                <span className="material-symbols-outlined text-slate-400 me-2">directions_car</span>
                 <Dropdown
                   options={[
-                    { value: 'All Vehicles', label: 'Tous les véhicules' },
-                    { value: 'Luxury Sedan', label: 'Berline de luxe' },
-                    { value: 'Premium SUV', label: 'SUV premium' },
-                    { value: 'Sports Coupe', label: 'Coupé sport' }
+                    { value: 'All Vehicles', label: t('u.tous_les_vhicules') },
+                    { value: 'Luxury Sedan', label: t('u.berline_de_luxe') },
+                    { value: 'Premium SUV', label: t('u.suv_premium') },
+                    { value: 'Sports Coupe', label: t('u.coup_sport') }
                   ]}
                   value={filters.category}
                   onChange={(v) => setFilters({...filters, category: v})}
@@ -128,7 +130,7 @@ const Marketplace = () => {
             </div>
             <button className="bg-primary hover:bg-primary-deep text-white px-8 py-3.5 rounded-lg font-bold transition-all h-[50px] flex items-center gap-2">
               <span className="material-symbols-outlined text-lg">search</span>
-              Trouver un véhicule
+              {t('u.trouver_un_vhicule')}
             </button>
           </div>
         </section>
@@ -140,12 +142,12 @@ const Marketplace = () => {
               <div>
                 <h3 className="font-manrope font-bold text-lg mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">filter_list</span>
-                  Affiner les résultats
+                  {t('u.affiner_les_rsultats')}
                 </h3>
                 <div className="space-y-8">
                   {/* Agency Filter Placeholder */}
                   <div className="bg-slate-50 p-4 rounded-xl">
-                    <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4">Agence de location</span>
+                    <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4">{t('u.agence_de_location')}</span>
                     <div className="space-y-3">
                       {['Vantage Elite', 'Hertz Premium', 'Sixt Luxury'].map(agency => (
                         <label key={agency} className="flex items-center gap-3 cursor-pointer group">
@@ -158,7 +160,7 @@ const Marketplace = () => {
 
                   {/* Price Range */}
                   <div className="bg-slate-50 p-4 rounded-xl">
-                    <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4">Prix / jour (max {formatMoney(filters.price, { decimals: 0 })})</span>
+                    <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4">{t('u.prix_jour_max', { max: formatMoney(filters.price, { decimals: 0 }) })}</span>
                     <input 
                       className="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-primary" 
                       max="1000" min="50" step="50" type="range" 
@@ -178,16 +180,16 @@ const Marketplace = () => {
           {/* Vehicle Grid */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-8">
-              <p className="text-sm text-slate-500">Affichage de <span className="font-bold text-slate-900">{filteredVehicles.length} véhicules</span> disponibles</p>
+              <p className="text-sm text-slate-500">{t('u.affichage_de')} <span className="font-bold text-slate-900">{t('u.vhicules_2', { n: filteredVehicles.length })}</span> {t('u.disponibles_2')}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Trier par</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400">{t('u.trier_par')}</span>
                 <Dropdown
                   options={[
-                    { value: 'Relevance', label: 'Relevance' },
-                    { value: 'Price: Low to High', label: 'Price: Low to High' },
-                    { value: 'Price: High to Low', label: 'Price: High to Low' }
+                    { value: 'Relevance', label: t('u.pertinence') },
+                    { value: 'Price: Low to High', label: t('u.prix_croissant') },
+                    { value: 'Price: High to Low', label: t('u.prix_dcroissant') }
                   ]}
-                  defaultValue={{ value: 'Relevance', label: 'Relevance' }}
+                  defaultValue={{ value: 'Relevance', label: t('u.pertinence') }}
                   styles={{
                     control: (base) => ({
                       ...base,
@@ -221,7 +223,7 @@ const Marketplace = () => {
                           <span className="material-symbols-outlined text-6xl">directions_car</span>
                         </div>
                       )}
-                      <div className="absolute top-4 right-4">
+                      <div className="absolute top-4 end-4">
                         <span className="bg-white/80 backdrop-blur-md text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest text-primary">
                           {vehicle.carburant}
                         </span>
@@ -233,15 +235,15 @@ const Marketplace = () => {
                           <h3 className="text-xl font-extrabold font-manrope leading-none">{vehicle.marque_name} {vehicle.modele_name}</h3>
                           <p className="text-sm text-slate-400 font-medium mt-1">{vehicle.annee} • {vehicle.couleur}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <span className="text-2xl font-bold font-manrope text-primary">{formatMoney(vehicle.prix_par_jour, { decimals: 0 })}</span>
-                          <span className="text-xs text-slate-400 font-bold block">/ JOUR</span>
+                          <span className="text-xs text-slate-400 font-bold block">{t('u.jour_2')}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 py-4 mb-4 border-y border-slate-100">
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <span className="material-symbols-outlined text-sm">settings_input_component</span>
-                          <span className="text-xs font-semibold">Automatique</span>
+                          <span className="text-xs font-semibold">{t('u.automatique')}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <span className="material-symbols-outlined text-sm">local_gas_station</span>
@@ -255,7 +257,7 @@ const Marketplace = () => {
                           </div>
                           <span className="text-xs font-bold text-slate-500">{vehicle.agency_details?.name || 'Kricar Partner'}</span>
                         </div>
-                        <button className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:shadow-lg transition-all">Réserver</button>
+                        <button className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:shadow-lg transition-all">{t('u.rserver')}</button>
                       </div>
                     </div>
                   </div>
@@ -266,7 +268,7 @@ const Marketplace = () => {
             {filteredVehicles.length === 0 && !loading && (
               <div className="text-center py-20 bg-slate-50 rounded-xl">
                 <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">search_off</span>
-                <p className="text-slate-500 font-medium">Aucun véhicule ne correspond à vos critères.</p>
+                <p className="text-slate-500 font-medium">{t('u.aucun_vhicule_ne_correspond_vos_')}</p>
               </div>
             )}
           </div>
@@ -277,12 +279,12 @@ const Marketplace = () => {
         <div className="w-full py-12 px-8 flex flex-col md:flex-row justify-between items-center gap-6 max-w-screen-2xl mx-auto">
           <div className="flex flex-col gap-2">
             <span className="font-manrope font-bold text-white text-xl">Kricar Agency</span>
-            <p className="text-xs tracking-wide text-slate-400">© 2026 Kricar Agency. Tous droits réservés.</p>
+            <p className="text-xs tracking-wide text-slate-400">{t('u.2026_kricar_agency_tous_droits_r')}</p>
           </div>
           <div className="flex flex-wrap justify-center gap-8 text-xs tracking-wide uppercase">
-            <a className="text-slate-400 hover:text-white underline transition-all" href="#">Confidentialité</a>
-            <a className="text-slate-400 hover:text-white underline transition-all" href="#">Conditions d'utilisation</a>
-            <a className="text-slate-400 hover:text-white underline transition-all" href="#">Solutions de flotte</a>
+            <a className="text-slate-400 hover:text-white underline transition-all" href="#">{t('u.confidentialit')}</a>
+            <a className="text-slate-400 hover:text-white underline transition-all" href="#">{t('u.conditions_d_utilisation')}</a>
+            <a className="text-slate-400 hover:text-white underline transition-all" href="#">{t('u.solutions_de_flotte')}</a>
           </div>
         </div>
       </footer>

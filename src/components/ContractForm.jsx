@@ -14,6 +14,7 @@ import { formatMoney, formatNumber } from '../utils/formatters';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Button from './ui/Button';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
+import { useI18n } from '../i18n/context';
 
 const getLocalDatetime = (date) => {
     const tzoffset = date.getTimezoneOffset() * 60000;
@@ -21,6 +22,7 @@ const getLocalDatetime = (date) => {
 };
 
 const ContractForm = () => {
+    const { t } = useI18n();
     const { formProps, markClean } = useUnsavedChanges();
     const navigate = useNavigate();
     const location = useLocation();
@@ -37,10 +39,10 @@ const ContractForm = () => {
     const [quoteLoading, setQuoteLoading] = useState(false);
 
     const steps = [
-        { num: 1, label: 'Véhicule', icon: 'directions_car' },
-        { num: 2, label: 'Client', icon: 'person' },
-        { num: 3, label: 'Période & Tarification', icon: 'payments' },
-        { num: 4, label: 'Inspection & Validation', icon: 'fact_check' },
+        { num: 1, label: t('u.vhicule'), icon: 'directions_car' },
+        { num: 2, label: t('u.client'), icon: 'person' },
+        { num: 3, label: t('u.priode_tarification'), icon: 'payments' },
+        { num: 4, label: t('u.inspection_validation'), icon: 'fact_check' },
     ];
 
     const hasError = (name) => Boolean(fieldErrors[name]);
@@ -176,7 +178,7 @@ const ContractForm = () => {
         };
 
     const fetchGpsKm = async () => {
-        if (!selectedVehicle) { toast.error('Veuillez d\'abord sélectionner un véhicule'); return; }
+        if (!selectedVehicle) { toast.error(t('u.veuillez_d_abord_slectionner_un_')); return; }
         setKmLoading(true);
         try {
             const { data } = await api.get(`gps/positions/${selectedVehicle.id}/`);
@@ -184,13 +186,13 @@ const ContractForm = () => {
             if (odometer != null) {
                 const km = Math.round(odometer / 1000);
                 setFormData((prev) => ({ ...prev, km_sortie: km }));
-                toast.success(`Kilométrage GPS : ${formatNumber(km)} km`);
+                toast.success(t('u.kilomtrage_gps_km', { km: formatNumber(km) }));
             } else {
-                toast.error('Aucune position GPS / kilométrage disponible pour ce véhicule.');
+                toast.error(t('u.aucune_position_gps_kilomtrage_d'));
             }
         } catch (error) {
             console.error("Erreur lors de la récupération du kilométrage GPS", error);
-            toast.error("Impossible de récupérer le kilométrage GPS.");
+            toast.error(t('u.impossible_de_rcuprer_le_kilomtr'));
         } finally {
             setKmLoading(false);
         }
@@ -213,10 +215,10 @@ const ContractForm = () => {
     
         const handleNext = () => {
             if (currentStep === 1) {
-                if (!formData.vehicle) { setFieldErrors((prev) => ({ ...prev, vehicle: true })); toast.error('Veuillez sélectionner un véhicule'); return; }
+                if (!formData.vehicle) { setFieldErrors((prev) => ({ ...prev, vehicle: true })); toast.error(t('u.veuillez_slectionner_un_vhicule')); return; }
             }
             if (currentStep === 2) {
-                if (!formData.client) { setFieldErrors((prev) => ({ ...prev, client: true })); toast.error('Veuillez sélectionner un client'); return; }
+                if (!formData.client) { setFieldErrors((prev) => ({ ...prev, client: true })); toast.error(t('u.veuillez_slectionner_un_client')); return; }
             }
             setCurrentStep((prev) => Math.min(prev + 1, 4));
         };
@@ -224,17 +226,17 @@ const ContractForm = () => {
     
         const handleSubmit = async (e) => {
             e.preventDefault();
-            if (!formData.vehicle) { setFieldErrors((prev) => ({ ...prev, vehicle: true })); setCurrentStep(1); toast.error('Veuillez sélectionner un véhicule'); return; }
-            if (!formData.client) { setFieldErrors((prev) => ({ ...prev, client: true })); setCurrentStep(2); toast.error('Veuillez sélectionner un client'); return; }
+            if (!formData.vehicle) { setFieldErrors((prev) => ({ ...prev, vehicle: true })); setCurrentStep(1); toast.error(t('u.veuillez_slectionner_un_vhicule')); return; }
+            if (!formData.client) { setFieldErrors((prev) => ({ ...prev, client: true })); setCurrentStep(2); toast.error(t('u.veuillez_slectionner_un_client')); return; }
             const advance = Number(formData.montant_paye || 0);
             if (!Number.isFinite(advance) || advance < 0) {
                 setCurrentStep(4);
-                toast.error('Le montant versé ne peut pas être négatif.');
+                toast.error(t('u.le_montant_vers_ne_peut_pas_tre_'));
                 return;
             }
             if (advance > totalEstimate() + 0.001) {
                 setCurrentStep(4);
-                toast.error(`Le montant versé (${formatMoney(advance)}) dépasse le total estimé (${formatMoney(totalEstimate())}).`);
+                toast.error(t('u.le_montant_vers_dpasse_le_total_', { advance: formatMoney(advance), total: formatMoney(totalEstimate()) }));
                 return;
             }
             try {
@@ -250,10 +252,10 @@ const ContractForm = () => {
                 await api.post('contracts/', dataToSubmit);
             markClean();
             navigate('/contracts');
-            toast.success('Contrat créé avec succès.');
+            toast.success(t('u.contrat_cr_avec_succs'));
             } catch (error) {
                 console.error("Erreur lors de la création du contrat", error);
-                toast.error(apiErrorText(error, "Erreur lors de la création du contrat. Vérifiez les champs et la disponibilité du véhicule."));
+                toast.error(apiErrorText(error, t('u.erreur_lors_de_la_cration_du_con')));
             }
         };
     
@@ -265,7 +267,7 @@ const ContractForm = () => {
         const filteredVehicles = vehicles.filter((v) => matchesSearch(v) && isFreeOnPeriod(v));
         const hiddenBusyCount = vehicles.filter((v) => matchesSearch(v) && !isFreeOnPeriod(v)).length;
     
-        if (loading) return <div className="p-8 text-center font-bold" style={{ color: 'var(--primary-container)' }}>Initialisation du Fleet Concierge...</div>;
+        if (loading) return <div className="p-8 text-center font-bold" style={{ color: 'var(--primary-container)' }}>{t('u.initialisation_du_fleet_concierg')}</div>;
 
         const fieldClass = (name) => `field transition-all duration-200 ${hasError(name) ? 'border-danger bg-danger-bg/40' : 'focus:bg-white'}`;
 
@@ -291,24 +293,24 @@ const ContractForm = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div>
                         <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                            Contrats / Nouveau
+                            {t('u.contrats_nouveau')}
                         </p>
                         <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                            Nouveau contrat de location
+                            {t('u.nouveau_contrat_de_location')}
                         </h1>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                        <Button variant="ghost" onClick={() => navigate('/contracts')}>Annuler</Button>
+                        <Button variant="ghost" onClick={() => navigate('/contracts')}>{t('u.annuler')}</Button>
                         {currentStep > 1 && (
-                            <Button variant="outline" icon="arrow_back" onClick={handlePrev}>Étape précédente</Button>
+                            <Button variant="outline" icon="arrow_back" onClick={handlePrev}>{t('u.tape_prcdente')}</Button>
                         )}
                         {currentStep < 4 ? (
                             <Button onClick={handleNext}>
-                                Continuer
+                                {t('u.continuer')}
                                 <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">arrow_forward</span>
                             </Button>
                         ) : (
-                            <Button variant="success" icon="fact_check" onClick={handleSubmit}>Valider le contrat</Button>
+                            <Button variant="success" icon="fact_check" onClick={handleSubmit}>{t('u.valider_le_contrat')}</Button>
                         )}
                     </div>
                 </div>
@@ -323,10 +325,10 @@ const ContractForm = () => {
                             <div className={hasError('vehicle') ? 'border-danger ring-1 ring-danger/30 rounded-xl' : ''}>
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="relative">
-                                        <span className="material-symbols-outlined absolute left-3 top-3 text-slate-400 text-[16px]">search</span>
+                                        <span className="material-symbols-outlined absolute start-3 top-3 text-slate-400 text-[16px]">search</span>
                                         <input
-                                            className="field pl-9"
-                                            placeholder="Rechercher dans la flotte..."
+                                            className="field ps-9"
+                                            placeholder={t('u.rechercher_dans_la_flotte')}
                                             type="text"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -366,7 +368,7 @@ const ContractForm = () => {
                                         </div>
                                     ))}
                                     {filteredVehicles.length === 0 && (
-                                        <div className="col-span-2 py-10 text-center text-slate-400 font-medium text-sm">Aucun véhicule disponible trouvé.</div>
+                                        <div className="col-span-2 py-10 text-center text-slate-400 font-medium text-sm">{t('u.aucun_vhicule_disponible_trouv')}</div>
                                     )}
                                 </div>
                             </div>
@@ -382,11 +384,11 @@ const ContractForm = () => {
                                         style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
                                     >
                                         <span className="material-symbols-outlined text-sm">add</span>
-                                        NOUVEAU CLIENT
+                                        {t('u.nouveau_client')}
                                     </button>
                                 </div>
                                 <div>
-                                    <label className="label mb-2">Sélectionner un client existant</label>
+                                    <label className="label mb-2">{t('u.slectionner_un_client_existant')}</label>
                                     <Select
                                         options={clients.map(c => ({
                                             value: c.id,
@@ -401,7 +403,7 @@ const ContractForm = () => {
                                             value: formData.client,
                                             label: selectedClient ? `${selectedClient.nom} ${selectedClient.prenom} (${selectedClient.cin_passport})` : ''
                                         } : null}
-                                        placeholder="Rechercher par nom, prénom ou CIN..."
+                                        placeholder={t('u.rechercher_par_nom_prnom_ou_cin')}
                                         isSearchable
                                         isClearable
                                         classNamePrefix="react-select"
@@ -412,18 +414,18 @@ const ContractForm = () => {
                                 {formData.client && (
                                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="p-3 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
-                                            <p className="label mb-1">Téléphone</p>
+                                            <p className="label mb-1">{t('u.tlphone')}</p>
                                             <p className="text-sm font-bold" style={{ color: 'var(--on-surface)' }}>{selectedClient?.telephone || 'N/A'}</p>
                                         </div>
                                         <div className="p-3 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
-                                            <p className="label mb-1">N° Permis</p>
+                                            <p className="label mb-1">{t('u.n_permis')}</p>
                                             <p className="text-sm font-bold" style={{ color: 'var(--on-surface)' }}>{selectedClient?.permis_conduite || 'N/A'}</p>
                                         </div>
                                     </div>
                                 )}
 
                                 <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--stroke)' }}>
-                                    <label className="label mb-2">Deuxième Conducteur (Optionnel)</label>
+                                    <label className="label mb-2">{t('u.deuxime_conducteur_optionnel')}</label>
                                     <Select
                                         options={clients.filter(c => c.id != formData.client).map(c => ({
                                             value: c.id,
@@ -434,7 +436,7 @@ const ContractForm = () => {
                                             value: formData.deuxieme_chauffeur,
                                             label: clients.find(c => c.id == formData.deuxieme_chauffeur) ? `${clients.find(c => c.id == formData.deuxieme_chauffeur).nom} ${clients.find(c => c.id == formData.deuxieme_chauffeur).prenom} (${clients.find(c => c.id == formData.deuxieme_chauffeur).cin_passport})` : ''
                                         } : null}
-                                        placeholder="Rechercher un deuxième chauffeur..."
+                                        placeholder={t('u.rechercher_un_deuxime_chauffeur')}
                                         isSearchable
                                         isClearable
                                         classNamePrefix="react-select"
@@ -448,25 +450,25 @@ const ContractForm = () => {
                             <>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div>
-                                        <label className="label">Date et Heure de Départ</label>
+                                        <label className="label">{t('u.date_et_heure_de_dpart')}</label>
                                         <DatePicker
                                             className={fieldClass('date_sortie')}
                                             value={formData.date_sortie}
                                             onChange={(v) => setFormData({...formData, date_sortie: v})}
                                             min={getLocalDatetime(new Date()).slice(0, 10)}
                                             disabledRanges={unavailableRanges}
-                                            placeholder="Choisir la date de départ"
+                                            placeholder={t('u.choisir_la_date_de_dpart')}
                                         />
                                     </div>
                                     <div>
-                                        <label className="label">Date et Heure de Retour Prévu</label>
+                                        <label className="label">{t('u.date_et_heure_de_retour_prvu')}</label>
                                         <DatePicker
                                             className={fieldClass('date_retour_prevue')}
                                             value={formData.date_retour_prevue}
                                             onChange={(v) => setFormData({...formData, date_retour_prevue: v})}
                                             min={formData.date_sortie ? formData.date_sortie.slice(0, 10) : getLocalDatetime(new Date()).slice(0, 10)}
                                             disabledRanges={unavailableRanges}
-                                            placeholder="Choisir la date de retour"
+                                            placeholder={t('u.choisir_la_date_de_retour')}
                                         />
                                     </div>
                                 </div>
@@ -474,8 +476,8 @@ const ContractForm = () => {
                                 <div className="space-y-5">
                                         <div className="check-item justify-between">
                                             <div>
-                                                <p className="text-sm font-bold" style={{ color: 'var(--on-surface)' }}>Service Chauffeur</p>
-                                                <p className="text-xs" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Conducteur premium</p>
+                                                <p className="text-sm font-bold" style={{ color: 'var(--on-surface)' }}>{t('u.service_chauffeur')}</p>
+                                                <p className="text-xs" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.conducteur_premium')}</p>
                                             </div>
                                             <div
                                                 onClick={() => setFormData({...formData, chauffeur_service: !formData.chauffeur_service})}
@@ -488,7 +490,7 @@ const ContractForm = () => {
                                         </div>
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
-                                                <label className="label mb-0">Garantie (Caution)</label>
+                                                <label className="label mb-0">{t('u.garantie_caution')}</label>
                                                 <div
                                                     onClick={() => {
                                                         const newState = !isCautionActive;
@@ -503,9 +505,9 @@ const ContractForm = () => {
                                                 </div>
                                             </div>
                                             <div className="relative">
-                                                <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
+                                                <span className="absolute start-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
                                                 <input
-                                                    className={`field pl-10 ${!isCautionActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    className={`field ps-10 ${!isCautionActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     type="number"
                                                     value={formData.caution}
                                                     onChange={(e) => setFormData({...formData, caution: e.target.value})}
@@ -516,11 +518,11 @@ const ContractForm = () => {
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="label mb-2">Montant Versé</label>
+                                                <label className="label mb-2">{t('u.montant_vers')}</label>
                                                 <div className="relative">
-                                                    <span className="absolute left-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
+                                                    <span className="absolute start-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
                                                     <input
-                                                        className="field pl-10"
+                                                        className="field ps-10"
                                                         type="number"
                                                         min="0"
                                                         max={totalEstimate() || undefined}
@@ -530,13 +532,13 @@ const ContractForm = () => {
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="label mb-2">Mode de Paiement</label>
+                                                <label className="label mb-2">{t('u.mode_de_paiement')}</label>
                                                 <Dropdown
                                                     options={[
-                                                        { value: 'Espèce', label: 'Espèce' },
-                                                        { value: 'Chèque', label: 'Chèque' },
-                                                        { value: 'TPE', label: 'TPE' },
-                                                        { value: 'Virement', label: 'Virement' }
+                                                        { value: 'Espèce', label: t('method.Espèce') },
+                                                        { value: 'Chèque', label: t('method.Chèque') },
+                                                        { value: 'TPE', label: t('method.TPE') },
+                                                        { value: 'Virement', label: t('method.Virement') }
                                                     ]}
                                                     value={formData.methode_paiement || 'Espèce'}
                                                     onChange={(v) => setFormData({...formData, methode_paiement: v})}
@@ -551,14 +553,14 @@ const ContractForm = () => {
                             <>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                     <div>
-                                        <label className="label mb-3">Niveau de carburant au départ</label>
+                                        <label className="label mb-3">{t('u.niveau_de_carburant_au_dpart')}</label>
                                         <FuelGaugeSelector
                                             value={formData.carburant_sortie}
                                             onChange={(val) => setFormData({...formData, carburant_sortie: val})}
                                         />
                                     </div>
                                     <div>
-                                        <label className="label mb-3">Kilométrage de sortie</label>
+                                        <label className="label mb-3">{t('u.kilomtrage_de_sortie')}</label>
                                         <div className="flex gap-2">
                                             <input
                                                 className="field flex-1"
@@ -570,7 +572,7 @@ const ContractForm = () => {
                                                 type="button"
                                                 onClick={fetchGpsKm}
                                                 disabled={kmLoading || !selectedVehicle}
-                                                title="Remplir avec le kilométrage GPS (Traccar)" aria-label="Remplir avec le kilométrage GPS (Traccar)"
+                                                title={t('u.remplir_avec_le_kilomtrage_gps_t')} aria-label={t('u.remplir_avec_le_kilomtrage_gps_t')}
                                                 className="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
                                                 style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
                                             >
@@ -583,7 +585,7 @@ const ContractForm = () => {
                                     </div>
                                 </div>
 
-                                <label className="label mt-7 mb-3">Dégâts constatés au départ (cliquer sur le schéma)</label>
+                                <label className="label mt-7 mb-3">{t('u.dgts_constats_au_dpart_cliquer_s')}</label>
                                 <DamageSelector
                                     damages={formData.damages}
                                     onChange={(newDamages) => setFormData({...formData, damages: newDamages})}
@@ -591,10 +593,10 @@ const ContractForm = () => {
                                 />
 
                                 <div className="mt-4">
-                                    <label className="label mb-2">Observation générale (optionnel)</label>
+                                    <label className="label mb-2">{t('u.observation_gnrale_optionnel')}</label>
                                     <textarea
                                         className="field resize-none"
-                                        placeholder="Note supplémentaire sur l'état général..."
+                                        placeholder={t('u.note_supplmentaire_sur_l_tat_gnr')}
                                         rows="2"
                                         value={formData.degats_depart}
                                         onChange={(e) => setFormData({...formData, degats_depart: e.target.value})}
@@ -603,14 +605,14 @@ const ContractForm = () => {
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {[
-                                        { id: 'roue_secours', label: 'Roue secours' },
-                                        { id: 'cric', label: 'Cric' },
-                                        { id: 'manivelle', label: 'Manivelle' },
-                                        { id: 'gilet', label: 'Gilet' },
-                                        { id: 'triangle', label: 'Triangle' },
-                                        { id: 'extincteur', label: 'Extincteur' },
-                                        { id: 'papiers', label: 'Papiers' },
-                                        { id: 'cles', label: 'Clés' },
+                                        { id: 'roue_secours', label: t('u.roue_secours') },
+                                        { id: 'cric', label: t('u.cric') },
+                                        { id: 'manivelle', label: t('u.manivelle') },
+                                        { id: 'gilet', label: t('u.gilet') },
+                                        { id: 'triangle', label: t('u.triangle') },
+                                        { id: 'extincteur', label: t('u.extincteur') },
+                                        { id: 'papiers', label: t('u.papiers') },
+                                        { id: 'cles', label: t('u.cls') },
                                     ].map(item => (
                                         <label
                                             key={item.id}
@@ -630,7 +632,7 @@ const ContractForm = () => {
 
                                 <textarea
                                     className="field resize-none"
-                                    placeholder="Entrez toute condition supplémentaire, notes sur l'état, ou demandes client..."
+                                    placeholder={t('u.entrez_toute_condition_supplment')}
                                     rows="3"
                                     value={formData.notes}
                                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
@@ -642,40 +644,40 @@ const ContractForm = () => {
                     {/* Right column: summary */}
                     <div className="space-y-6">
                         <div className="card shadow-l1 p-6">
-                            <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>Résumé du contrat</h3>
+                            <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>{t('u.rsum_du_contrat')}</h3>
                             <div className="space-y-3 text-[13px]">
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Véhicule</span>
+                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.vhicule')}</span>
                                     <span className="font-semibold">{selectedVehicle ? `${selectedVehicle.marque_name} ${selectedVehicle.modele_name}${selectedVehicle.matricule_actuel ? ` · ${selectedVehicle.matricule_actuel}` : ''}` : '—'}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Client</span>
+                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.client')}</span>
                                     <span className="font-semibold">{selectedClient ? `${selectedClient.prenom} ${selectedClient.nom}` : '—'}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Durée</span>
-                                    <span className="font-semibold">{diffDays()} jours</span>
+                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.dure')}</span>
+                                    <span className="font-semibold">{t('u.jours', { n: diffDays() })}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Prix / jour</span>
+                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.prix_jour')}</span>
                                     <span className="font-semibold">{formatMoney(quote && quote.prix_moyen != null ? quote.prix_moyen : formData.prix_par_jour || 0)}</span>
                                 </div>
                                 {quote && (
                                     <div className="flex justify-between">
-                                        <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Tarification</span>
+                                        <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.tarification')}</span>
                                         <span className="font-semibold text-[11px]" style={{ color: 'var(--primary-container)' }}>
-                                            {quoteLoading ? '…' : quote.detail?.length > 0 ? 'Saisonnière' : 'Standard'}
+                                            {quoteLoading ? '…' : quote.detail?.length > 0 ? t('u.saisonnire') : t('u.standard')}
                                         </span>
                                     </div>
                                 )}
                                 <div className="flex justify-between">
-                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Caution</span>
+                                    <span style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.caution')}</span>
                                     <span className="font-semibold">{isCautionActive ? formatMoney(formData.caution || 0) : '—'}</span>
                                 </div>
                             </div>
                             <div className="my-4 h-px" style={{ background: 'var(--stroke)' }}></div>
                             <div className="flex justify-between items-center">
-                                <span className="font-bold text-[14px]">Total</span>
+                                <span className="font-bold text-[14px]">{t('u.total')}</span>
                                 <span className="font-bold text-[20px] flex items-center gap-2" style={{ color: 'var(--primary-container)' }}>
                                     {quoteLoading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
                                     {formatMoney(totalEstimate())}
@@ -688,7 +690,7 @@ const ContractForm = () => {
                                 <div className="flex items-start gap-3">
                                     <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--success)' }}>task_alt</span>
                                     <p className="text-[12.5px] font-medium" style={{ color: 'var(--success-dark)' }}>
-                                        Toutes les étapes précédentes sont complètes. Valide le contrat pour générer le PDF et activer la location.
+                                        {t('u.toutes_les_tapes_prcdentes_sont_')}
                                     </p>
                                 </div>
                             </div>
@@ -697,7 +699,7 @@ const ContractForm = () => {
                         <div className="p-6 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
                             <div className="flex items-center gap-3" style={{ color: 'var(--on-surface-variant)' }}>
                                 <span className="material-symbols-outlined text-sm">info</span>
-                                <p className="text-xs leading-relaxed">Le système vérifie automatiquement la disponibilité en temps réel. Les contrats sont légalement contraignants dès la validation.</p>
+                                <p className="text-xs leading-relaxed">{t('u.le_systme_vrifie_automatiquement')}</p>
                             </div>
                         </div>
                     </div>

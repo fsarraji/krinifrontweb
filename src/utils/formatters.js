@@ -3,7 +3,10 @@
  * ne plus appeler toLocale*() ni écrire "DH"/"MAD" à la main dans les composants.
  */
 export const CURRENCY = 'MAD';
-const LOCALE = 'fr-FR';
+// Locale d'affichage : suit la langue de l'interface (voir I18nProvider). 'ar-MA' garde les chiffres latins.
+let LOCALE = 'fr-FR';
+const LOCALES = { fr: 'fr-FR', ar: 'ar-MA' };
+export const setFormatLocale = (lang) => { LOCALE = LOCALES[lang] || 'fr-FR'; };
 
 const toDate = (v) => {
     if (!v) return null;
@@ -42,4 +45,4 @@ export const formatDateTime = (v) => {
 // Rétro-compatibilité (utilisés par les modales d'information existantes).
 export const fmtNum = formatNumber;
 export const fmtDate = (iso) => formatDate(iso, { day: '2-digit', month: 'short', year: 'numeric' });
-export const OUI_NON = (v) => (v ? 'Oui' : 'Non');
+export const OUI_NON = (v) => (LOCALE.startsWith('ar') ? (v ? 'نعم' : 'لا') : (v ? 'Oui' : 'Non'));

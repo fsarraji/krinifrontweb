@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { tNow } from '../i18n/runtime';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import api, { fetchAllPages } from '../api';
@@ -7,6 +8,7 @@ import { toast } from './Toast';
 import { formatDate, formatDateTime, formatNumber } from '../utils/formatters';
 import { messageBox } from './MessageBox';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
+import { useI18n } from '../i18n/context';
 
 const REFRESH_MS = 15000;
 const MOROCCO = [31.63, -7.98];
@@ -29,21 +31,21 @@ const formatKm = (odometer) => {
 };
 
 const STATUS = {
-    moving: { label: 'En mouvement', moving: true, color: '#10B981', dotBg: '#10B981', bg: '#D1FAE5', text: '#047857' },
-    stopped: { label: "À l'arrêt", moving: false, color: '#F59E0B', dotBg: '#F59E0B', bg: '#FEF3C7', text: '#B45309' },
-    offline: { label: 'Hors ligne', moving: false, color: '#94A3B8', dotBg: '#64748B', bg: '#F1F5F9', text: '#64748B' },
+    moving: { labelKey: 'u.en_mouvement', moving: true, color: '#10B981', dotBg: '#10B981', bg: '#D1FAE5', text: '#047857' },
+    stopped: { labelKey: 'u.l_arrt', moving: false, color: '#F59E0B', dotBg: '#F59E0B', bg: '#FEF3C7', text: '#B45309' },
+    offline: { labelKey: 'u.hors_ligne', moving: false, color: '#94A3B8', dotBg: '#64748B', bg: '#F1F5F9', text: '#64748B' },
 };
 
 const COMMAND_LABELS = {
-    engineStop: { label: 'Couper le moteur', icon: 'power_settings_new', danger: true },
-    engineResume: { label: 'Réactiver le moteur', icon: 'play_circle' },
-    custom: { label: 'Commande personnalisée', icon: 'terminal' },
-    movement: { label: 'Alarme mouvement', icon: 'directions_run' },
-    positionPeriodic: { label: 'Position périodique', icon: 'update' },
-    setTimezone: { label: 'Fuseau horaire', icon: 'schedule' },
-    sos: { label: 'SOS', icon: 'sos' },
-    reset: { label: 'Réinitialiser', icon: 'restart_alt' },
-    reboot: { label: 'Redémarrer', icon: 'refresh' },
+    engineStop: { labelKey: 'u.couper_le_moteur', icon: 'power_settings_new', danger: true },
+    engineResume: { labelKey: 'u.ractiver_le_moteur', icon: 'play_circle' },
+    custom: { labelKey: 'u.commande_personnalise', icon: 'terminal' },
+    movement: { labelKey: 'u.alarme_mouvement', icon: 'directions_run' },
+    positionPeriodic: { labelKey: 'u.position_priodique', icon: 'update' },
+    setTimezone: { labelKey: 'u.fuseau_horaire', icon: 'schedule' },
+    sos: { labelKey: 'u.sos', icon: 'sos' },
+    reset: { labelKey: 'u.rinitialiser', icon: 'restart_alt' },
+    reboot: { labelKey: 'u.redmarrer', icon: 'refresh' },
 };
 
 const deriveStatus = (v) => {
@@ -56,6 +58,7 @@ const deriveStatus = (v) => {
 };
 
 const GpsTracking = () => {
+    const { t } = useI18n();
     const [vehicles, setVehicles] = useState([]);
     const [tracking, setTracking] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -163,7 +166,7 @@ const GpsTracking = () => {
                 setSelectedId(v.id === selectedId ? null : v.id);
                 if (v.id !== selectedId) setView('detail');
             });
-            marker.bindTooltip(`${v.marque_name || 'Véhicule'} — ${v.matricule}`, { direction: 'top', offset: [0, -14] });
+            marker.bindTooltip(`${v.marque_name || tNow('u.vhicule')} — ${v.matricule}`, { direction: 'top', offset: [0, -14] });
             markerLayer.current.addLayer(marker);
         });
         if (map.current.__gpsFitted === undefined && positioned.length) {
@@ -205,13 +208,13 @@ const GpsTracking = () => {
     const sendCommand = async (type, attributes) => {
         if (!selected?.traccar_device_id) return;
         const meta = COMMAND_LABELS[type];
-        if (meta?.danger && (await messageBox.ask(`${meta.label} ? Cette action peut immobiliser le véhicule.`, 'Confirmer la commande', { destructive: true, confirmText: 'Envoyer' })) !== true) return;
+        if (meta?.danger && (await messageBox.ask(`${meta.labelKey ? t(meta.labelKey) : meta.label} ? Cette action peut immobiliser le véhicule.`, t('u.confirmer_la_commande'), { destructive: true, confirmText: t('u.envoyer') })) !== true) return;
         setCommandLoading(true);
         try {
             const { data } = await api.post('gps/commands/', { vehicle_id: selected.id, type, attributes: attributes || {} });
-            toast.success(`Commande « ${data.command?.type || type} » envoyée au dispositif.`);
+            toast.success(t('u.commande_envoye_au_dispositif', { type: data.command?.type || type }));
         } catch (error) {
-            toast.error(error.response?.data?.detail || `Échec de l'envoi de la commande « ${type} ».`);
+            toast.error(error.response?.data?.detail || t('u.chec_de_l_envoi_de_la_commande', { type }));
         } finally {
             setCommandLoading(false);
         }
@@ -257,7 +260,7 @@ const GpsTracking = () => {
             const { data } = await api.get('gps/devices/');
             setDevices(Array.isArray(data.devices) ? data.devices : []);
         } catch (error) {
-            toast.error(error.response?.data?.detail || 'Impossible de charger les dispositifs GPS.');
+            toast.error(error.response?.data?.detail || t('u.impossible_de_charger_les_dispos'));
         } finally {
             setDevicesLoading(false);
         }
@@ -266,7 +269,7 @@ const GpsTracking = () => {
     const addDevice = async () => {
         const imei = newDeviceImei.trim();
         if (!imei) {
-            toast.error("Renseignez l'ID/IMEI du dispositif.");
+            toast.error(t('u.renseignez_l_id_imei_du_disposit'));
             return;
         }
         setAddingDevice(true);
@@ -279,24 +282,24 @@ const GpsTracking = () => {
             setDevices((prev) => (prev.some((d) => String(d.id) === String(dev.id)) ? prev : [...prev, dev]));
             setNewDeviceImei('');
             setNewDeviceName('');
-            toast.success('Dispositif ajouté au serveur Traccar.');
+            toast.success(t('u.dispositif_ajout_au_serveur_trac'));
         } catch (error) {
-            toast.error(error.response?.data?.detail || "Impossible d'ajouter le dispositif sur Traccar.");
+            toast.error(error.response?.data?.detail || t('u.impossible_d_ajouter_le_disposit'));
         } finally {
             setAddingDevice(false);
         }
     };
 
     const deleteDevice = async (device) => {
-        if ((await messageBox.ask(`Supprimer le dispositif « ${device.name || `#${device.id}`} » (#${device.id}) du serveur Traccar ?`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
+        if ((await messageBox.ask(t('u.supprimer_le_dispositif_du_serve', { name: device.name || `#${device.id}`, id: device.id }), t('u.confirmation'), { destructive: true, confirmText: t('u.confirmer') })) !== true) return;
         setDeletingDeviceId(device.id);
         try {
             await api.delete('gps/devices/', { params: { device_id: device.id } });
             setDevices((prev) => prev.filter((d) => d.id !== device.id));
-            toast.success('Dispositif supprimé.');
+            toast.success(t('u.dispositif_supprim'));
             loadFleet();
         } catch (error) {
-            toast.error(error.response?.data?.detail || 'Échec de la suppression du dispositif.');
+            toast.error(error.response?.data?.detail || t('u.chec_de_la_suppression_du_dispos'));
         } finally {
             setDeletingDeviceId(null);
         }
@@ -304,32 +307,32 @@ const GpsTracking = () => {
 
     const associateDevice = async (device, vehicleId) => {
         if (!vehicleId) {
-            toast.error('Sélectionnez un véhicule.');
+            toast.error(t('u.slectionnez_un_vhicule'));
             return;
         }
         setAssociatingDeviceId(device.id);
         try {
             await api.post('gps/devices/associate/', { device_id: device.id, vehicle_id: vehicleId });
-            toast.success('Dispositif associé au véhicule.');
+            toast.success(t('u.dispositif_associ_au_vhicule'));
             await loadDevices();
             loadFleet();
         } catch (error) {
-            toast.error(error.response?.data?.detail || "Impossible d'associer le dispositif.");
+            toast.error(error.response?.data?.detail || t('u.impossible_d_associer_le_disposi'));
         } finally {
             setAssociatingDeviceId(null);
         }
     };
 
     const dissociateDevice = async (device) => {
-        if ((await messageBox.ask(`Dissocier le dispositif « ${device.name || `#${device.id}`} » du véhicule « ${device.vehicle_matricule || `#${device.vehicle_id}`} » ?`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
+        if ((await messageBox.ask(t('u.dissocier_le_dispositif_du_vhicu', { name: device.name || `#${device.id}`, plate: device.vehicle_matricule || `#${device.vehicle_id}` }), t('u.confirmation'), { destructive: true, confirmText: t('u.confirmer') })) !== true) return;
         setAssociatingDeviceId(device.id);
         try {
             await api.post('gps/devices/associate/', { device_id: device.id });
-            toast.success('Dispositif dissocié du véhicule.');
+            toast.success(t('u.dispositif_dissoci_du_vhicule'));
             await loadDevices();
             loadFleet();
         } catch (error) {
-            toast.error(error.response?.data?.detail || 'Impossible de dissocier le dispositif.');
+            toast.error(error.response?.data?.detail || t('u.impossible_de_dissocier_le_dispo'));
         } finally {
             setAssociatingDeviceId(null);
         }
@@ -337,16 +340,16 @@ const GpsTracking = () => {
 
     const dissociateSelectedVehicle = async () => {
         if (!selected?.traccar_device_id) return;
-        if ((await messageBox.ask(`Dissocier le boîtier #${selected.traccar_device_id} du véhicule « ${selected.matricule} » ? Le véhicule n'apparaîtra plus sur le suivi GPS.`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
+        if ((await messageBox.ask(t('u.dissocier_le_botier_du_vhicule_l', { id: selected.traccar_device_id, plate: selected.matricule }), t('u.confirmation'), { destructive: true, confirmText: t('u.confirmer') })) !== true) return;
         setDissociatingVehicle(true);
         try {
             await api.post('gps/devices/associate/', { device_id: selected.traccar_device_id });
-            toast.success('Boîtier dissocié du véhicule.');
+            toast.success(t('u.botier_dissoci_du_vhicule'));
             setView('list');
             setSelectedId(null);
             loadFleet();
         } catch (error) {
-            toast.error(error.response?.data?.detail || 'Impossible de dissocier le boîtier.');
+            toast.error(error.response?.data?.detail || t('u.impossible_de_dissocier_le_botie'));
         } finally {
             setDissociatingVehicle(false);
         }
@@ -354,15 +357,15 @@ const GpsTracking = () => {
 
     const dissociateAllDevices = async () => {
         const linked = devices.filter((d) => d.vehicle_id != null).length;
-        if ((await messageBox.ask(`Dissocier les ${linked} dispositifs associés de tous les véhicules ? Les véhicules n'apparaîtront plus sur le suivi GPS (les boîtiers restent sur le serveur Traccar).`, 'Confirmation', { destructive: true, confirmText: 'Confirmer' })) !== true) return;
+        if ((await messageBox.ask(t('u.dissocier_les_dispositifs_associ', { n: linked }), t('u.confirmation'), { destructive: true, confirmText: t('u.confirmer') })) !== true) return;
         setAssociatingDeviceId('all');
         try {
             await api.post('gps/devices/associate/', { dissociate_all: true });
-            toast.success('Tous les dispositifs ont été dissociés.');
+            toast.success(t('u.tous_les_dispositifs_ont_t_disso'));
             await loadDevices();
             loadFleet();
         } catch (error) {
-            toast.error(error.response?.data?.detail || 'Impossible de dissocier tous les dispositifs.');
+            toast.error(error.response?.data?.detail || t('u.impossible_de_dissocier_tous_les'));
         } finally {
             setAssociatingDeviceId(null);
         }
@@ -415,14 +418,14 @@ const GpsTracking = () => {
             <div className="px-8 pt-8 pb-6 flex items-end justify-between flex-shrink-0">
                 <div>
                     <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{subtitle}</p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>Suivi GPS</h2>
+                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>{t('u.suivi_gps')}</h2>
                 </div>
                 <div className="flex items-center gap-3">
                     {!fleetOpen && (
                         <button
                             onClick={() => setFleetOpen(true)}
                             className="card rounded-token shadow-l1 w-10 h-10 flex items-center justify-center hover:opacity-80"
-                            title="Afficher la flotte" aria-label="Afficher la flotte"
+                            title={t('u.afficher_la_flotte')} aria-label={t('u.afficher_la_flotte')}
                         >
                             <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)' }}>format_list_bulleted</span>
                         </button>
@@ -430,10 +433,10 @@ const GpsTracking = () => {
                     <button
                         onClick={openDevices}
                         className="card rounded-token shadow-l1 h-10 px-4 flex items-center gap-2 hover:opacity-80"
-                        title="Gérer les dispositifs GPS (ajouter, supprimer, associer)" aria-label="Gérer les dispositifs GPS (ajouter, supprimer, associer)"
+                        title={t('u.grer_les_dispositifs_gps_ajouter')} aria-label={t('u.grer_les_dispositifs_gps_ajouter')}
                     >
                         <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>sensors</span>
-                        <span className="text-[12.5px] font-bold" style={{ color: 'var(--on-surface)' }}>Dispositifs</span>
+                        <span className="text-[12.5px] font-bold" style={{ color: 'var(--on-surface)' }}>{t('u.dispositifs')}</span>
                     </button>
                     <span className="badge" style={{ background: 'var(--success-bg)', color: 'var(--success-dark)' }}>
                         <span className="badge-dot pulse" style={{ background: 'var(--success)' }}></span>
@@ -453,18 +456,18 @@ const GpsTracking = () => {
                     <div className="card rounded-token shadow-l1 overflow-hidden flex flex-col min-h-0">
                         <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: '1px solid var(--stroke)' }}>
                             <h3 className="font-bold text-[15px]" style={{ color: 'var(--on-surface)' }}>
-                                Flotte <span className="font-semibold text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>· {vehicles.length} véh.</span>
+                                {t('u.flotte')} <span className="font-semibold text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>· {vehicles.length} véh.</span>
                             </h3>
                             <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1 p-1 rounded-full" style={{ background: 'var(--slate-bg)' }}>
-                                    <div className={`toggle-tab ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>Liste</div>
-                                    <div className={`toggle-tab ${view === 'detail' ? 'active' : ''}`} onClick={() => setView('detail')}>Détail</div>
+                                    <div className={`toggle-tab ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>{t('u.liste')}</div>
+                                    <div className={`toggle-tab ${view === 'detail' ? 'active' : ''}`} onClick={() => setView('detail')}>{t('u.dtail')}</div>
                                 </div>
                                 <button
                                     onClick={() => setFleetOpen(false)}
                                     className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
                                     style={{ color: 'var(--on-surface-variant)' }}
-                                    title="Réduire la liste" aria-label="Réduire la liste"
+                                    title={t('u.rduire_la_liste')} aria-label={t('u.rduire_la_liste')}
                                 >
                                     <span className="material-symbols-outlined text-base">chevron_left</span>
                                 </button>
@@ -475,12 +478,12 @@ const GpsTracking = () => {
                         {view === 'list' && (
                             <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                                 <div className="px-4 pt-4 pb-2 relative flex-shrink-0">
-                                    <span className="material-symbols-outlined absolute left-7 top-[26px] text-[18px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>search</span>
+                                    <span className="material-symbols-outlined absolute start-7 top-[26px] text-[18px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>search</span>
                                     <input
                                         className="input"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        placeholder="Rechercher un véhicule…"
+                                        placeholder={t('u.rechercher_un_vhicule')}
                                         style={{ paddingLeft: 36, fontSize: 13 }}
                                     />
                                 </div>
@@ -496,7 +499,7 @@ const GpsTracking = () => {
                                     ))}
                                     {!loading && filtered.length === 0 && (
                                         <p className="text-[12.5px] font-semibold text-center pt-6" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                            Aucun véhicule trouvé
+                                            {t('u.aucun_vhicule_trouv')}
                                         </p>
                                     )}
                                     {!loading && filtered.map((v) => {
@@ -506,7 +509,7 @@ const GpsTracking = () => {
                                             <div key={v.id} className={`veh-row ${active ? 'selected' : ''}`} onClick={() => { setSelectedId(v.id); setView('detail'); }}>
                                                 <div className="thumb overflow-hidden" style={{ background: status.bg }}>
                                                     {resolveImage(v.image) ? (
-                                                        <img src={resolveImage(v.image)} alt={`${v.marque_name || 'Véhicule'} ${v.modele_name || ''}`} className="w-full h-full object-cover" loading="lazy" />
+                                                        <img src={resolveImage(v.image)} alt={`${v.marque_name || t('u.vhicule')} ${v.modele_name || ''}`} className="w-full h-full object-cover" loading="lazy" />
                                                     ) : (
                                                         <span className="material-symbols-outlined text-[20px]" style={{ color: status.color }}>directions_car</span>
                                                     )}
@@ -518,7 +521,7 @@ const GpsTracking = () => {
                                                     <p className="text-[11px] mono" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{v.matricule}</p>
                                                     <span className="badge mt-1" style={{ background: status.bg, color: status.text, padding: '2px 8px 2px 6px' }}>
                                                         <span className={`badge-dot ${status.moving ? 'pulse' : ''}`} style={{ background: status.dotBg }}></span>
-                                                        {status.label}
+                                                        {t(status.labelKey)}
                                                     </span>
                                                 </div>
                                                 {v.position?.speed_kph != null && (
@@ -539,7 +542,7 @@ const GpsTracking = () => {
                                 {!selected ? (
                                     <div className="px-5 py-10 text-center">
                                         <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                            Sélectionnez un véhicule dans la liste pour voir ses détails
+                                            {t('u.slectionnez_un_vhicule_dans_la_l')}
                                         </p>
                                     </div>
                                 ) : (
@@ -561,9 +564,9 @@ const GpsTracking = () => {
                                             {(() => {
                                                 const status = deriveStatus(selected);
                                                 return (
-                                                    <span className="badge absolute left-3 bottom-3" style={{ background: 'rgba(255,255,255,.95)', color: status.text }}>
+                                                    <span className="badge absolute start-3 bottom-3" style={{ background: 'rgba(255,255,255,.95)', color: status.text }}>
                                                         <span className={`badge-dot ${status.moving ? 'pulse' : ''}`} style={{ background: status.dotBg }}></span>
-                                                        {status.label}
+                                                        {t(status.labelKey)}
                                                     </span>
                                                 );
                                             })()}
@@ -574,7 +577,7 @@ const GpsTracking = () => {
                                                 <h4 className="font-bold text-[18px]" style={{ color: 'var(--on-surface)' }}>{selected.marque_name} {selected.modele_name}</h4>
                                                 <p className="text-[12px] mono mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{selected.matricule}</p>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="text-end">
                                                 <p className="font-bold text-[18px] mono" style={{ color: deriveStatus(selected).color }}>
                                                     {selected.position?.speed_kph != null ? Math.round(selected.position.speed_kph) : '--'}
                                                 </p>
@@ -586,16 +589,16 @@ const GpsTracking = () => {
                                             <div className="stat-tile">
                                                 <div className="flex items-center gap-2">
                                                     <span className="material-symbols-outlined text-[16px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>local_gas_station</span>
-                                                    <span className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Carburant</span>
+                                                    <span className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.carburant')}</span>
                                                 </div>
                                                 <p className="text-[13px] font-bold mt-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.55 }}>
-                                                    {selected.position?.fuel_level != null ? `${Math.round(selected.position.fuel_level)} %` : 'Non renseigné'}
+                                                    {selected.position?.fuel_level != null ? `${Math.round(selected.position.fuel_level)} %` : t('u.non_renseign_2')}
                                                 </p>
                                             </div>
                                             <div className="stat-tile">
                                                 <div className="flex items-center gap-2">
                                                     <span className="material-symbols-outlined text-[16px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>speed</span>
-                                                    <span className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>Kilométrage</span>
+                                                    <span className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{t('u.kilomtrage')}</span>
                                                 </div>
                                                 <p className="text-[15px] font-bold mono mt-2" style={{ color: 'var(--on-surface)' }}>
                                                     {formatKm(selected.position?.odometer)} <span className="text-[11px] font-semibold" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>km</span>
@@ -608,7 +611,7 @@ const GpsTracking = () => {
                                                 <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>pin_drop</span>
                                                 <div className="min-w-0">
                                                     <p className="text-[12.5px] font-bold" style={{ color: 'var(--on-surface)' }}>
-                                                        {selected.position?.address || (selected.position ? `${selected.position.latitude?.toFixed(5)}, ${selected.position.longitude?.toFixed(5)}` : 'Aucune position')}
+                                                        {selected.position?.address || (selected.position ? `${selected.position.latitude?.toFixed(5)}, ${selected.position.longitude?.toFixed(5)}` : t('u.aucune_position'))}
                                                     </p>
                                                     {selected.position && (
                                                         <p className="text-[10.5px] mono mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.55 }}>
@@ -624,13 +627,13 @@ const GpsTracking = () => {
 
                                         <details className="tech mx-5 mt-4 mb-5 pt-3" style={{ borderTop: '1px solid var(--stroke)' }}>
                                             <summary className="flex items-center justify-between">
-                                                <span className="text-[12px] font-bold" style={{ color: 'var(--on-surface-variant)' }}>Détails techniques du boîtier</span>
+                                                <span className="text-[12px] font-bold" style={{ color: 'var(--on-surface-variant)' }}>{t('u.dtails_techniques_du_botier')}</span>
                                                 <span className="material-symbols-outlined chev text-[16px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>chevron_right</span>
                                             </summary>
                                             <div className="grid grid-cols-2 gap-3 mt-3">
                                                 {selected.traccar_device_id != null && (
                                                     <div>
-                                                        <p className="text-[9.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>Dispositif</p>
+                                                        <p className="text-[9.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>{t('u.dispositif')}</p>
                                                         <p className="text-[12px] font-bold mono mt-0.5">#{selected.traccar_device_id}</p>
                                                     </div>
                                                 )}
@@ -642,13 +645,13 @@ const GpsTracking = () => {
                                                 )}
                                                 {selected.sim_number && (
                                                     <div>
-                                                        <p className="text-[9.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>Carte SIM</p>
+                                                        <p className="text-[9.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>{t('u.carte_sim')}</p>
                                                         <p className="text-[12px] font-bold mono mt-0.5">{selected.sim_number}</p>
                                                     </div>
                                                 )}
                                                 {selected.sim_operator && (
                                                     <div>
-                                                        <p className="text-[9.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>Opérateur</p>
+                                                        <p className="text-[9.5px] font-bold uppercase tracking-wide" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>{t('u.oprateur')}</p>
                                                         <p className="text-[12px] font-bold mono mt-0.5">{selected.sim_operator}</p>
                                                     </div>
                                                 )}
@@ -664,11 +667,11 @@ const GpsTracking = () => {
                                                     <span className={`material-symbols-outlined text-[16px] ${dissociatingVehicle ? 'animate-spin' : ''}`}>
                                                         {dissociatingVehicle ? 'progress_activity' : 'link_off'}
                                                     </span>
-                                                    {dissociatingVehicle ? 'Dissociation en cours…' : 'Dissocier le boîtier du véhicule'}
+                                                    {dissociatingVehicle ? t('u.dissociation_en_cours') : t('u.dissocier_le_botier_du_vhicule')}
                                                 </button>
                                             )}
 
-                                            {routeLoading && <p className="text-[12px] mt-4 text-text-muted" role="status">Chargement de l'historique…</p>}
+                                            {routeLoading && <p className="text-[12px] mt-4 text-text-muted" role="status">{t('u.chargement_de_l_historique')}</p>}
                                             {route && !routeLoading && (
                                                 <p className="text-[12px] font-semibold mt-4" style={{ color: 'var(--primary-container)' }}>
                                                     Trajet des dernières 24h affiché sur la carte ({route.length} points)
@@ -681,14 +684,14 @@ const GpsTracking = () => {
                                                     className="flex-1 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
                                                     style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
                                                 >
-                                                    Historique du trajet
+                                                    {t('u.historique_du_trajet')}
                                                 </button>
                                                 <button
                                                     onClick={() => selected?.position && map.current?.flyTo([selected.position.latitude, selected.position.longitude], 16, { duration: 0.8 })}
                                                     className="flex-1 py-2.5 rounded-token text-[12px] font-bold text-white"
                                                     style={{ background: 'var(--primary-container)' }}
                                                 >
-                                                    Centrer sur la carte
+                                                    {t('u.centrer_sur_la_carte')}
                                                 </button>
                                             </div>
                                             <div className="flex gap-2 mt-2">
@@ -697,28 +700,28 @@ const GpsTracking = () => {
                                                     className="flex-1 py-2 rounded-token text-[11.5px] font-bold"
                                                     style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
                                                 >
-                                                    Suivi en Direct
+                                                    {t('u.suivi_en_direct')}
                                                 </button>
                                                 <button
                                                     onClick={() => map.current?.setView(MOROCCO, 6)}
                                                     className="flex-1 py-2 rounded-token text-[11.5px] font-bold"
                                                     style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
                                                 >
-                                                    Recentrer la carte
+                                                    {t('u.recentrer_la_carte')}
                                                 </button>
                                             </div>
 
                                             {commands.length > 0 && (
                                                 <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--stroke)' }}>
-                                                    <p className="text-[12px] font-bold mb-2" style={{ color: 'var(--on-surface-variant)' }}>Commandes du boîtier</p>
+                                                    <p className="text-[12px] font-bold mb-2" style={{ color: 'var(--on-surface-variant)' }}>{t('u.commandes_du_botier')}</p>
                                                     <div className="flex flex-col gap-2">
-                                                        {commands.filter((t) => t !== 'custom').map((t) => {
-                                                            const meta = COMMAND_LABELS[t] || { label: t, icon: 'terminal' };
+                                                        {commands.filter((cmd) => cmd !== 'custom').map((cmd) => {
+                                                            const meta = COMMAND_LABELS[cmd] || { label: cmd, icon: 'terminal' };
                                                             return (
                                                                 <button
-                                                                    key={t}
+                                                                    key={cmd}
                                                                     disabled={commandLoading}
-                                                                    onClick={() => sendCommand(t)}
+                                                                    onClick={() => sendCommand(cmd)}
                                                                     className="flex items-center justify-center gap-2 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
                                                                     style={
                                                                         meta.danger
@@ -727,7 +730,7 @@ const GpsTracking = () => {
                                                                     }
                                                                 >
                                                                     <span className="material-symbols-outlined text-[16px]">{meta.icon}</span>
-                                                                    {meta.label}
+                                                                    {meta.labelKey ? t(meta.labelKey) : meta.label}
                                                                 </button>
                                                             );
                                                         })}
@@ -735,7 +738,7 @@ const GpsTracking = () => {
                                                             <div className="flex gap-2 mt-1">
                                                                 <input
                                                                     className="input"
-                                                                    placeholder="Données custom (ex: hex)"
+                                                                    placeholder={t('u.donnes_custom_ex_hex')}
                                                                     value={customCommand}
                                                                     onChange={(e) => setCustomCommand(e.target.value)}
                                                                     onKeyDown={(e) => {
@@ -751,14 +754,14 @@ const GpsTracking = () => {
                                                                     className="px-4 py-2 rounded-token text-[12px] font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                                                                     style={{ background: 'var(--primary-container)' }}
                                                                 >
-                                                                    Envoyer
+                                                                    {t('u.envoyer')}
                                                                 </button>
                                                             </div>
                                                         )}
                                                     </div>
                                                     {commandLoading && (
                                                         <p className="text-[11.5px] mt-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                            Envoi de la commande en cours…
+                                                            {t('u.envoi_de_la_commande_en_cours')}
                                                         </p>
                                                     )}
                                                 </div>
@@ -776,7 +779,7 @@ const GpsTracking = () => {
                     {/* Vraie carte (z-0 confine les calques Leaflet sous les panneaux) */}
                     <div className="absolute inset-0 z-0" ref={mapRef} data-location="map-traccar" />
 
-                    <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+                    <div className="absolute top-4 start-4 end-4 z-10 flex items-center justify-between">
                         <div className="card rounded-token shadow-l1 px-3 py-2 flex items-center gap-4 text-[11.5px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>
                             <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: 'var(--success)' }}></span>En mouvement</span>
                             <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: 'var(--warning)' }}></span>À l'arrêt</span>
@@ -785,7 +788,7 @@ const GpsTracking = () => {
                         <button
                             onClick={() => map.current?.setView(MOROCCO, 6)}
                             className="card rounded-token shadow-l1 w-9 h-9 flex items-center justify-center hover:opacity-80"
-                            title="Recentrer sur le Maroc" aria-label="Recentrer sur le Maroc"
+                            title={t('u.recentrer_sur_le_maroc')} aria-label={t('u.recentrer_sur_le_maroc')}
                         >
                             <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--on-surface-variant)' }}>my_location</span>
                         </button>
@@ -793,17 +796,17 @@ const GpsTracking = () => {
 
                     {!tracking && !loading && (
                         <div
-                            className="absolute top-4 left-1/2 -translate-x-1/2 z-20 text-[12.5px] font-semibold px-4 py-2.5 rounded-token shadow-l1 whitespace-nowrap"
+                            className="absolute top-4 start-1/2 -translate-x-1/2 z-20 text-[12.5px] font-semibold px-4 py-2.5 rounded-token shadow-l1 whitespace-nowrap"
                             style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
                         >
-                            Suivi GPS non configuré — connectez votre compte Traccar dans les Paramètres de l'agence.
+                            {t('u.suivi_gps_non_configur_connectez')}
                         </div>
                     )}
 
                     {vehicles.length === 0 && !loading && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
                             <div className="card rounded-token shadow-l1 px-6 py-4 text-center">
-                                <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>Aucun véhicule dans la flotte</p>
+                                <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>{t('u.aucun_vhicule_dans_la_flotte')}</p>
                             </div>
                         </div>
                     )}
@@ -811,13 +814,13 @@ const GpsTracking = () => {
                     {loading && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center">
                             <div className="card rounded-token shadow-l1 px-6 py-4 text-center">
-                                <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>Chargement des positions…</p>
+                                <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>{t('u.chargement_des_positions')}</p>
                             </div>
                         </div>
                     )}
 
-                    <div className="absolute bottom-4 right-16 text-[10.5px] px-2.5 py-1 rounded-token z-10" style={{ background: 'rgba(255,255,255,.85)', color: 'var(--on-surface-variant)' }}>
-                        Fond de carte OpenStreetMap
+                    <div className="absolute bottom-4 end-16 text-[10.5px] px-2.5 py-1 rounded-token z-10" style={{ background: 'rgba(255,255,255,.85)', color: 'var(--on-surface-variant)' }}>
+                        {t('u.fond_de_carte_openstreetmap')}
                     </div>
                 </div>
             </div>
@@ -832,7 +835,7 @@ const GpsTracking = () => {
                     <div
                         role="dialog"
                         aria-modal="true"
-                        aria-label="Dispositifs GPS"
+                        aria-label={t('u.dispositifs_gps')}
                         tabIndex={-1}
                         ref={(el) => el && el.focus()}
                         className="card rounded-token shadow-l2 w-full max-w-2xl overflow-hidden flex flex-col max-h-[88vh] outline-none"
@@ -842,14 +845,14 @@ const GpsTracking = () => {
                         <div className="px-6 py-5 flex items-center justify-between flex-shrink-0" style={{ borderBottom: '1px solid var(--stroke)' }}>
                             <h3 className="font-bold text-[17px] flex items-center gap-2" style={{ color: 'var(--on-surface)' }}>
                                 <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--primary-container)' }}>sensors</span>
-                                Dispositifs GPS
+                                {t('u.dispositifs_gps')}
                                 <span className="font-semibold text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>· {devices.length}</span>
                             </h3>
                             <button
                                 onClick={() => setDevicesOpen(false)}
                                 className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
                                 style={{ color: 'var(--on-surface-variant)' }}
-                                title="Fermer" aria-label="Fermer"
+                                title={t('u.fermer')} aria-label={t('u.fermer')}
                             >
                                 <span className="material-symbols-outlined text-[18px]">close</span>
                             </button>
@@ -857,7 +860,7 @@ const GpsTracking = () => {
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             <div className="stat-tile">
-                                <p className="text-[12px] font-bold mb-3" style={{ color: 'var(--on-surface)' }}>Ajouter un dispositif</p>
+                                <p className="text-[12px] font-bold mb-3" style={{ color: 'var(--on-surface)' }}>{t('u.ajouter_un_dispositif')}</p>
                                 <div className="grid grid-cols-2 gap-2 items-end">
                                     <div>
                                         <label className="block text-[10.5px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
@@ -894,14 +897,14 @@ const GpsTracking = () => {
                                         <span className={`material-symbols-outlined text-[16px] ${addingDevice ? 'animate-spin' : ''}`}>
                                             {addingDevice ? 'progress_activity' : 'add'}
                                         </span>
-                                        {addingDevice ? 'Ajout en cours…' : 'Ajouter au serveur Traccar'}
+                                        {addingDevice ? t('u.ajout_en_cours') : t('u.ajouter_au_serveur_traccar')}
                                     </button>
                                 </div>
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <p className="text-[12px] font-bold" style={{ color: 'var(--on-surface)' }}>Dispositifs du serveur Traccar</p>
+                                    <p className="text-[12px] font-bold" style={{ color: 'var(--on-surface)' }}>{t('u.dispositifs_du_serveur_traccar')}</p>
                                     <div className="flex items-center gap-1.5">
                                         {devices.some((d) => d.vehicle_id != null) && (
                                             <button
@@ -909,17 +912,17 @@ const GpsTracking = () => {
                                                 disabled={associatingDeviceId != null || dissociatingVehicle}
                                                 className="text-[11px] font-bold px-3 py-1.5 rounded-token flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                                                 style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
-                                                title="Dissocier tous les dispositifs des véhicules" aria-label="Dissocier tous les dispositifs des véhicules"
+                                                title={t('u.dissocier_tous_les_dispositifs_d')} aria-label={t('u.dissocier_tous_les_dispositifs_d')}
                                             >
                                                 <span className="material-symbols-outlined text-[13px]">link_off</span>
-                                                Tout dissocier
+                                                {t('u.tout_dissocier')}
                                             </button>
                                         )}
                                         <button
                                             onClick={loadDevices}
                                             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
                                             style={{ color: 'var(--on-surface-variant)' }}
-                                            title="Actualiser" aria-label="Actualiser"
+                                            title={t('u.actualiser')} aria-label={t('u.actualiser')}
                                         >
                                             <span className={`material-symbols-outlined text-[15px] ${devicesLoading ? 'animate-spin' : ''}`}>refresh</span>
                                         </button>
@@ -936,7 +939,7 @@ const GpsTracking = () => {
 
                                 {!devicesLoading && devices.length === 0 && (
                                     <p className="text-[12.5px] font-semibold text-center py-6" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                        Aucun dispositif — ajoutez-en un ci-dessus.
+                                        {t('u.aucun_dispositif_ajoutez_en_un_c')}
                                     </p>
                                 )}
 
@@ -959,7 +962,7 @@ const GpsTracking = () => {
                                                             </span>
                                                         </div>
                                                         <p className="text-[11px] mono mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                            #{d.id} · {d.uniqueId || 'IMEI inconnu'}
+                                                            #{d.id} · {d.uniqueId || t('u.imei_inconnu')}
                                                         </p>
                                                     </div>
                                                     <button
@@ -967,7 +970,7 @@ const GpsTracking = () => {
                                                         disabled={deletingDeviceId === d.id}
                                                         className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-danger-bg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                                                         style={{ color: 'var(--danger)' }}
-                                                        title="Supprimer le dispositif" aria-label="Supprimer le dispositif"
+                                                        title={t('u.supprimer_le_dispositif')} aria-label={t('u.supprimer_le_dispositif')}
                                                     >
                                                         <span className={`material-symbols-outlined text-[17px] ${deletingDeviceId === d.id ? 'animate-spin' : ''}`}>
                                                             {deletingDeviceId === d.id ? 'progress_activity' : 'delete'}
@@ -980,22 +983,22 @@ const GpsTracking = () => {
                                                         <>
                                                             <span className="flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: 'var(--success-dark)' }}>
                                                                 <span className="material-symbols-outlined text-[13px]">link</span>
-                                                                Associé à {d.vehicle_matricule || `Véhicule #${d.vehicle_id}`}
+                                                                Associé à {d.vehicle_matricule || t('u.vhicule_2', { id: d.vehicle_id })}
                                                             </span>
                                                             <button
                                                                 onClick={() => dissociateDevice(d)}
                                                                 disabled={associatingDeviceId === d.id}
-                                                                className="ml-auto text-[11px] font-bold px-3 py-1.5 rounded-token disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                className="ms-auto text-[11px] font-bold px-3 py-1.5 rounded-token disabled:opacity-40 disabled:cursor-not-allowed"
                                                     style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
                                                             >
-                                                                Dissocier
+                                                                {t('u.dissocier')}
                                                             </button>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <span className="flex items-center gap-1.5 text-[11.5px] font-semibold flex-shrink-0" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
                                                                 <span className="material-symbols-outlined text-[13px]">link_off</span>
-                                                                Non associé
+                                                                {t('u.non_associ')}
                                                             </span>
                                                             <select
                                                                 value={chosen}
@@ -1003,7 +1006,7 @@ const GpsTracking = () => {
                                                                 className="flex-1 min-w-0 input"
                                                                 style={{ height: 30, fontSize: 12, padding: '0 8px' }}
                                                             >
-                                                                <option value="">Associer à un véhicule…</option>
+                                                                <option value="">{t('u.associer_un_vhicule')}</option>
                                                                 {vehicles.map((v) => (
                                                                     <option key={v.id} value={v.id}>
                                                                         {(v.marque_name || 'Véhicule') + ' ' + (v.modele_name || '')} — {v.matricule}
@@ -1017,7 +1020,7 @@ const GpsTracking = () => {
                                                                 style={{ background: 'var(--primary-container)' }}
                                                             >
                                                                 <span className="material-symbols-outlined text-[14px]">link</span>
-                                                                Associer
+                                                                {t('u.associer')}
                                                             </button>
                                                         </>
                                                     )}

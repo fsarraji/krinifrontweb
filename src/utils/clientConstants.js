@@ -1,3 +1,5 @@
+import { tNow } from '../i18n/runtime';
+
 export const SEXE_OPTIONS = [
     { value: 'HOMME', label: 'Homme' },
     { value: 'FEMME', label: 'Femme' },
@@ -35,7 +37,7 @@ export const NATIONALITES = [
 
 export const cinLabelFor = (nationalite) => {
     if (nationalite && nationalite.toLowerCase() !== 'marocaine') {
-        return 'Passport';
+        return tNow('client.passport');
     }
-    return 'CIN / Passeport';
+    return tNow('client.cin');
 };

@@ -3,6 +3,7 @@ import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import { apiErrorText, fieldErrors } from '../utils/apiErrorText';
+import { useI18n } from '../i18n/context';
 
 const EMPTY = { name: '', latitude: '', longitude: '', radius_km: '25' };
 
@@ -22,6 +23,7 @@ const formatKm = (meters) => {
  * N'utilise pas <form> : ce composant est affiché à l'intérieur d'un formulaire.
  */
 const GeofenceManager = ({ canEdit }) => {
+    const { t } = useI18n();
     const [zones, setZones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [outside, setOutside] = useState(null);
@@ -34,11 +36,11 @@ const GeofenceManager = ({ canEdit }) => {
             const { data } = await api.get('geofences/');
             setZones(Array.isArray(data) ? data : data.results || []);
         } catch (err) {
-            toast.error(apiErrorText(err, 'Impossible de charger les zones autorisées.'));
+            toast.error(apiErrorText(err, t('u.impossible_de_charger_les_zones_')));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const checkNow = useCallback(async () => {
         try {
@@ -58,13 +60,13 @@ const GeofenceManager = ({ canEdit }) => {
 
     const validate = () => {
         const next = {};
-        if (!draft.name.trim()) next.name = 'Le nom est obligatoire.';
+        if (!draft.name.trim()) next.name = t('u.le_nom_est_obligatoire');
         const lat = Number(draft.latitude);
         const lon = Number(draft.longitude);
         const km = Number(draft.radius_km);
-        if (draft.latitude === '' || !Number.isFinite(lat) || lat < -90 || lat > 90) next.latitude = 'Latitude entre -90 et 90.';
-        if (draft.longitude === '' || !Number.isFinite(lon) || lon < -180 || lon > 180) next.longitude = 'Longitude entre -180 et 180.';
-        if (!Number.isFinite(km) || km < 0.05 || km > 2000) next.radius_m = 'Rayon entre 0,05 km et 2000 km.';
+        if (draft.latitude === '' || !Number.isFinite(lat) || lat < -90 || lat > 90) next.latitude = t('u.latitude_entre_90_et_90');
+        if (draft.longitude === '' || !Number.isFinite(lon) || lon < -180 || lon > 180) next.longitude = t('u.longitude_entre_180_et_180');
+        if (!Number.isFinite(km) || km < 0.05 || km > 2000) next.radius_m = t('u.rayon_entre_0_05_km_et_2000_km');
         return next;
     };
 
@@ -83,7 +85,7 @@ const GeofenceManager = ({ canEdit }) => {
                 radius_m: Math.round(Number(draft.radius_km) * 1000),
                 is_active: true,
             });
-            toast.success('Zone ajoutée.');
+            toast.success(t('u.zone_ajoute'));
             setDraft(EMPTY);
             setErrors({});
             setOutside(null);
@@ -91,7 +93,7 @@ const GeofenceManager = ({ canEdit }) => {
         } catch (err) {
             const byField = fieldErrors(err);
             setErrors(byField);
-            if (Object.keys(byField).length === 0) toast.error(apiErrorText(err, "Erreur lors de l'ajout de la zone."));
+            if (Object.keys(byField).length === 0) toast.error(apiErrorText(err, t('u.erreur_lors_de_l_ajout_de_la_zon')));
         } finally {
             setSaving(false);
         }
@@ -103,23 +105,23 @@ const GeofenceManager = ({ canEdit }) => {
             setOutside(null);
             await load();
         } catch (err) {
-            toast.error(apiErrorText(err, 'Mise à jour impossible.'));
+            toast.error(apiErrorText(err, t('u.mise_jour_impossible')));
         }
     };
 
     const handleDelete = async (zone) => {
-        const confirmed = await messageBox.ask(`Supprimer la zone « ${zone.name} » ?`, 'Supprimer la zone', {
+        const confirmed = await messageBox.ask(t('u.supprimer_la_zone', { name: zone.name }), t('u.supprimer_la_zone_3'), {
             destructive: true,
-            confirmText: 'Supprimer',
+            confirmText: t('clients.menu.delete'),
         });
         if (!confirmed) return;
         try {
             await api.delete(`geofences/${zone.id}/`);
-            toast.success('Zone supprimée.');
+            toast.success(t('u.zone_supprime'));
             setOutside(null);
             await load();
         } catch (err) {
-            toast.error(apiErrorText(err, 'Suppression impossible.'));
+            toast.error(apiErrorText(err, t('u.suppression_impossible')));
         }
     };
 
@@ -137,19 +139,19 @@ const GeofenceManager = ({ canEdit }) => {
             <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
                 <h2 id="geofence-title" className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary" aria-hidden="true">share_location</span>
-                    Zones autorisées (géorepérage)
+                    {t('u.zones_autorises_goreprage')}
                 </h2>
                 <p className="text-slate-500 text-sm mt-1">
-                    Une alerte est créée lorsqu'un véhicule loué sort de toutes les zones actives. Sans zone active, aucun contrôle.
-                    {!canEdit && <span className="font-bold text-danger ml-1">(Seul le propriétaire peut modifier)</span>}
+                    {t('u.une_alerte_est_cre_lorsqu_un_vhi')}
+                    {!canEdit && <span className="font-bold text-danger ms-1">{t('u.seul_le_propritaire_peut_modifie')}</span>}
                 </p>
             </div>
 
             <div className="p-6 space-y-5">
                 {loading ? (
-                    <p className="text-sm text-slate-500" role="status">Chargement…</p>
+                    <p className="text-sm text-slate-500" role="status">{t('u.chargement')}</p>
                 ) : zones.length === 0 ? (
-                    <p className="text-sm text-slate-500">Aucune zone définie : les véhicules loués ne sont pas contrôlés.</p>
+                    <p className="text-sm text-slate-500">{t('u.aucune_zone_dfinie_les_vhicules_')}</p>
                 ) : (
                     <ul className="divide-y divide-slate-100 border border-slate-100 rounded-xl">
                         {zones.map((zone) => (
@@ -157,7 +159,7 @@ const GeofenceManager = ({ canEdit }) => {
                                 <div className="min-w-0">
                                     <p className="font-semibold text-slate-800 truncate">{zone.name}</p>
                                     <p className="text-xs text-slate-500">
-                                        {zone.latitude.toFixed(4)}, {zone.longitude.toFixed(4)} · rayon {formatKm(zone.radius_m)}
+                                        {zone.latitude.toFixed(4)}, {zone.longitude.toFixed(4)} · {t('u.rayon', { radius: formatKm(zone.radius_m) })}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
@@ -168,13 +170,13 @@ const GeofenceManager = ({ canEdit }) => {
                                             disabled={!canEdit}
                                             onChange={() => toggleActive(zone)}
                                         />
-                                        Active
+                                        {t('u.active')}
                                     </label>
                                     {canEdit && (
                                         <button
                                             type="button"
                                             onClick={() => handleDelete(zone)}
-                                            aria-label={`Supprimer la zone ${zone.name}`}
+                                            aria-label={t('u.supprimer_la_zone_2', { name: zone.name })}
                                             className="p-1.5 rounded-lg text-danger hover:bg-danger-bg/50"
                                         >
                                             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
@@ -189,22 +191,22 @@ const GeofenceManager = ({ canEdit }) => {
                 {canEdit && (
                     <div className="grid grid-cols-2 lg:grid-cols-12 gap-3 items-start" onKeyDown={onEnter}>
                         <div className="col-span-2 lg:col-span-4">
-                            <label htmlFor="gf-name" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Nom</label>
-                            <input id="gf-name" className={inputClass} value={draft.name} onChange={set('name')} placeholder="Ex : Casablanca" aria-invalid={Boolean(errors.name)} />
+                            <label htmlFor="gf-name" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.nom')}</label>
+                            <input id="gf-name" className={inputClass} value={draft.name} onChange={set('name')} placeholder={t('u.ex_casablanca')} aria-invalid={Boolean(errors.name)} />
                             {errors.name && <p role="alert" className="text-xs text-danger mt-1">{errors.name}</p>}
                         </div>
                         <div className="lg:col-span-2">
-                            <label htmlFor="gf-lat" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Latitude</label>
+                            <label htmlFor="gf-lat" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.latitude')}</label>
                             <input id="gf-lat" className={inputClass} inputMode="decimal" value={draft.latitude} onChange={set('latitude')} placeholder="33.5731" aria-invalid={Boolean(errors.latitude)} />
                             {errors.latitude && <p role="alert" className="text-xs text-danger mt-1">{errors.latitude}</p>}
                         </div>
                         <div className="lg:col-span-2">
-                            <label htmlFor="gf-lon" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Longitude</label>
+                            <label htmlFor="gf-lon" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.longitude')}</label>
                             <input id="gf-lon" className={inputClass} inputMode="decimal" value={draft.longitude} onChange={set('longitude')} placeholder="-7.5898" aria-invalid={Boolean(errors.longitude)} />
                             {errors.longitude && <p role="alert" className="text-xs text-danger mt-1">{errors.longitude}</p>}
                         </div>
                         <div className="lg:col-span-2">
-                            <label htmlFor="gf-radius" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Rayon (km)</label>
+                            <label htmlFor="gf-radius" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.rayon_km')}</label>
                             <input id="gf-radius" className={inputClass} inputMode="decimal" value={draft.radius_km} onChange={set('radius_km')} aria-invalid={Boolean(errors.radius_m)} />
                             {errors.radius_m && <p role="alert" className="text-xs text-danger mt-1">{errors.radius_m}</p>}
                         </div>
@@ -215,7 +217,7 @@ const GeofenceManager = ({ canEdit }) => {
                                 disabled={saving}
                                 className="w-full px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60"
                             >
-                                {saving ? 'Ajout…' : 'Ajouter la zone'}
+                                {saving ? t('u.ajout') : t('u.ajouter_la_zone')}
                             </button>
                         </div>
                     </div>
@@ -228,17 +230,17 @@ const GeofenceManager = ({ canEdit }) => {
                         disabled={activeCount === 0}
                         className="text-sm font-semibold text-primary hover:underline disabled:text-slate-400 disabled:no-underline"
                     >
-                        Vérifier maintenant les véhicules loués
+                        {t('u.vrifier_maintenant_les_vhicules_')}
                     </button>
                     {outside !== null && (
                         <div className="mt-3" role="status">
                             {outside.length === 0 ? (
-                                <p className="text-sm text-success font-semibold">Tous les véhicules loués suivis par GPS sont dans une zone autorisée.</p>
+                                <p className="text-sm text-success font-semibold">{t('u.tous_les_vhicules_lous_suivis_pa')}</p>
                             ) : (
                                 <ul className="space-y-1.5">
                                     {outside.map((v) => (
                                         <li key={v.contract_id} className="text-sm text-danger-dark bg-danger-bg rounded-lg px-3 py-2">
-                                            <strong>{v.matricule}</strong> (contrat #{v.contract_id}, {v.client}) : à {formatKm(v.distance_outside_m)} de la zone « {v.nearest_zone} ».
+                                            <strong>{v.matricule}</strong> {t('u.contrat_de_la_zone', { id: v.contract_id, client: v.client, distance: formatKm(v.distance_outside_m), zone: v.nearest_zone })}
                                         </li>
                                     ))}
                                 </ul>

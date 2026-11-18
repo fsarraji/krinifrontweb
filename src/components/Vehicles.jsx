@@ -97,13 +97,13 @@ const Vehicles = () => {
     const paginatedVehicles = filteredVehicles.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     const EXPORT_COLUMNS = [
-        { key: 'matricule', label: 'Matricule' },
-        { key: 'marque_name', label: 'Marque' },
-        { key: 'modele_name', label: 'Modèle' },
-        { key: 'annee', label: 'Année' },
-        { key: 'kilometrage', label: 'Kilométrage (km)' },
-        { key: 'carburant', label: 'Carburant' },
-        { key: 'statut', label: 'Statut' },
+        { key: 'matricule', label: t('u.matricule') },
+        { key: 'marque_name', label: t('u.marque') },
+        { key: 'modele_name', label: t('u.modle') },
+        { key: 'annee', label: t('u.anne') },
+        { key: 'kilometrage', label: t('u.kilomtrage_km') },
+        { key: 'carburant', label: t('u.carburant') },
+        { key: 'statut', label: t('u.statut') },
         { key: 'prix_par_jour', label: 'Prix/Jour (MAD)' },
     ];
 

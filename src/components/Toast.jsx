@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { tNow } from '../i18n/runtime';
 
 // Simple event-bus for Toasts
 const LISTENERS = new Set();
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const toast = {
-    success: (message, title = 'Succès') => notify('success', title, message),
-    error: (message, title = 'Erreur') => notify('error', title, message),
-    warning: (message, title = 'Attention') => notify('warning', title, message),
-    info: (message, title = 'Information') => notify('info', title, message),
+    success: (message, title = tNow('u.succs')) => notify('success', title, message),
+    error: (message, title = tNow('u.erreur')) => notify('error', title, message),
+    warning: (message, title = tNow('u.attention')) => notify('warning', title, message),
+    info: (message, title = tNow('u.information')) => notify('info', title, message),
 };
 
 function notify(type, title, message) {

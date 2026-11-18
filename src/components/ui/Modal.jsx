@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { useI18n } from '../../i18n/context';
 
 const SIZES = {
     sm: 'max-w-sm',
@@ -25,6 +26,7 @@ const Modal = ({
     className = '',
     closeOnBackdrop = true,
 }) => {
+    const { t } = useI18n();
     const autoId = useId();
     const titleId = labelId || `modal-title-${autoId}`;
     const panelRef = useRef(null);
@@ -104,7 +106,7 @@ const Modal = ({
                         type="button"
                         onClick={onClose}
                         className="p-2 -mr-1 rounded-full hover:bg-surface-container transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                        aria-label="Fermer"
+                        aria-label={t('u.fermer')}
                     >
                         <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: 20 }}>close</span>
                     </button>

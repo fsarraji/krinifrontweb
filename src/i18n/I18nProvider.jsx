@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { I18nContext } from './context';
+import { setFormatLocale } from '../utils/formatters';
+import { setRuntimeLang } from './runtime';
 import { LANG_META, SUPPORTED_LANGS, translate } from './translations';
 
 const STORAGE_KEY = 'lang';
@@ -20,6 +22,9 @@ const readStoredLang = () => {
 const I18nProvider = ({ children }) => {
     const [lang, setLangState] = useState(readStoredLang);
     const dir = LANG_META[lang].dir;
+    // Avant le rendu des enfants : dates et nombres suivent la langue.
+    setFormatLocale(lang);
+    setRuntimeLang(lang);
 
     useEffect(() => {
         document.documentElement.lang = lang;

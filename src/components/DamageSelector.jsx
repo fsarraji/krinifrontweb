@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
 import carDiagram from '../assets/car_damage_diagram.webp';
+import { useI18n } from '../i18n/context';
 
 let damageSeq = 0;
 
 const nextDamageId = () => { damageSeq += 1; return `dmg-${damageSeq}`; };
 
 const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPART' }) => {
+    const { t } = useI18n();
     const imgRef = useRef(null);
     const [activeDamageId, setActiveDamageId] = useState(null);
 
@@ -56,7 +58,7 @@ const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPA
                 <img 
                     ref={imgRef}
                     src={carDiagram} 
-                    alt="Schéma de la voiture" 
+                    alt={t('u.schma_de_la_voiture')} 
                     className={`w-full h-auto object-contain border border-slate-200 rounded-xl bg-white ${!readOnly ? 'cursor-crosshair' : ''}`}
                     onClick={handleImageClick}
                 />
@@ -64,7 +66,7 @@ const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPA
                 {contextDamages.map((damage, index) => (
                     <div 
                         key={damage.id || index}
-                        className={`absolute w-6 h-6 -ml-3 -mt-3 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-transform ${(!readOnly && activeDamageId === (damage.id || index)) ? 'bg-red-600 text-white scale-125 ring-2 ring-white z-10' : 'bg-red-500/80 text-white hover:bg-red-500'} ${!readOnly ? 'cursor-pointer' : ''}`}
+                        className={`absolute w-6 h-6 -ms-3 -mt-3 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-transform ${(!readOnly && activeDamageId === (damage.id || index)) ? 'bg-red-600 text-white scale-125 ring-2 ring-white z-10' : 'bg-red-500/80 text-white hover:bg-red-500'} ${!readOnly ? 'cursor-pointer' : ''}`}
                         style={{ left: `${damage.x}%`, top: `${damage.y}%` }}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -84,10 +86,10 @@ const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPA
                 
                 {contextDamages.length === 0 ? (
                     <div className="flex-1 flex items-center justify-center text-slate-400 text-sm italic text-center p-4">
-                        {readOnly ? "Aucun dégât signalé." : "Cliquez sur le schéma pour ajouter des points de dégâts."}
+                        {readOnly ? t('u.aucun_dgt_signal') : t('u.cliquez_sur_le_schma_pour_ajoute')}
                     </div>
                 ) : (
-                    <div className="space-y-3 overflow-y-auto pr-2 max-h-[300px]">
+                    <div className="space-y-3 overflow-y-auto pe-2 max-h-[300px]">
                         {contextDamages.map((damage, index) => (
                             <div 
                                 key={damage.id || index} 
@@ -99,14 +101,14 @@ const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPA
                                     </div>
                                     <div className="flex-1">
                                         {readOnly ? (
-                                            <p className="text-sm text-slate-700">{damage.description || <span className="text-sm italic text-slate-400">Aucune description</span>}</p>
+                                            <p className="text-sm text-slate-700">{damage.description || <span className="text-sm italic text-slate-400">{t('u.aucune_description')}</span>}</p>
                                         ) : (
                                             <div className="space-y-2">
                                                 <input
                                                     type="text"
                                                     value={damage.description}
                                                     onChange={(e) => handleDescriptionChange(damage.id || index, e.target.value)}
-                                                    placeholder="Décrire l'anomalie (ex: rayure, bosse)..."
+                                                    placeholder={t('u.dcrire_l_anomalie_ex_rayure_boss')}
                                                     className="w-full bg-transparent border-b border-slate-300 focus:border-red-500 focus:outline-none text-sm py-1 placeholder:text-slate-400"
                                                     autoFocus={activeDamageId === (damage.id || index)}
                                                 />
@@ -116,7 +118,7 @@ const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPA
                                                         className="text-[10px] text-red-500 hover:text-red-700 font-bold uppercase tracking-wider flex items-center gap-1"
                                                     >
                                                         <span className="material-symbols-outlined text-[14px]">delete</span>
-                                                        Supprimer
+                                                        {t('u.supprimer')}
                                                     </button>
                                                 </div>
                                             </div>

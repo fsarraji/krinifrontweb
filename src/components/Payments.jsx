@@ -49,10 +49,10 @@ const Payments = () => {
             'recettes_paiements',
             [
                 { key: 'id', label: 'ID Paiement' },
-                { key: 'payment_date', label: 'Date' },
+                { key: 'payment_date', label: t('u.date') },
                 { key: 'contract', label: 'ID Contrat' },
-                { key: 'payment_method', label: 'Méthode de Paiement' },
-                { key: 'reference', label: 'Référence' },
+                { key: 'payment_method', label: t('u.mthode_de_paiement') },
+                { key: 'reference', label: t('u.rfrence') },
                 { key: 'amount', label: 'Montant (MAD)' },
             ]
         );

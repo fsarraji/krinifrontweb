@@ -2,6 +2,8 @@
 // une clé absente en arabe retombe automatiquement sur le français, puis sur la clé elle-même.
 // Variables : {nom} est remplacé par la valeur fournie à t(clé, { nom }).
 
+import { pagesAr, pagesFr } from './pages';
+
 export const SUPPORTED_LANGS = ['fr', 'ar'];
 
 export const LANG_META = {
@@ -271,6 +273,45 @@ export const translations = {
         'veh.restore.title': 'Restaurer le véhicule',
         'veh.restore.ok': 'Véhicule restauré.',
         'veh.restore.error': 'Impossible de restaurer le véhicule.',
+        'acc.roue_secours': 'Roue secours',
+        'acc.cric': 'Cric',
+        'acc.manivelle': 'Manivelle',
+        'acc.gilet': 'Gilet',
+        'acc.triangle': 'Triangle',
+        'acc.extincteur': 'Extincteur',
+        'acc.papiers': 'Papiers',
+        'acc.cles': 'Clés',
+        'sexe.HOMME': 'Homme',
+        'sexe.FEMME': 'Femme',
+        'client.cin': 'CIN / Passeport',
+        'client.passport': 'Passeport',
+        'nat.Marocaine': 'Marocaine',
+        'nat.Française': 'Française',
+        'nat.Algérienne': 'Algérienne',
+        'nat.Tunisienne': 'Tunisienne',
+        'nat.Sénégalaise': 'Sénégalaise',
+        'nat.Ivoirienne': 'Ivoirienne',
+        'nat.Malienne': 'Malienne',
+        'nat.Égyptienne': 'Égyptienne',
+        'nat.Libanaise': 'Libanaise',
+        'nat.Émiratie': 'Émiratie',
+        'nat.Saoudienne': 'Saoudienne',
+        'nat.Espagnole': 'Espagnole',
+        'nat.Italienne': 'Italienne',
+        'nat.Allemande': 'Allemande',
+        'nat.Belge': 'Belge',
+        'nat.Britannique': 'Britannique',
+        'nat.Américaine': 'Américaine',
+        'nat.Canadienne': 'Canadienne',
+        'nat.Portugaise': 'Portugaise',
+        'nat.Néerlandaise': 'Néerlandaise',
+        'nat.Suisse': 'Suisse',
+        'nat.Russe': 'Russe',
+        'nat.Turque': 'Turque',
+        'nat.Chinoise': 'Chinoise',
+        'nat.Indienne': 'Indienne',
+        'nat.Japonaise': 'Japonaise',
+        'nat.Autre': 'Autre',
     },
 
     ar: {
@@ -534,8 +575,51 @@ export const translations = {
         'veh.restore.title': 'استرجاع السيارة',
         'veh.restore.ok': 'تم استرجاع السيارة.',
         'veh.restore.error': 'تعذّر استرجاع السيارة.',
+        'acc.roue_secours': 'العجلة الاحتياطية',
+        'acc.cric': 'الرافعة',
+        'acc.manivelle': 'مقبض الرافعة',
+        'acc.gilet': 'السترة',
+        'acc.triangle': 'المثلث',
+        'acc.extincteur': 'طفاية الحريق',
+        'acc.papiers': 'الوثائق',
+        'acc.cles': 'المفاتيح',
+        'sexe.HOMME': 'ذكر',
+        'sexe.FEMME': 'أنثى',
+        'client.cin': 'بطاقة التعريف / جواز السفر',
+        'client.passport': 'جواز السفر',
+        'nat.Marocaine': 'مغربية',
+        'nat.Française': 'فرنسية',
+        'nat.Algérienne': 'جزائرية',
+        'nat.Tunisienne': 'تونسية',
+        'nat.Sénégalaise': 'سنغالية',
+        'nat.Ivoirienne': 'إيفوارية',
+        'nat.Malienne': 'مالية',
+        'nat.Égyptienne': 'مصرية',
+        'nat.Libanaise': 'لبنانية',
+        'nat.Émiratie': 'إماراتية',
+        'nat.Saoudienne': 'سعودية',
+        'nat.Espagnole': 'إسبانية',
+        'nat.Italienne': 'إيطالية',
+        'nat.Allemande': 'ألمانية',
+        'nat.Belge': 'بلجيكية',
+        'nat.Britannique': 'بريطانية',
+        'nat.Américaine': 'أمريكية',
+        'nat.Canadienne': 'كندية',
+        'nat.Portugaise': 'برتغالية',
+        'nat.Néerlandaise': 'هولندية',
+        'nat.Suisse': 'سويسرية',
+        'nat.Russe': 'روسية',
+        'nat.Turque': 'تركية',
+        'nat.Chinoise': 'صينية',
+        'nat.Indienne': 'هندية',
+        'nat.Japonaise': 'يابانية',
+        'nat.Autre': 'أخرى',
     },
 };
+
+// Clés générées pour les pages (voir pages.js) : fusionnées sans écraser les clés manuelles.
+Object.assign(translations.fr, pagesFr, { ...translations.fr });
+Object.assign(translations.ar, pagesAr, { ...translations.ar });
 
 /** Traduit `key` dans `lang` (repli : français, puis la clé) et remplace les {variables}. */
 export function translate(lang, key, vars) {

@@ -12,8 +12,10 @@ import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import { optimizeImageFile } from '../utils/imageUtils';
 import AuditTimeline from './AuditTimeline';
+import { useI18n } from '../i18n/context';
 
 const VehicleForm = () => {
+    const { t } = useI18n();
     const { formProps, markClean } = useUnsavedChanges();
     const { id } = useParams();
     const navigate = useNavigate();
@@ -55,34 +57,34 @@ const VehicleForm = () => {
     const [checkingUnique, setCheckingUnique] = useState({});
 
     const steps = [
-        { num: 1, label: 'Identification', icon: 'fingerprint', subtitle: 'Informations générales' },
-        { num: 2, label: 'Spécifications', icon: 'settings_input_component', subtitle: 'Détails techniques' },
-        { num: 3, label: 'Tarification', icon: 'payments', subtitle: 'Prix et options' },
-        { num: 4, label: 'Validité & Statut', icon: 'verified_user', subtitle: 'Documents et disponibilité' },
+        { num: 1, label: t('u.identification'), icon: 'fingerprint', subtitle: t('u.informations_gnrales') },
+        { num: 2, label: t('u.spcifications'), icon: 'settings_input_component', subtitle: t('u.dtails_techniques') },
+        { num: 3, label: t('u.tarification'), icon: 'payments', subtitle: t('u.prix_et_options') },
+        { num: 4, label: t('u.validit_statut'), icon: 'verified_user', subtitle: t('u.documents_et_disponibilit') },
     ];
 
     const requiredFields = {
         1: [
-            { key: 'matricule', label: 'Matricule', check: () => !formData.matricule },
-            { key: 'marque', label: 'Marque', check: () => !formData.marque },
-            { key: 'modele', label: 'Modèle', check: () => !formData.modele },
-            { key: 'annee', label: 'Année', check: () => !formData.annee },
+            { key: 'matricule', label: t('u.matricule'), check: () => !formData.matricule },
+            { key: 'marque', label: t('u.marque'), check: () => !formData.marque },
+            { key: 'modele', label: t('u.modle'), check: () => !formData.modele },
+            { key: 'annee', label: t('u.anne'), check: () => !formData.annee },
         ],
         2: [
-            { key: 'kilometrage', label: 'Kilométrage', check: () => formData.kilometrage === '' || formData.kilometrage === null || formData.kilometrage === undefined },
+            { key: 'kilometrage', label: t('u.kilomtrage'), check: () => formData.kilometrage === '' || formData.kilometrage === null || formData.kilometrage === undefined },
         ],
         3: [
-            { key: 'prix_par_jour', label: 'Prix journalier', check: () => formData.prix_par_jour === '' || formData.prix_par_jour === null || formData.prix_par_jour === undefined },
+            { key: 'prix_par_jour', label: t('u.prix_journalier'), check: () => formData.prix_par_jour === '' || formData.prix_par_jour === null || formData.prix_par_jour === undefined },
         ],
         4: [
-            { key: 'date_assurance', label: 'Expiration assurance', check: () => !formData.date_assurance },
-            { key: 'date_visite_technique', label: 'Visite technique', check: () => !formData.date_visite_technique },
+            { key: 'date_assurance', label: t('u.expiration_assurance'), check: () => !formData.date_assurance },
+            { key: 'date_visite_technique', label: t('u.visite_technique'), check: () => !formData.date_visite_technique },
         ],
     };
 
     const UNIQUE_FIELDS = {
-        matricule: 'matricule',
-        matricule_definitif: 'matricule définitif',
+        matricule: t('u.matricule_2'),
+        matricule_definitif: t('u.matricule_dfinitif_2'),
     };
 
     const checkUnique = async (field, value) => {
@@ -102,15 +104,15 @@ const VehicleForm = () => {
             setUniqueErrors((prev) => ({
                 ...prev,
                 [field]: res.data.available === false
-                    ? `Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.`
+                    ? t('u.un_vhicule_de_votre_flotte_utili', { field: UNIQUE_FIELDS[field] })
                     : false,
             }));
         } catch (err) {
             console.error("Erreur lors de la vérification de l'unicité", err);
             setUniqueErrors((prev) => ({ ...prev, [field]: false }));
             toast.error(err.response?.status === 404
-                ? "Vérification indisponible : le serveur doit être mis à jour (vehicles/check-unique)."
-                : "Impossible de vérifier l'unicité de ce matricule.");
+                ? t('u.vrification_indisponible_le_serv')
+                : t('u.impossible_de_vrifier_l_unicit_d'));
         } finally {
             setCheckingUnique((prev) => ({ ...prev, [field]: false }));
         }
@@ -135,14 +137,14 @@ const VehicleForm = () => {
         const missing = validateStep(currentStep);
         if (missing.length > 0) {
             markErrors(missing);
-            toast.error(`Champs requis manquants : ${missing.map((m) => m.label).join(', ')}`);
+            toast.error(t('u.champs_requis_manquants', { fields: missing.map((m) => m.label).join(', ') }));
             return;
         }
         const uniqueFieldsOnStep = (requiredFields[currentStep] || [])
             .map((f) => f.key)
             .filter((k) => UNIQUE_FIELDS[k] && uniqueErrors[k]);
         if (uniqueFieldsOnStep.length > 0) {
-            toast.error(`Corrigez d'abord les champs en double : ${uniqueFieldsOnStep.map((k) => UNIQUE_FIELDS[k]).join(', ')}`);
+            toast.error(t('u.corrigez_d_abord_les_champs_en_d', { fields: uniqueFieldsOnStep.map((k) => UNIQUE_FIELDS[k]).join(', ') }));
             return;
         }
         setCurrentStep((prev) => Math.min(prev + 1, 4));
@@ -152,7 +154,7 @@ const VehicleForm = () => {
 
     const hasError = (name) => Boolean(fieldErrors[name]) || Boolean(uniqueErrors[name]);
 
-    const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? 'Champ requis' : '');
+    const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? t('u.champ_requis') : '');
 
     const inputClass = (name) => `w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition-all duration-200 ${
         hasError(name)
@@ -264,18 +266,18 @@ const VehicleForm = () => {
     };
 
     const MONTHS = [
-        { value: 1, label: 'Janvier' },
-        { value: 2, label: 'Février' },
-        { value: 3, label: 'Mars' },
-        { value: 4, label: 'Avril' },
-        { value: 5, label: 'Mai' },
-        { value: 6, label: 'Juin' },
-        { value: 7, label: 'Juillet' },
-        { value: 8, label: 'Août' },
-        { value: 9, label: 'Septembre' },
-        { value: 10, label: 'Octobre' },
-        { value: 11, label: 'Novembre' },
-        { value: 12, label: 'Décembre' },
+        { value: 1, label: t('u.janvier') },
+        { value: 2, label: t('u.fvrier') },
+        { value: 3, label: t('u.mars') },
+        { value: 4, label: t('u.avril') },
+        { value: 5, label: t('u.mai') },
+        { value: 6, label: t('u.juin') },
+        { value: 7, label: t('u.juillet') },
+        { value: 8, label: t('u.aot') },
+        { value: 9, label: t('u.septembre') },
+        { value: 10, label: t('u.octobre') },
+        { value: 11, label: t('u.novembre') },
+        { value: 12, label: t('u.dcembre') },
     ];
     const DAYS = Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
 
@@ -368,7 +370,7 @@ const VehicleForm = () => {
         } catch (error) {
             console.error("Erreur lors de l'enregistrement du véhicule", error);
             
-            let message = "Une erreur est survenue lors de l'enregistrement.";
+            let message = t('u.une_erreur_est_survenue_lors_de__4');
             if (error.response?.data) {
                 const data = error.response.data;
                 if (typeof data === 'string') {
@@ -396,7 +398,7 @@ const VehicleForm = () => {
         if (stepsWithErrors.length > 0) {
             const missingAll = stepsWithErrors.flatMap((s) => validateStep(s));
             markErrors(missingAll);
-            toast.error(`Champs requis manquants : ${missingAll.map((m) => m.label).join(', ')}`);
+            toast.error(t('', { fields: missingAll.map((m) => m.label).join(', ') }));
             setCurrentStep(Math.min(...stepsWithErrors));
             return;
         }
@@ -413,8 +415,8 @@ const VehicleForm = () => {
                     },
                 });
                 if (res.data.available === false) {
-                    setUniqueErrors((prev) => ({ ...prev, [field]: `Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.` }));
-                    toast.error(`Un véhicule de votre flotte utilise déjà ce ${UNIQUE_FIELDS[field]}.`);
+                    setUniqueErrors((prev) => ({ ...prev, [field]: t('u.un_vhicule_de_votre_flotte_utili', { field: UNIQUE_FIELDS[field] }) }));
+                    toast.error(t('u.un_vhicule_de_votre_flotte_utili', { field: UNIQUE_FIELDS[field] }));
                     setCurrentStep(1);
                     return;
                 }
@@ -427,21 +429,21 @@ const VehicleForm = () => {
     };
 
     const handleDelete = () => {
-        messageBox.danger("Êtes-vous sûr de vouloir supprimer ce véhicule ?", "Supprimer le véhicule", {
+        messageBox.danger(t('u.tes_vous_sr_de_vouloir_supprimer_2'), t('u.supprimer_le_vhicule'), {
             onConfirm: async () => {
                 try {
                     await api.delete(`vehicles/${id}/`);
-                    toast.success('Véhicule supprimé avec succès.');
+                    toast.success(t('u.vhicule_supprim_avec_succs'));
                     navigate('/vehicles');
                 } catch (error) {
                     console.error("Erreur lors de la suppression du véhicule", error);
-                    toast.error(apiErrorText(error, "Erreur lors de la suppression du véhicule."));
+                    toast.error(apiErrorText(error, t('u.erreur_lors_de_la_suppression_du')));
                 }
             }
         });
     };
 
-    if (fetching) return <div className="flex items-center justify-center min-h-[50vh] gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> Chargement du véhicule…</div>;
+    if (fetching) return <div className="flex items-center justify-center min-h-[50vh] gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> {t('u.chargement_du_vhicule')}</div>;
 
     const stepState = (num) => {
         if (currentStep > num) return 'done';
@@ -455,14 +457,14 @@ const VehicleForm = () => {
             <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        <Link to="/vehicles" className="hover:text-slate-600">Véhicules</Link>
+                        <Link to="/vehicles" className="hover:text-slate-600">{t('u.vhicules')}</Link>
                         <span className="mx-1">›</span>
-                        {isEditMode ? 'Modifier' : 'Nouveau'}
+                        {isEditMode ? t('u.modifier') : t('u.nouveau')}
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-                        {isEditMode ? 'Modifier un véhicule' : 'Ajouter un véhicule'}
+                        {isEditMode ? t('u.modifier_un_vhicule') : t('u.ajouter_un_vhicule')}
                     </h1>
-                    <p className="mt-1 text-sm text-slate-500">Complétez les informations pour enregistrer votre véhicule.</p>
+                    <p className="mt-1 text-sm text-slate-500">{t('u.compltez_les_informations_pour_e')}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {isEditMode && (
@@ -472,7 +474,7 @@ const VehicleForm = () => {
                             className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-100 active:scale-[0.98]"
                         >
                             <span className="material-symbols-outlined text-[18px]">delete</span>
-                            Supprimer
+                            {t('u.supprimer')}
                         </button>
                     )}
                 </div>
@@ -534,7 +536,7 @@ const VehicleForm = () => {
                                     {checkingUnique['matricule'] && (
                                         <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-slate-500">
                                             <span className="material-symbols-outlined animate-spin text-[13px]">progress_activity</span>
-                                            Vérification de l'unicité…
+                                            {t('u.vrification_de_l_unicit')}
                                         </p>
                                     )}
                                     {fieldErrorMsg('matricule') && (
@@ -545,7 +547,7 @@ const VehicleForm = () => {
                                     )}
                                 </label>
                                 <div>
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Marque</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.marque')}</span>
                                     <Select
                                         options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
                                         onChange={(opt) => {
@@ -553,7 +555,7 @@ const VehicleForm = () => {
                                             setFieldErrors(prev => ({ ...prev, marque: false, modele: false }));
                                         }}
                                         value={formData.marque ? { value: formData.marque, label: brands.find(b => b.id == formData.marque)?.name || '' } : null}
-                                        placeholder="Sélectionner une marque"
+                                        placeholder={t('u.slectionner_une_marque')}
                                         isSearchable
                                         isClearable
                                         classNamePrefix="react-select"
@@ -567,7 +569,7 @@ const VehicleForm = () => {
                                     )}
                                 </div>
                                 <div>
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Modèle</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.modle')}</span>
                                     <Select
                                         options={(formData.marque ? models : []).map(model => ({ value: model.id, label: model.name }))}
                                         onChange={(opt) => {
@@ -575,7 +577,7 @@ const VehicleForm = () => {
                                             setFieldErrors(prev => ({ ...prev, modele: false }));
                                         }}
                                         value={formData.modele ? { value: formData.modele, label: (formData.marque ? models : []).find(m => m.id == formData.modele)?.name || '' } : null}
-                                        placeholder="Sélectionner un modèle"
+                                        placeholder={t('u.slectionner_un_modle')}
                                         isSearchable
                                         isClearable
                                         isDisabled={!formData.marque}
@@ -590,7 +592,7 @@ const VehicleForm = () => {
                                     )}
                                 </div>
                                 <label className="block">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Année</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.anne')}</span>
                                     <input
                                         name="annee"
                                         value={formData.annee}
@@ -606,7 +608,7 @@ const VehicleForm = () => {
                                     )}
                                 </label>
                                 <label className="block">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Plaque définitive (optionnel)</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.plaque_dfinitive_optionnel')}</span>
                                     <input
                                         name="matricule_definitif"
                                         value={formData.matricule_definitif}
@@ -619,7 +621,7 @@ const VehicleForm = () => {
                                     {checkingUnique['matricule_definitif'] && (
                                         <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-slate-500">
                                             <span className="material-symbols-outlined animate-spin text-[13px]">progress_activity</span>
-                                            Vérification de l'unicité…
+                                            {t('u.vrification_de_l_unicit')}
                                         </p>
                                     )}
                                     {fieldErrorMsg('matricule_definitif') && (
@@ -628,10 +630,10 @@ const VehicleForm = () => {
                                             {fieldErrorMsg('matricule_definitif')}
                                         </p>
                                     )}
-                                    <p className="mt-1.5 text-[11px] text-slate-400">Saisie une fois la plaque 00000-lettre-00 reçue. Elle remplace la WW provisoire un mois après la mise en circulation.</p>
+                                    <p className="mt-1.5 text-[11px] text-slate-400">{t('u.saisie_une_fois_la_plaque_00000_')}</p>
                                 </label>
                                 <label className="block">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Date de mise en circulation</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.date_de_mise_en_circulation')}</span>
                                     <input
                                         name="date_mise_en_circulation"
                                         value={formData.date_mise_en_circulation}
@@ -641,7 +643,7 @@ const VehicleForm = () => {
                                     />
                                 </label>
                                 <label className="block">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Date d'autorisation de circulation</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.date_d_autorisation_de_circulati')}</span>
                                     <input
                                         name="date_autorisation_circulation"
                                         value={formData.date_autorisation_circulation}
@@ -657,32 +659,32 @@ const VehicleForm = () => {
                         <>
                             <div className="grid gap-6 md:grid-cols-2">
                                     <label className="block">
-                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Couleur</span>
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.couleur')}</span>
                                         <input
                                             name="couleur"
                                             value={formData.couleur}
                                             onChange={handleChange}
                                             className={inputClass('couleur')}
                                             type="text"
-                                            placeholder="Ex: Noir Métallisé"
+                                            placeholder={t('u.ex_noir_mtallis')}
                                         />
                                     </label>
                                     <div>
-                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Carburant</span>
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.carburant')}</span>
                                         <Dropdown
                                             name="carburant"
                                             options={[
-                                                { value: 'Diesel', label: 'Diesel' },
-                                                { value: 'Essence', label: 'Essence' },
-                                                { value: 'Hybride', label: 'Hybride' },
-                                                { value: 'Electrique', label: 'Électrique' }
+                                                { value: 'Diesel', label: t('u.diesel') },
+                                                { value: 'Essence', label: t('u.essence') },
+                                                { value: 'Hybride', label: t('u.hybride') },
+                                                { value: 'Electrique', label: t('u.lectrique') }
                                             ]}
                                             value={formData.carburant}
                                             onChange={(v) => handleChange({ target: { name: 'carburant', value: v } })}
                                         />
                                     </div>
                                     <label className="block">
-                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Kilométrage actuel</span>
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.kilomtrage_actuel')}</span>
                                         <input
                                             name="kilometrage"
                                             value={formData.kilometrage}
@@ -698,7 +700,7 @@ const VehicleForm = () => {
                                         )}
                                     </label>
                                     <label className="block">
-                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Prochaine vidange (km)</span>
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.prochaine_vidange_km')}</span>
                                         <input
                                             name="prochain_vidange_km"
                                             value={formData.prochain_vidange_km}
@@ -708,7 +710,7 @@ const VehicleForm = () => {
                                         />
                                     </label>
                                     <label className="block">
-                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Puissance fiscale (CV)</span>
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.puissance_fiscale_cv')}</span>
                                         <input
                                             name="puissance_fiscale"
                                             value={formData.puissance_fiscale}
@@ -727,7 +729,7 @@ const VehicleForm = () => {
                         <>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Prix journalier (DH)</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.prix_journalier_dh')}</span>
                                     <input
                                         name="prix_par_jour"
                                         value={formData.prix_par_jour}
@@ -753,11 +755,11 @@ const VehicleForm = () => {
                                             checked={formData.chauffeur_disponible}
                                             onChange={handleChange}
                                         />
-                                        <span className="text-sm font-medium text-slate-700">Chauffeur disponible avec ce véhicule</span>
+                                        <span className="text-sm font-medium text-slate-700">{t('u.chauffeur_disponible_avec_ce_vhi')}</span>
                                     </label>
                                 </div>
                                 <div className="md:col-span-2">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Tarif km suppl. spécifique à ce véhicule (DH/km)</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.tarif_km_suppl_spcifique_ce_vhic')}</span>
                                     <input
                                         name="tarif_km_extra"
                                         value={formData.tarif_km_extra || ''}
@@ -766,16 +768,16 @@ const VehicleForm = () => {
                                         type="number"
                                         step="0.5"
                                         min="0"
-                                        placeholder="Laissez vide = utiliser le tarif agence (défaut)"
+                                        placeholder={t('u.laissez_vide_utiliser_le_tarif_a')}
                                     />
-                                    <p className="mt-2 text-xs text-slate-400">Si non renseigné, le tarif par défaut des Paramètres sera appliqué.</p>
+                                    <p className="mt-2 text-xs text-slate-400">{t('u.si_non_renseign_le_tarif_par_dfa')}</p>
                                 </div>
                             </div>
                             <div className="mt-7 border-t border-slate-200 pt-6">
                                 <div className="mb-4 flex items-center justify-between gap-3">
                                     <div>
-                                        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Périodes tarifaires (saisonnières)</span>
-                                        <p className="text-xs text-slate-400">Prix journalier appliqué pendant certaines périodes de l'année. Le prix par défaut s'applique au reste de l'année.</p>
+                                        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.priodes_tarifaires_saisonnires')}</span>
+                                        <p className="text-xs text-slate-400">{t('u.prix_journalier_appliqu_pendant_')}</p>
                                     </div>
                                     <button
                                         type="button"
@@ -783,12 +785,12 @@ const VehicleForm = () => {
                                         className="flex shrink-0 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">add</span>
-                                        Ajouter une période
+                                        {t('u.ajouter_une_priode')}
                                     </button>
                                 </div>
                                 {formData.price_intervals.length === 0 && (
                                     <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-400">
-                                        Aucune période saisonnière. Le tarif journalier défaut s'applique toute l'année.
+                                        {t('u.aucune_priode_saisonnire_le_tari')}
                                     </p>
                                 )}
                                 <div className="space-y-3">
@@ -802,16 +804,16 @@ const VehicleForm = () => {
                                                     className="flex items-center gap-1 text-[11px] font-semibold text-rose-500 transition hover:text-rose-700"
                                                 >
                                                     <span className="material-symbols-outlined text-[14px]">delete</span>
-                                                    Supprimer
+                                                    {t('u.supprimer')}
                                                 </button>
                                             </div>
                                             <div className="grid gap-3 md:grid-cols-2">
                                                 <div>
-                                                    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</span>
+                                                    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('u.type')}</span>
                                                     <Dropdown
                                                         options={[
-                                                            { value: 'RECURRENT', label: 'Récurrent (chaque année)' },
-                                                            { value: 'ABSOLUTE', label: 'Absolu (dates précises)' },
+                                                            { value: 'RECURRENT', label: t('u.rcurrent_chaque_anne') },
+                                                            { value: 'ABSOLUTE', label: t('u.absolu_dates_prcises') },
                                                         ]}
                                                         value={interval.type}
                                                         onChange={(v) => updateInterval(index, { type: v })}
@@ -832,14 +834,14 @@ const VehicleForm = () => {
                                                 {interval.type === 'RECURRENT' ? (
                                                     <>
                                                         <div>
-                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Début (mois / jour)</span>
+                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('u.dbut_mois_jour')}</span>
                                                             <div className="flex gap-2">
                                                                 <select
                                                                     value={interval.mois_debut}
                                                                     onChange={(e) => updateInterval(index, { mois_debut: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
-                                                                    <option value="">Mois</option>
+                                                                    <option value="">{t('u.mois')}</option>
                                                                     {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                                                                 </select>
                                                                 <select
@@ -847,7 +849,7 @@ const VehicleForm = () => {
                                                                     onChange={(e) => updateInterval(index, { jour_debut: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
-                                                                    <option value="">Jour</option>
+                                                                    <option value="">{t('u.jour')}</option>
                                                                     {DAYS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                                                                 </select>
                                                             </div>
@@ -860,7 +862,7 @@ const VehicleForm = () => {
                                                                     onChange={(e) => updateInterval(index, { mois_fin: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
-                                                                    <option value="">Mois</option>
+                                                                    <option value="">{t('u.mois')}</option>
                                                                     {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
                                                                 </select>
                                                                 <select
@@ -868,17 +870,17 @@ const VehicleForm = () => {
                                                                     onChange={(e) => updateInterval(index, { jour_fin: e.target.value })}
                                                                     className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-2.5 text-sm outline-none transition focus:border-blue-600"
                                                                 >
-                                                                    <option value="">Jour</option>
+                                                                    <option value="">{t('u.jour')}</option>
                                                                     {DAYS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                        <p className="text-[11px] text-slate-400 md:col-span-2">Peut chevaucher la fin d'année (ex : 15 décembre → 15 janvier).</p>
+                                                        <p className="text-[11px] text-slate-400 md:col-span-2">{t('u.peut_chevaucher_la_fin_d_anne_ex')}</p>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <label className="block">
-                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date de début</span>
+                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('u.date_de_dbut')}</span>
                                                             <input
                                                                 type="date"
                                                                 value={interval.date_debut}
@@ -887,7 +889,7 @@ const VehicleForm = () => {
                                                             />
                                                         </label>
                                                         <label className="block">
-                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date de fin</span>
+                                                            <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('u.date_de_fin')}</span>
                                                             <input
                                                                 type="date"
                                                                 value={interval.date_fin}
@@ -909,7 +911,7 @@ const VehicleForm = () => {
                         <>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <label className="block">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Expiration assurance</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.expiration_assurance')}</span>
                                     <input
                                         name="date_assurance"
                                         value={formData.date_assurance}
@@ -925,7 +927,7 @@ const VehicleForm = () => {
                                     )}
                                 </label>
                                 <label className="block">
-                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Visite technique</span>
+                                    <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.visite_technique')}</span>
                                     <input
                                         name="date_visite_technique"
                                         value={formData.date_visite_technique}
@@ -942,7 +944,7 @@ const VehicleForm = () => {
                                 </label>
                             </div>
                             <div className="mt-7">
-                                <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-slate-500">Statut</span>
+                                <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.statut')}</span>
                                 <div className="grid gap-3 md:grid-cols-3">
                                     {['Available', 'Maintenance', 'Rented'].map((status) => {
                                         const active = formData.statut === status;
@@ -960,7 +962,7 @@ const VehicleForm = () => {
                                                 <span className="material-symbols-outlined text-[18px]">
                                                     {status === 'Available' ? 'check_circle' : status === 'Maintenance' ? 'build' : 'key'}
                                                 </span>
-                                                <span>{status === 'Available' ? 'Disponible' : status === 'Maintenance' ? 'Maintenance' : 'Louée'}</span>
+                                                <span>{t(`status.${status}`)}</span>
                                             </button>
                                         );
                                     })}
@@ -977,16 +979,16 @@ const VehicleForm = () => {
                                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                                         <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
                                     </span>
-                                    <h2 className="font-semibold text-slate-900">Photo du véhicule</h2>
+                                    <h2 className="font-semibold text-slate-900">{t('u.photo_du_vhicule')}</h2>
                                 </div>
                                 {imagePreview ? (
                                     <div className="group relative aspect-video overflow-hidden rounded-xl border border-slate-200">
                                         <img
                                             src={imagePreview}
                                             className="absolute inset-0 h-full w-full object-cover"
-                                            alt="Aperçu"
+                                            alt={t('u.aperu')}
                                         />
-                                        <label className="absolute right-3 top-3 cursor-pointer rounded-full bg-white/80 p-2 shadow-sm backdrop-blur transition-colors hover:bg-white">
+                                        <label className="absolute end-3 top-3 cursor-pointer rounded-full bg-white/80 p-2 shadow-sm backdrop-blur transition-colors hover:bg-white">
                                             <span className="material-symbols-outlined text-[18px] text-blue-600">photo_camera</span>
                                             <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                                         </label>
@@ -994,9 +996,9 @@ const VehicleForm = () => {
                                 ) : (
                                     <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-6 text-center transition hover:border-blue-300 hover:bg-blue-50/30">
                                         <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-2xl text-blue-600">📷</div>
-                                        <p className="text-sm font-semibold text-slate-700">Glisser une image ici</p>
-                                        <p className="mt-1 text-sm text-blue-600">ou cliquer pour parcourir</p>
-                                        <p className="mt-3 text-xs text-slate-400">Formats acceptés : JPG, PNG (max. 5 Mo)</p>
+                                        <p className="text-sm font-semibold text-slate-700">{t('u.glisser_une_image_ici')}</p>
+                                        <p className="mt-1 text-sm text-blue-600">{t('u.ou_cliquer_pour_parcourir')}</p>
+                                        <p className="mt-3 text-xs text-slate-400">{t('u.formats_accepts_jpg_png_max_5_mo')}</p>
                                         <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
                                     </label>
                                 )}
@@ -1008,7 +1010,7 @@ const VehicleForm = () => {
 
             {isEditMode && (
                 <details className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
-                    <summary className="cursor-pointer text-sm font-bold text-slate-700">Historique des modifications</summary>
+                    <summary className="cursor-pointer text-sm font-bold text-slate-700">{t('u.historique_des_modifications')}</summary>
                     <div className="mt-3">
                         <AuditTimeline model="vehicle" id={id} />
                     </div>
@@ -1022,28 +1024,28 @@ const VehicleForm = () => {
                         <span className="material-symbols-outlined">shield</span>
                     </div>
                     <div>
-                        <p className="text-sm font-semibold text-slate-700">Vos données sont sécurisées</p>
-                        <p className="text-xs text-slate-400">Nous protégeons vos informations avec le plus haut niveau de sécurité.</p>
+                        <p className="text-sm font-semibold text-slate-700">{t('u.vos_donnes_sont_scurises')}</p>
+                        <p className="text-xs text-slate-400">{t('u.nous_protgeons_vos_informations_')}</p>
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="ghost" onClick={() => navigate('/vehicles')}>Annuler</Button>
+                    <Button variant="ghost" onClick={() => navigate('/vehicles')}>{t('u.annuler')}</Button>
                     {currentStep > 1 && (
-                        <Button variant="outline" icon="chevron_left" onClick={handlePrev}>Précédent</Button>
+                        <Button variant="outline" icon="chevron_left" onClick={handlePrev}>{t('u.prcdent')}</Button>
                     )}
                     {isEditMode && (
                         <Button variant={currentStep < 4 ? 'outline' : 'primary'} icon="check" loading={loading} onClick={handleSubmit}>
-                            {loading ? 'Enregistrement…' : 'Enregistrer'}
+                            {loading ? t('u.enregistrement') : t('u.enregistrer')}
                         </Button>
                     )}
                     {currentStep < 4 ? (
                         <Button onClick={handleNext}>
-                            Suivant
+                            {t('u.suivant')}
                             <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">chevron_right</span>
                         </Button>
                     ) : !isEditMode && (
                         <Button icon="check" loading={loading} onClick={handleSubmit}>
-                            {loading ? 'Enregistrement…' : 'Enregistrer'}
+                            {loading ? t('u.enregistrement') : t('u.enregistrer')}
                         </Button>
                     )}
                 </div>

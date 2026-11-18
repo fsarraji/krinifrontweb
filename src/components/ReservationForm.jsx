@@ -11,8 +11,10 @@ import Stepper from './ui/Stepper';
 import PageHeader from './ui/PageHeader';
 import Button from './ui/Button';
 import { getRole } from '../utils/userRole';
+import { useI18n } from '../i18n/context';
 
 const ReservationForm = () => {
+    const { t } = useI18n();
     const navigate = useNavigate();
     const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
@@ -121,7 +123,7 @@ const ReservationForm = () => {
             setStep(2);
         } catch (error) {
             console.error("Dispo erreur", error);
-            toast.error(apiErrorText(error, "Erreur de disponibilité"));
+            toast.error(apiErrorText(error, t('u.erreur_de_disponibilit')));
         } finally {
             setLoading(false);
         }
@@ -131,11 +133,11 @@ const ReservationForm = () => {
         e.preventDefault();
         const advance = Number(formData.montant_paye || 0);
         if (!Number.isFinite(advance) || advance < 0) {
-            toast.error('Le montant versé ne peut pas être négatif.');
+            toast.error(t('u.le_montant_vers_ne_peut_pas_tre_'));
             return;
         }
         if (advance > totalEstimate() + 0.001) {
-            toast.error('Le montant versé dépasse le total estimé de la réservation.');
+            toast.error(t('u.le_montant_vers_dpasse_le_total__2'));
             return;
         }
         try {
@@ -149,11 +151,11 @@ const ReservationForm = () => {
                 date_retour_prevue: `${formData.date_retour_prevue}:00Z`,
             };
             await api.post('contracts/', dataToSubmit);
-            toast.success('Réservation créée avec succès.');
+            toast.success(t('u.rservation_cre_avec_succs'));
             navigate('/reservations');
         } catch (error) {
             console.error("Erreur lors de la création", error);
-            toast.error(apiErrorText(error, "Erreur lors de la création de la réservation. Vérifiez les champs."));
+            toast.error(apiErrorText(error, t('u.erreur_lors_de_la_cration_de_la_')));
         }
     };
 
@@ -167,14 +169,14 @@ const ReservationForm = () => {
         <div className="min-h-screen bg-surface">
             {/* Header Section */}
             <PageHeader
-                eyebrow="Fleet Concierge"
-                title="Nouvelle Réservation"
-                description="Réservez un véhicule en 3 étapes : Dates, Choix du véhicule, et Informations du Client."
+                eyebrow={t('u.fleet_concierge')}
+                title={t('u.nouvelle_rservation')}
+                description={t('u.rservez_un_vhicule_en_3_tapes_da')}
                 actions={(
                     <>
-                        <Button variant="secondary" onClick={() => navigate('/reservations')}>Annuler</Button>
+                        <Button variant="secondary" onClick={() => navigate('/reservations')}>{t('u.annuler')}</Button>
                         {step === 3 && (
-                            <Button icon="event_available" onClick={handleSubmit}>Confirmer la Réservation</Button>
+                            <Button icon="event_available" onClick={handleSubmit}>{t('u.confirmer_la_rservation')}</Button>
                         )}
                     </>
                 )}
@@ -184,17 +186,17 @@ const ReservationForm = () => {
             <Stepper
                 currentStep={step}
                 steps={[
-                    { num: 1, label: 'Dates' },
-                    { num: 2, label: 'Véhicule' },
-                    { num: 3, label: 'Client' },
+                    { num: 1, label: t('u.dates') },
+                    { num: 2, label: t('u.vhicule') },
+                    { num: 3, label: t('u.client') },
                 ]}
             />
 
             {/* Barre de progression */}
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Progression</span>
-                    <span className="text-[11px] font-bold text-primary">Étape {step} sur 3</span>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">{t('u.progression')}</span>
+                    <span className="text-[11px] font-bold text-primary">{t('u.tape_sur_3', { step })}</span>
                 </div>
                 <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div
@@ -210,26 +212,26 @@ const ReservationForm = () => {
                     {/* STEP 1: Dates */}
                     {step === 1 && (
                         <div>
-                            <p className="text-slate-500 mb-8 text-sm">Veuillez sélectionner la date de début et de fin de la réservation. Le système recherchera les véhicules disponibles pendant cette période précise.</p>
+                            <p className="text-slate-500 mb-8 text-sm">{t('u.veuillez_slectionner_la_date_de_')}</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Date et Heure de Départ</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.date_et_heure_de_dpart')}</label>
                                     <DatePicker
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200"
                                         value={formData.date_sortie}
                                         onChange={(v) => setFormData({...formData, date_sortie: v})}
-                                        placeholder="Choisir la date de départ"
+                                        placeholder={t('u.choisir_la_date_de_dpart')}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Retour Prévu</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.retour_prvu_2')}</label>
                                     <DatePicker
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200"
                                         value={formData.date_retour_prevue}
                                         onChange={(v) => setFormData({...formData, date_retour_prevue: v})}
                                         min={formData.date_sortie ? formData.date_sortie.slice(0, 10) : null}
-                                        placeholder="Choisir la date de retour"
+                                        placeholder={t('u.choisir_la_date_de_retour')}
                                     />
                                 </div>
                             </div>
@@ -240,7 +242,7 @@ const ReservationForm = () => {
                             >
                                 {loading && <span className="material-symbols-outlined animate-spin">progress_activity</span>}
                                 <span className="material-symbols-outlined">search</span>
-                                {loading ? 'Recherche en cours...' : 'Rechercher les véhicules'}
+                                {loading ? t('u.recherche_en_cours') : t('u.rechercher_les_vhicules')}
                             </button>
                         </div>
                     )}
@@ -250,17 +252,17 @@ const ReservationForm = () => {
                             <div className="flex items-center justify-between mb-6">
                                 <div className="relative">
                                     <input 
-                                        className="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 w-64" 
-                                        placeholder="Rechercher (Marque, Modèle, MAT)..." 
+                                        className="ps-10 pe-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 w-64" 
+                                        placeholder={t('u.rechercher_marque_modle_mat')} 
                                         type="text"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
-                                    <span className="material-symbols-outlined absolute left-3 top-3 text-slate-400 text-sm">search</span>
+                                    <span className="material-symbols-outlined absolute start-3 top-3 text-slate-400 text-sm">search</span>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 pb-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pe-2 pb-2">
                                 {filteredVehicles.map(vehicle => (
                                     <div 
                                         key={vehicle.id}
@@ -291,8 +293,8 @@ const ReservationForm = () => {
                                 {filteredVehicles.length === 0 && (
                                     <div className="col-span-1 md:col-span-2 py-16 text-center">
                                         <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">sentiment_dissatisfied</span>
-                                        <h4 className="text-lg font-bold text-slate-600">Aucun véhicule trouvé</h4>
-                                        <p className="text-slate-400 text-sm">Essayez de modifier vos dates ou filtres de recherche.</p>
+                                        <h4 className="text-lg font-bold text-slate-600">{t('u.aucun_vhicule_trouv')}</h4>
+                                        <p className="text-slate-400 text-sm">{t('u.essayez_de_modifier_vos_dates_ou')}</p>
                                     </div>
                                 )}
                             </div>
@@ -302,14 +304,14 @@ const ReservationForm = () => {
                                     onClick={() => setStep(1)}
                                     className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
                                 >
-                                    Retour
+                                    {t('u.retour')}
                                 </button>
                                 <button 
                                     onClick={() => setStep(3)}
                                     disabled={!formData.vehicle}
                                     className="flex-1 bg-primary hover:bg-primary-deep text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-primary-border/50 disabled:opacity-50 disabled:shadow-none transition-all"
                                 >
-                                    Continuer avec ce Véhicule
+                                    {t('u.continuer_avec_ce_vhicule')}
                                 </button>
                             </div>
                         </div>
@@ -325,13 +327,13 @@ const ReservationForm = () => {
                                     className="text-xs font-bold text-primary-deep bg-primary-light/50 hover:bg-primary-light ring-1 ring-primary-light px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-sm">add</span>
-                                    NOUVEAU CLIENT
+                                    {t('u.nouveau_client')}
                                 </button>
                             </div>
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Sélectionner le Client Principal *</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.slectionner_le_client_principal')}</label>
                                     <Select 
                                         options={clients.map(c => ({
                                             value: c.id,
@@ -342,7 +344,7 @@ const ReservationForm = () => {
                                             value: formData.client,
                                             label: clients.find(c => c.id == formData.client) ? `${clients.find(c => c.id == formData.client).nom} ${clients.find(c => c.id == formData.client).prenom} (${clients.find(c => c.id == formData.client).cin_passport})` : ''
                                         } : null}
-                                        placeholder="Rechercher par nom, prénom ou CIN..."
+                                        placeholder={t('u.rechercher_par_nom_prnom_ou_cin')}
                                         isSearchable
                                         isClearable
                                         classNamePrefix="react-select"
@@ -361,7 +363,7 @@ const ReservationForm = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Deuxième Conducteur (Optionnel)</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.deuxime_conducteur_optionnel')}</label>
                                     <Select 
                                         options={clients.filter(c => c.id != formData.client).map(c => ({
                                             value: c.id,
@@ -372,7 +374,7 @@ const ReservationForm = () => {
                                             value: formData.deuxieme_chauffeur,
                                             label: clients.find(c => c.id == formData.deuxieme_chauffeur) ? `${clients.find(c => c.id == formData.deuxieme_chauffeur).nom} ${clients.find(c => c.id == formData.deuxieme_chauffeur).prenom} (${clients.find(c => c.id == formData.deuxieme_chauffeur).cin_passport})` : ''
                                         } : null}
-                                        placeholder="Rechercher un deuxième chauffeur..."
+                                        placeholder={t('u.rechercher_un_deuxime_chauffeur')}
                                         isSearchable
                                         isClearable
                                         classNamePrefix="react-select"
@@ -395,14 +397,14 @@ const ReservationForm = () => {
                             
                             <div className="flex items-center gap-3 mb-6">
                                 <span className="material-symbols-outlined text-primary text-3xl">payments</span>
-                                <h3 className="text-xl font-extrabold text-slate-900">Paiement d'avance & Cautions</h3>
+                                <h3 className="text-xl font-extrabold text-slate-900">{t('u.paiement_d_avance_cautions')}</h3>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl transition-colors border border-slate-200">
                                         <div>
-                                            <p className="text-sm font-bold text-slate-900">Service Chauffeur</p>
+                                            <p className="text-sm font-bold text-slate-900">{t('u.service_chauffeur')}</p>
                                             <p className="text-[10px] text-slate-500 font-medium">+50 DH/jour</p>
                                         </div>
                                         <div 
@@ -418,11 +420,11 @@ const ReservationForm = () => {
                                 
                                 {agencySettings.caution_active && (
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Caution</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.caution')}</label>
                                         <div className="relative">
-                                            <span className="absolute left-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
+                                            <span className="absolute start-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
                                             <input 
-                                                className={`w-full px-4 py-3 rounded-xl border text-sm font-bold pl-12 outline-none transition-all duration-200 ${userRole !== 'OWNER' && userRole !== 'SUPERADMIN' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-200 text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary'}`} 
+                                                className={`w-full px-4 py-3 rounded-xl border text-sm font-bold ps-12 outline-none transition-all duration-200 ${userRole !== 'OWNER' && userRole !== 'SUPERADMIN' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-200 text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary'}`} 
                                                 type="number" 
                                                 value={formData.caution}
                                                 onChange={(e) => setFormData({...formData, caution: e.target.value})}
@@ -433,11 +435,11 @@ const ReservationForm = () => {
                                 )}
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Avance Versée</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.avance_verse')}</label>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
+                                        <span className="absolute start-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
                                         <input 
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-success-dark bg-success-bg/20 pl-12 text-sm font-extrabold focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200" 
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-success-dark bg-success-bg/20 ps-12 text-sm font-extrabold focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200" 
                                             type="number" 
                                             value={formData.montant_paye}
                                             onChange={(e) => setFormData({...formData, montant_paye: e.target.value})}
@@ -445,13 +447,13 @@ const ReservationForm = () => {
                                     </div>
                                 </div>
                                 <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Mode de Paiement (Avance)</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.mode_de_paiement_avance')}</label>
                                     <Dropdown
                                         options={[
-                                            { value: 'Espèce', label: 'Espèce' },
-                                            { value: 'Chèque', label: 'Chèque' },
-                                            { value: 'TPE', label: 'TPE' },
-                                            { value: 'Virement', label: 'Virement' }
+                                            { value: 'Espèce', label: t('method.Espèce') },
+                                            { value: 'Chèque', label: t('method.Chèque') },
+                                            { value: 'TPE', label: t('method.TPE') },
+                                            { value: 'Virement', label: t('method.Virement') }
                                         ]}
                                         value={formData.methode_paiement}
                                         onChange={(v) => setFormData({...formData, methode_paiement: v})}
@@ -462,10 +464,10 @@ const ReservationForm = () => {
                             <hr className="border-slate-100" />
                             
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 mb-2">Notes ou Demandes Spéciales</label>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.notes_ou_demandes_spciales')}</label>
                                 <textarea 
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 resize-none" 
-                                    placeholder="Entrez toute condition supplémentaire à satisfaire au moment de la récupération..." 
+                                    placeholder={t('u.entrez_toute_condition_supplment_2')} 
                                     rows="3"
                                     value={formData.notes}
                                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
@@ -477,7 +479,7 @@ const ReservationForm = () => {
                                     onClick={() => setStep(2)}
                                     className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
                                 >
-                                    Retour
+                                    {t('u.retour')}
                                 </button>
                                 <button 
                                     onClick={handleSubmit}
@@ -485,7 +487,7 @@ const ReservationForm = () => {
                                     className="flex-1 bg-primary hover:bg-primary-deep text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-primary-border/50 flex items-center justify-center gap-3 disabled:opacity-50 transition-all"
                                 >
                                     <span className="material-symbols-outlined">event_available</span>
-                                    Valider et Réserver
+                                    {t('u.valider_et_rserver')}
                                 </button>
                             </div>
                         </div>

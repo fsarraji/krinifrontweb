@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { translateOr } from '../i18n/helpers';
 import api from '../api';
 import DamageSelector from './DamageSelector';
 import FuelGaugeSelector from './FuelGaugeSelector';
@@ -7,8 +8,10 @@ import Field from './ui/Field';
 import { Input, Textarea } from './ui/Input';
 import Modal from './ui/Modal';
 import { VEHICLE_ACCESSORIES } from '../utils/vehicleAccessories';
+import { useI18n } from '../i18n/context';
 
 const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) => {
+    const { t } = useI18n();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
@@ -46,7 +49,7 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
             onClose();
         } catch (err) {
             console.error("Erreur lors de l'activation", err);
-            setError('Erreur lors de la validation. Veuillez vérifier les informations.');
+            setError(t('u.erreur_lors_de_la_validation_veu'));
             setLoading(false);
         }
     };
@@ -63,13 +66,13 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
             isOpen
             onClose={onClose}
             size="xl"
-            title="Activation de la réservation"
-            subtitle="Renseignez l'état du véhicule au moment précis du départ."
+            title={t('u.activation_de_la_rservation')}
+            subtitle={t('u.renseignez_l_tat_du_vhicule_au_m')}
             footer={(
                 <>
-                    <Button variant="outline" onClick={onClose}>Annuler</Button>
+                    <Button variant="outline" onClick={onClose}>{t('u.annuler')}</Button>
                     <Button type="submit" form="activate-form" size="lg" icon="play_circle" loading={loading}>
-                        {loading ? 'Activation en cours…' : 'Activer le contrat'}
+                        {loading ? t('u.activation_en_cours') : t('u.activer_le_contrat')}
                     </Button>
                 </>
             )}
@@ -83,9 +86,9 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
 
             <form id="activate-form" onSubmit={handleSubmit} className="space-y-6">
                 <section className="bg-white p-6 rounded-token border border-stroke">
-                    {sectionTitle('speed', 'Kilométrage & carburant')}
+                    {sectionTitle('speed', t('u.kilomtrage_carburant'))}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Field label="Kilométrage au départ" required>
+                        <Field label={t('u.kilomtrage_au_dpart')} required>
                             <Input
                                 type="number" min="0" required
                                 value={formData.km_sortie}
@@ -93,7 +96,7 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
                             />
                         </Field>
                         <div>
-                            <p className="label mb-2">Niveau de carburant</p>
+                            <p className="label mb-2">{t('u.niveau_de_carburant')}</p>
                             <FuelGaugeSelector
                                 value={formData.carburant_sortie}
                                 onChange={(val) => setFormData({ ...formData, carburant_sortie: val })}
@@ -103,7 +106,7 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
                 </section>
 
                 <section className="bg-white p-6 rounded-token border border-stroke">
-                    {sectionTitle('checklist', 'Accessoires inclus')}
+                    {sectionTitle('checklist', t('u.accessoires_inclus'))}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {VEHICLE_ACCESSORIES.map((item) => (
                             <label
@@ -119,24 +122,24 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
                                 <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                                     {formData[item.id] ? 'check_box' : 'check_box_outline_blank'}
                                 </span>
-                                <span className="text-xs font-bold">{item.label}</span>
+                                <span className="text-xs font-bold">{translateOr(t, `acc.${item.id}`, item.label)}</span>
                             </label>
                         ))}
                     </div>
                 </section>
 
                 <section className="bg-white p-6 rounded-token border border-stroke">
-                    {sectionTitle('car_crash', 'État & dégâts au départ')}
+                    {sectionTitle('car_crash', t('u.tat_dgts_au_dpart'))}
                     <DamageSelector
                         damages={formData.damages}
                         onChange={(newDamages) => setFormData({ ...formData, damages: newDamages })}
                         type="DEPART"
                     />
                     <div className="mt-6">
-                        <Field label="Observation générale (optionnel)">
+                        <Field label={t('u.observation_gnrale_optionnel')}>
                             <Textarea
                                 rows={2}
-                                placeholder="Dommages mineurs, rayures, propreté…"
+                                placeholder={t('u.dommages_mineurs_rayures_propret')}
                                 value={formData.degats_depart}
                                 onChange={(e) => setFormData({ ...formData, degats_depart: e.target.value })}
                             />

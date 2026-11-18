@@ -14,8 +14,10 @@ import ContractPhotos from './ContractPhotos';
 import AuditTimeline from './AuditTimeline';
 import { formatDateTime, formatMoney } from '../utils/formatters';
 import { apiErrorText, fieldErrors } from '../utils/apiErrorText';
+import { useI18n } from '../i18n/context';
 
 const EditContract = () => {
+  const { t } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -64,7 +66,7 @@ const EditContract = () => {
       navigate('/contracts');
     } catch (e) {
       console.error('Save error', e);
-      toast.error(apiErrorText(e, 'Erreur lors de l\'enregistrement du contrat.'));
+      toast.error(apiErrorText(e, t('u.erreur_lors_de_l_enregistrement_')));
     }
   };
 
@@ -81,7 +83,7 @@ const EditContract = () => {
       const { data } = await api.get(`contracts/${id}/`);
       setContract(data);
     } catch (err) {
-      toast.error(apiErrorText(err, 'Impossible de rafraîchir le contrat.'));
+      toast.error(apiErrorText(err, t('u.impossible_de_rafrachir_le_contr')));
     }
   };
 
@@ -100,11 +102,11 @@ const EditContract = () => {
     e.preventDefault();
     const amount = Number(paymentFormData.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      setPaymentErrors({ amount: 'Le montant doit être supérieur à zéro.' });
+      setPaymentErrors({ amount: t('u.le_montant_doit_tre_suprieur_zro') });
       return;
     }
     if (amount > resteAPayer + 0.001) {
-      setPaymentErrors({ amount: `Le montant dépasse le reste à payer (${formatMoney(resteAPayer)}).` });
+      setPaymentErrors({ amount: t('u.le_montant_dpasse_le_reste_payer', { rest: formatMoney(resteAPayer) }) });
       return;
     }
     setPaymentErrors({});
@@ -123,14 +125,14 @@ const EditContract = () => {
       setPaymentsHistory(paymentsRes.data.results || paymentsRes.data);
       setShowPaymentModal(false);
       setPaymentFormData({ amount: '', payment_method: 'Espèce', reference: '', notes: '' });
-      toast.success('Paiement ajouté avec succès.');
+      toast.success(t('u.paiement_ajout_avec_succs'));
     } catch (err) {
       console.error('Add payment error', err);
       // Erreurs par champ (ex. montant) sous le champ, le reste en notification
       const byField = fieldErrors(err);
       setPaymentErrors(byField);
       if (!byField.amount) {
-        toast.error(apiErrorText(err, 'Erreur lors de l\'ajout du paiement'));
+        toast.error(apiErrorText(err, t('u.erreur_lors_de_l_ajout_du_paieme')));
       }
     } finally {
       setPaymentSubmitting(false);
@@ -162,44 +164,44 @@ const EditContract = () => {
       });
       setProlongQuote(data);
     } catch {
-      setProlongError('Impossible de calculer le devis.');
+      setProlongError(t('u.impossible_de_calculer_le_devis'));
     }
   };
 
   const handleProlong = async (e) => {
     e.preventDefault();
-    if (!prolongDate) { setProlongError('Veuillez choisir une nouvelle date de retour.'); return; }
+    if (!prolongDate) { setProlongError(t('u.veuillez_choisir_une_nouvelle_da')); return; }
     setProlongSubmitting(true);
     setProlongError('');
     try {
       await api.post(`contracts/${id}/prolong/`, {
         date_retour_prevue: `${prolongDate.slice(0, 10)}T${prolongDate.slice(11, 16)}:00`
       });
-      toast.success('Contrat prolongé avec succès.');
+      toast.success(t('u.contrat_prolong_avec_succs'));
       const { data } = await api.get(`contracts/${id}/`);
       setContract(data);
       setShowProlongModal(false);
     } catch (err) {
-      setProlongError(apiErrorText(err, 'Erreur lors de la prolongation du contrat.'));
+      setProlongError(apiErrorText(err, t('u.erreur_lors_de_la_prolongation_d')));
     } finally {
       setProlongSubmitting(false);
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64 gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> Chargement du contrat…</div>;
-  if (!contract) return <div className="flex items-center justify-center h-screen text-error font-bold">Contrat non trouvé.</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> {t('u.chargement_du_contrat')}</div>;
+  if (!contract) return <div className="flex items-center justify-center h-screen text-error font-bold">{t('u.contrat_non_trouv')}</div>;
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 bg-slate-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200">
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-1">Résumé du Contrat</p>
+          <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-1">{t('u.rsum_du_contrat_2')}</p>
           <h2 className="text-4xl font-extrabold text-primary">CTR-{String(id).padStart(5, '0')}</h2>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleDiscard}>Abandonner</Button>
-          <Button onClick={handleSave}>Enregistrer</Button>
+          <Button variant="outline" onClick={handleDiscard}>{t('u.abandonner')}</Button>
+          <Button onClick={handleSave}>{t('u.enregistrer')}</Button>
         </div>
       </div>
 
@@ -210,19 +212,19 @@ const EditContract = () => {
           <div>
             <Select
               options={[
-                { value: 'RESERVE', label: 'Réservé' },
-                { value: 'EN_COURS', label: 'En cours' },
-                { value: 'TERMINE', label: 'Terminé' },
-                { value: 'ANNULE', label: 'Annulé' }
+                { value: 'RESERVE', label: t('u.rserv') },
+                { value: 'EN_COURS', label: t('u.en_cours') },
+                { value: 'TERMINE', label: t('u.termin') },
+                { value: 'ANNULE', label: t('u.annul') }
               ]}
               value={
                 {
                   value: formData.statut,
                   label: {
-                    RESERVE: 'Réservé',
-                    EN_COURS: 'En cours',
-                    TERMINE: 'Terminé',
-                    ANNULE: 'Annulé'
+                    RESERVE: t('u.rserv'),
+                    EN_COURS: t('u.en_cours'),
+                    TERMINE: t('u.termin'),
+                    ANNULE: t('u.annul')
                   }[formData.statut] || ''
                 }
               }
@@ -244,18 +246,18 @@ const EditContract = () => {
           <div>
             <div className="flex items-center space-x-4">
               <div>
-                <p className="text-xs font-medium text-slate-500">Départ</p>
+                <p className="text-xs font-medium text-slate-500">{t('u.dpart')}</p>
                 <p className="font-semibold">{contract.formatted_dates?.start || contract.date_debut}</p>
               </div>
               <span className="material-symbols-outlined text-slate-300">arrow_forward</span>
               <div>
-                <p className="text-xs font-medium text-slate-500">Retour</p>
+                <p className="text-xs font-medium text-slate-500">{t('u.retour')}</p>
                 <p className="font-semibold">{contract.formatted_dates?.end || contract.date_fin}</p>
               </div>
             </div>
             {contract.statut === 'EN_COURS' && (
               <Button variant="outline" icon="schedule" className="mt-4 w-full !text-primary" onClick={openProlongModal}>
-                Prolonger le contrat
+                {t('u.prolonger_le_contrat')}
               </Button>
             )}
             </div>
@@ -270,7 +272,7 @@ const EditContract = () => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <div />
-              <Button size="sm" icon="add" onClick={openPaymentModal}>Ajouter</Button>
+              <Button size="sm" icon="add" onClick={openPaymentModal}>{t('u.ajouter')}</Button>
             </div>
             {/* Progress Bar : payé / (location + frais) */}
             <div className="flex items-center gap-4 mb-2">
@@ -281,19 +283,19 @@ const EditContract = () => {
             </div>
             <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-sm">
               <div>
-                <dt className="text-xs text-slate-500">Location</dt>
+                <dt className="text-xs text-slate-500">{t('u.location')}</dt>
                 <dd className="font-semibold">{formatMoney(contract.montant_total)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Frais supplémentaires</dt>
+                <dt className="text-xs text-slate-500">{t('u.frais_supplmentaires')}</dt>
                 <dd className="font-semibold">{formatMoney(fraisSupplementaires)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Déjà payé</dt>
+                <dt className="text-xs text-slate-500">{t('u.dj_pay')}</dt>
                 <dd className="font-semibold">{formatMoney(contract.montant_paye)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Reste à payer</dt>
+                <dt className="text-xs text-slate-500">{t('u.reste_payer_2')}</dt>
                 <dd className={`font-bold ${resteAPayer > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{formatMoney(resteAPayer)}</dd>
               </div>
             </dl>
@@ -301,15 +303,15 @@ const EditContract = () => {
             {paymentsHistory.length > 0 && (
               <div className="border border-slate-100 rounded-lg overflow-hidden">
                 <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 text-xs font-bold uppercase text-slate-500">
-                  Historique des transactions
+                  {t('u.historique_des_transactions')}
                 </div>
-                <table className="w-full text-left text-sm">
+                <table className="w-full text-start text-sm">
                   <thead className="bg-white text-xs uppercase text-slate-400 font-bold border-b border-slate-100">
                     <tr>
-                      <th className="px-4 py-2">Date</th>
-                      <th className="px-4 py-2">Méthode</th>
-                      <th className="px-4 py-2">Réf / Notes</th>
-                      <th className="px-4 py-2 text-right">Montant</th>
+                      <th className="px-4 py-2">{t('u.date')}</th>
+                      <th className="px-4 py-2">{t('u.mthode')}</th>
+                      <th className="px-4 py-2">{t('u.rf_notes')}</th>
+                      <th className="px-4 py-2 text-end">{t('u.montant')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -327,7 +329,7 @@ const EditContract = () => {
                           {pay.reference || '-'}
                           {pay.notes && <span className="block text-xs text-slate-400">{pay.notes}</span>}
                         </td>
-                        <td className="px-4 py-2 text-right font-bold text-success whitespace-nowrap">
+                        <td className="px-4 py-2 text-end font-bold text-success whitespace-nowrap">
                           +{formatMoney(pay.amount)}
                         </td>
                       </tr>
@@ -341,7 +343,7 @@ const EditContract = () => {
       </div>
 
       <details className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
-        <summary className="cursor-pointer text-sm font-bold text-slate-700">Historique des modifications</summary>
+        <summary className="cursor-pointer text-sm font-bold text-slate-700">{t('u.historique_des_modifications')}</summary>
         <div className="mt-3">
           <AuditTimeline model="contract" id={id} />
         </div>
@@ -352,23 +354,23 @@ const EditContract = () => {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         size="md"
-        title="Ajouter un paiement"
+        title={t('u.ajouter_un_paiement')}
         footer={(
           <>
-            <Button variant="outline" onClick={() => setShowPaymentModal(false)}>Annuler</Button>
-            <Button type="submit" form="add-payment-form" loading={paymentSubmitting}>Valider le paiement</Button>
+            <Button variant="outline" onClick={() => setShowPaymentModal(false)}>{t('u.annuler')}</Button>
+            <Button type="submit" form="add-payment-form" loading={paymentSubmitting}>{t('u.valider_le_paiement')}</Button>
           </>
         )}
       >
         <form id="add-payment-form" onSubmit={handleAddPayment} className="space-y-4">
           <Field
-            label="Montant (MAD)"
+            label={t('u.montant_mad')}
             required
-            hint={`Reste à payer : ${formatMoney(resteAPayer)}`}
+            hint={t('u.reste_payer', { rest: formatMoney(resteAPayer) })}
             error={paymentErrors.amount}
           >
             <Input
-              type="number" required min="0.01" max={resteAPayer > 0 ? resteAPayer : undefined} step="0.01" placeholder="Ex : 1500"
+              type="number" required min="0.01" max={resteAPayer > 0 ? resteAPayer : undefined} step="0.01" placeholder={t('u.ex_1500')}
               value={paymentFormData.amount}
               onChange={(e) => {
                 setPaymentFormData({ ...paymentFormData, amount: e.target.value });
@@ -377,28 +379,28 @@ const EditContract = () => {
             />
           </Field>
           <div>
-            <p className="label mb-1.5">Méthode <span className="text-danger" aria-hidden="true">*</span></p>
+            <p className="label mb-1.5">{t('u.mthode')} <span className="text-danger" aria-hidden="true">*</span></p>
             <Dropdown
               options={[
-                { value: 'Espèce', label: 'Espèce (Cash)' },
-                { value: 'TPE', label: 'Carte Bancaire (TPE)' },
-                { value: 'Virement', label: 'Virement Bancaire' },
-                { value: 'Chèque', label: 'Chèque' },
+                { value: 'Espèce', label: t('u.espce_cash') },
+                { value: 'TPE', label: t('u.carte_bancaire_tpe') },
+                { value: 'Virement', label: t('u.virement_bancaire') },
+                { value: 'Chèque', label: t('method.Chèque') },
               ]}
               value={paymentFormData.payment_method}
               onChange={(value) => setPaymentFormData({ ...paymentFormData, payment_method: value || 'Espèce' })}
             />
           </div>
-          <Field label="Référence (optionnel)">
+          <Field label={t('u.rfrence_optionnel')}>
             <Input
-              type="text" placeholder="N° chèque ou réf. virement"
+              type="text" placeholder={t('u.n_chque_ou_rf_virement')}
               value={paymentFormData.reference}
               onChange={(e) => setPaymentFormData({ ...paymentFormData, reference: e.target.value })}
             />
           </Field>
-          <Field label="Notes">
+          <Field label={t('u.notes')}>
             <Textarea
-              rows={2} placeholder="Détails supplémentaires…"
+              rows={2} placeholder={t('u.dtails_supplmentaires')}
               value={paymentFormData.notes}
               onChange={(e) => setPaymentFormData({ ...paymentFormData, notes: e.target.value })}
             />
@@ -411,12 +413,12 @@ const EditContract = () => {
         isOpen={Boolean(showProlongModal && contract)}
         onClose={() => setShowProlongModal(false)}
         size="md"
-        title="Prolonger le contrat"
+        title={t('u.prolonger_le_contrat')}
         footer={(
           <>
-            <Button variant="outline" onClick={() => setShowProlongModal(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setShowProlongModal(false)}>{t('u.annuler')}</Button>
             <Button type="submit" form="prolong-form" loading={prolongSubmitting}>
-              {prolongSubmitting ? 'Prolongation…' : 'Prolonger'}
+              {prolongSubmitting ? t('u.prolongation') : t('u.prolonger')}
             </Button>
           </>
         )}
@@ -424,16 +426,16 @@ const EditContract = () => {
         <form id="prolong-form" onSubmit={handleProlong} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="bg-surface border border-stroke rounded-token p-3">
-              <p className="text-label-sm uppercase tracking-wider text-text-muted mb-1">Retour actuel</p>
+              <p className="text-label-sm uppercase tracking-wider text-text-muted mb-1">{t('u.retour_actuel')}</p>
               <p className="font-bold text-on-surface">{contract?.formatted_dates?.retour || contract?.formatted_dates?.end || ''}</p>
             </div>
             <div className="bg-surface border border-stroke rounded-token p-3">
-              <p className="text-label-sm uppercase tracking-wider text-text-muted mb-1">Jours actuel</p>
-              <p className="font-bold text-on-surface">{contract?.jours} jours</p>
+              <p className="text-label-sm uppercase tracking-wider text-text-muted mb-1">{t('u.jours_actuel')}</p>
+              <p className="font-bold text-on-surface">{t('u.jours', { n: contract?.jours })}</p>
             </div>
           </div>
 
-          <Field label="Nouvelle date de retour" required hint="La nouvelle date doit être après le retour actuel.">
+          <Field label={t('u.nouvelle_date_de_retour')} required hint={t('u.la_nouvelle_date_doit_tre_aprs_l')}>
             <Input
               type="datetime-local" required
               min={contract?.date_retour_prevue ? toLocalDatetime(contract.date_retour_prevue) : ''}
@@ -445,15 +447,15 @@ const EditContract = () => {
           {prolongQuote && (
             <div className="bg-primary-light border border-primary-border rounded-token p-4 grid grid-cols-3 gap-3 text-center text-xs">
               <div>
-                <p className="text-label-sm uppercase tracking-wider text-text-muted">Jours</p>
+                <p className="text-label-sm uppercase tracking-wider text-text-muted">{t('u.jours_2')}</p>
                 <p className="text-lg font-extrabold text-primary">{prolongQuote.jours}</p>
               </div>
               <div>
-                <p className="text-label-sm uppercase tracking-wider text-text-muted">Prix / jour</p>
+                <p className="text-label-sm uppercase tracking-wider text-text-muted">{t('u.prix_jour')}</p>
                 <p className="text-lg font-extrabold text-primary">{formatMoney(prolongQuote.prix_moyen)}</p>
               </div>
               <div>
-                <p className="text-label-sm uppercase tracking-wider text-text-muted">Total</p>
+                <p className="text-label-sm uppercase tracking-wider text-text-muted">{t('u.total')}</p>
                 <p className="text-lg font-extrabold text-primary">{formatMoney(prolongQuote.total)}</p>
               </div>
             </div>

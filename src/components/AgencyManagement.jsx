@@ -11,6 +11,7 @@ import StatusBadge from './ui/StatusBadge';
 import Spinner from './ui/Spinner';
 import EmptyState from './ui/EmptyState';
 import PageHeader from './ui/PageHeader';
+import { useI18n } from '../i18n/context';
 
 const EMPTY_FORM = { name: '', address: '', city: '', telephone: '', email: '', rc: '', ice: '', isActive: true };
 
@@ -38,6 +39,7 @@ const toPayload = (form) => ({
 });
 
 const AgencyManagement = () => {
+    const { t } = useI18n();
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM);
@@ -64,23 +66,23 @@ const AgencyManagement = () => {
             }
             closeModal();
             await fetchAgencies();
-            toast.success(isEditing ? 'Agence mise à jour avec succès.' : 'Agence créée avec succès.');
+            toast.success(isEditing ? t('u.agence_mise_jour_avec_succs') : t('u.agence_cre_avec_succs'));
         } catch (error) {
             console.error("Erreur lors de l'enregistrement de l'agence", error);
-            toast.error("Erreur lors de l'enregistrement. Vérifiez les données.");
+            toast.error(t('u.erreur_lors_de_l_enregistrement__2'));
         }
     };
 
     const handleDelete = (id) => {
-        messageBox.danger("Êtes-vous sûr de vouloir supprimer cette agence ?", "Supprimer l'agence", {
+        messageBox.danger(t('u.tes_vous_sr_de_vouloir_supprimer_3'), t('u.supprimer_l_agence'), {
             onConfirm: async () => {
                 try {
                     await api.delete(`agencies/${id}/`);
                     await fetchAgencies();
-                    toast.success('Agence supprimée avec succès.');
+                    toast.success(t('u.agence_supprime_avec_succs'));
                 } catch (error) {
                     console.error("Erreur lors de la suppression", error);
-                    toast.error("Erreur lors de la suppression.");
+                    toast.error(t('u.erreur_lors_de_la_suppression'));
                 }
             }
         });
@@ -93,11 +95,11 @@ const AgencyManagement = () => {
     return (
         <>
             <PageHeader
-                eyebrow="Administration Système"
-                title="Gestion des Agences"
+                eyebrow={t('u.administration_systme')}
+                title={t('u.gestion_des_agences')}
                 actions={
                     <Button icon="add" size="lg" onClick={() => openModal()}>
-                        Nouvelle Agence
+                        {t('u.nouvelle_agence')}
                     </Button>
                 }
             />
@@ -106,11 +108,11 @@ const AgencyManagement = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="text-left border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-4">Agence</th>
-                                <th className="px-6 py-4">Contact</th>
-                                <th className="px-6 py-4">Statut</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                            <tr className="text-start border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
+                                <th className="px-6 py-4">{t('u.agence')}</th>
+                                <th className="px-6 py-4">{t('u.contact')}</th>
+                                <th className="px-6 py-4">{t('u.statut')}</th>
+                                <th className="px-6 py-4 text-end">{t('u.actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stroke">
@@ -119,8 +121,8 @@ const AgencyManagement = () => {
                                     <td colSpan="4" className="px-6 py-4">
                                         <EmptyState
                                             icon="storefront"
-                                            title="Aucune agence"
-                                            description="Créez une première agence pour commencer."
+                                            title={t('u.aucune_agence')}
+                                            description={t('u.crez_une_premire_agence_pour_com')}
                                         />
                                     </td>
                                 </tr>
@@ -148,13 +150,13 @@ const AgencyManagement = () => {
                                         <StatusBadge
                                             variant={agency.is_active ? 'success' : 'neutral'}
                                             appearance="dot"
-                                            label={agency.is_active ? 'Actif' : 'Inactif'}
+                                            label={agency.is_active ? t('u.actif') : t('u.inactif')}
                                         />
                                     </td>
-                                    <td className="px-6 py-5 text-right">
+                                    <td className="px-6 py-5 text-end">
                                         <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity justify-end">
-                                            <Button variant="ghost" iconOnly icon="edit" aria-label="Modifier" onClick={() => openModal(agency)} />
-                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label="Supprimer" onClick={() => handleDelete(agency.id)} />
+                                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(agency)} />
+                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label={t('u.supprimer')} onClick={() => handleDelete(agency.id)} />
                                         </div>
                                     </td>
                                 </tr>
@@ -167,29 +169,29 @@ const AgencyManagement = () => {
             <Modal
                 isOpen={showModal}
                 onClose={closeModal}
-                title={isEditing ? "Modifier l'agence" : "Ajouter une agence"}
+                title={isEditing ? t('u.modifier_l_agence') : t('u.ajouter_une_agence')}
                 labelId="agency-modal-title"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={closeModal}>Annuler</Button>
-                        <Button type="submit" form="agency-form" icon="save">Enregistrer</Button>
+                        <Button variant="ghost" onClick={closeModal}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="agency-form" icon="save">{t('u.enregistrer')}</Button>
                     </>
                 }
             >
                 <form id="agency-form" onSubmit={handleSave} className="space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <Field label="Nom de l'agence" required>
+                        <Field label={t('u.nom_de_l_agence')} required>
                             <input className="field w-full" type="text" value={form.name} onChange={(e) => setField('name', e.target.value)} required />
                         </Field>
-                        <Field label="Téléphone" required>
+                        <Field label={t('u.tlphone')} required>
                             <input className="field w-full" type="text" value={form.telephone} onChange={(e) => setField('telephone', e.target.value)} required />
                         </Field>
-                        <Field label="Email">
+                        <Field label={t('u.email')}>
                             <input className="field w-full" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
                         </Field>
-                        <Field label="Statut">
+                        <Field label={t('u.statut')}>
                             <Dropdown
-                                options={[{ value: 'true', label: 'Actif' }, { value: 'false', label: 'Inactif' }]}
+                                options={[{ value: 'true', label: t('u.actif') }, { value: 'false', label: t('u.inactif') }]}
                                 value={form.isActive ? 'true' : 'false'}
                                 onChange={(v) => setField('isActive', v === 'true')}
                             />
@@ -200,10 +202,10 @@ const AgencyManagement = () => {
                         <Field label="ICE">
                             <input className="field w-full" type="text" value={form.ice} onChange={(e) => setField('ice', e.target.value)} />
                         </Field>
-                        <Field label="Ville" className="md:col-span-2">
+                        <Field label={t('u.ville')} className="md:col-span-2">
                             <input className="field w-full" type="text" value={form.city} onChange={(e) => setField('city', e.target.value)} />
                         </Field>
-                        <Field label="Adresse" required className="md:col-span-2">
+                        <Field label={t('u.adresse')} required className="md:col-span-2">
                             <textarea className="field w-full min-h-[100px]" value={form.address} onChange={(e) => setField('address', e.target.value)} required />
                         </Field>
                     </div>

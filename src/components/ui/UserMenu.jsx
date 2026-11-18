@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { logout } from '../../api';
+import { useI18n } from '../../i18n/context';
 
 const getInitials = (name) => {
     if (!name) return 'FC';
@@ -12,6 +13,7 @@ const getInitials = (name) => {
 };
 
 const UserMenu = ({ userName = 'Utilisateur', userRole = 'Admin', agencyName = '', collapsed = false }) => {
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -92,7 +94,7 @@ const UserMenu = ({ userName = 'Utilisateur', userRole = 'Admin', agencyName = '
                                 className="flex items-center gap-2.5 w-full p-2.5 rounded-token hover:bg-slate-100 hover:text-slate-900 transition-colors"
                             >
                                 <span className="material-symbols-outlined text-[20px]">settings</span>
-                                Paramètres
+                                {t('u.paramtres')}
                             </Link>
                         </li>
                         <li className="border-t border-stroke pt-1.5 mt-1">
@@ -103,7 +105,7 @@ const UserMenu = ({ userName = 'Utilisateur', userRole = 'Admin', agencyName = '
                                 className="flex items-center gap-2.5 w-full p-2.5 rounded-token text-danger hover:bg-danger-bg transition-colors"
                             >
                                 <span className="material-symbols-outlined text-[20px]">logout</span>
-                                Déconnexion
+                                {t('u.dconnexion')}
                             </button>
                         </li>
                     </ul>

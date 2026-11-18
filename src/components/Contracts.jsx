@@ -41,22 +41,22 @@ const Contracts = () => {
 
     const handleCloseSuccess = () => {
         setCloseContract(null);
-        toast.success('Le contrat a été clôturé avec succès.');
+        toast.success(t('u.le_contrat_a_t_cltur_avec_succs'));
         fetchContracts();
     };
 
     const EXPORT_COLUMNS = [
-        { key: 'id', label: 'ID Contrat' },
-        { key: 'client_name', label: 'Nom Client' },
-        { key: 'client_prenom', label: 'Prénom Client' },
-        { key: 'vehicle_name', label: 'Véhicule' },
-        { key: 'vehicle_matricule', label: 'Matricule' },
-        { key: 'jours', label: 'Durée (Jours)' },
-        { key: 'montant_total', label: 'Montant Total (MAD)' },
-        { key: 'frais_supplementaires', label: 'Frais supplémentaires (MAD)' },
-        { key: 'reste_a_payer', label: 'Reste à payer (MAD)' },
-        { key: 'statut', label: 'Statut Contrat' },
-        { key: 'payment_status', label: 'Statut Paiement' },
+        { key: 'id', label: t('u.id_contrat') },
+        { key: 'client_name', label: t('u.nom_client') },
+        { key: 'client_prenom', label: t('u.prnom_client') },
+        { key: 'vehicle_name', label: t('u.vhicule') },
+        { key: 'vehicle_matricule', label: t('u.matricule') },
+        { key: 'jours', label: t('u.dure_jours') },
+        { key: 'montant_total', label: t('u.montant_total_mad') },
+        { key: 'frais_supplementaires', label: t('u.frais_supplmentaires_mad') },
+        { key: 'reste_a_payer', label: t('u.reste_payer_mad') },
+        { key: 'statut', label: t('u.statut_contrat') },
+        { key: 'payment_status', label: t('u.statut_paiement') },
     ];
 
     const handleDownloadPDF = async (id, withCachet) => {
@@ -74,7 +74,7 @@ const Contracts = () => {
             link.remove();
         } catch (error) {
             console.error("Erreur lors du téléchargement du PDF", error);
-            toast.error("Erreur lors de la génération du PDF.");
+            toast.error(t('u.erreur_lors_de_la_gnration_du_pd'));
         }
     };
 

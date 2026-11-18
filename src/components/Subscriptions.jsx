@@ -12,19 +12,20 @@ import StatusBadge from './ui/StatusBadge';
 import Spinner from './ui/Spinner';
 import EmptyState from './ui/EmptyState';
 import PageHeader from './ui/PageHeader';
+import { useI18n } from '../i18n/context';
 
 const PLAN_OPTIONS = [
-    { value: 'GRATUIT', label: 'Gratuit' },
-    { value: 'BASIC', label: 'Basic' },
-    { value: 'PRO', label: 'Pro' },
-    { value: 'PREMIUM', label: 'Premium' },
+    { value: 'GRATUIT', labelKey: 'u.gratuit' },
+    { value: 'BASIC', labelKey: 'u.basic' },
+    { value: 'PRO', labelKey: 'u.pro' },
+    { value: 'PREMIUM', labelKey: 'u.premium' },
 ];
 
 const STATUS_OPTIONS = [
-    { value: 'ACTIVE', label: 'Actif' },
-    { value: 'EXPIRED', label: 'Expiré' },
-    { value: 'SUSPENDED', label: 'Suspendu' },
-    { value: 'CANCELLED', label: 'Annulé' },
+    { value: 'ACTIVE', labelKey: 'u.actif' },
+    { value: 'EXPIRED', labelKey: 'u.expir' },
+    { value: 'SUSPENDED', labelKey: 'u.suspendu' },
+    { value: 'CANCELLED', labelKey: 'u.annul' },
 ];
 
 const STATUS_BADGES = {
@@ -32,11 +33,6 @@ const STATUS_BADGES = {
     EXPIRED: 'danger',
     SUSPENDED: 'warning',
     CANCELLED: 'neutral',
-};
-
-const planLabel = (plan) => {
-    const found = PLAN_OPTIONS.find(p => p.value === plan);
-    return found ? found.label : plan;
 };
 
 const buildEmptyForm = () => ({
@@ -76,6 +72,11 @@ const toPayload = (form) => ({
 });
 
 const Subscriptions = () => {
+    const { t } = useI18n();
+    const tOpts = (opts) => opts.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+    const planOptions = tOpts(PLAN_OPTIONS);
+    const statusOptions = tOpts(STATUS_OPTIONS);
+    const planLabel = (plan) => planOptions.find((p) => p.value === plan)?.label || plan;
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState(buildEmptyForm());
@@ -96,7 +97,7 @@ const Subscriptions = () => {
     const handleSave = async (e) => {
         e.preventDefault();
         if (!form.agency) {
-            toast.error("Veuillez sélectionner une agence.");
+            toast.error(t('u.veuillez_slectionner_une_agence'));
             return;
         }
         try {
@@ -107,23 +108,23 @@ const Subscriptions = () => {
             }
             closeModal();
             await fetchSubscriptions();
-            toast.success(isEditing ? 'Abonnement mis à jour avec succès.' : 'Abonnement créé avec succès.');
+            toast.success(isEditing ? t('u.abonnement_mis_jour_avec_succs') : t('u.abonnement_cr_avec_succs'));
         } catch (error) {
             console.error("Erreur lors de l'enregistrement", error);
-            toast.error("Erreur lors de l'enregistrement. Vérifiez les données.");
+            toast.error(t('u.erreur_lors_de_l_enregistrement__2'));
         }
     };
 
     const handleDelete = (id) => {
-        messageBox.danger("Supprimer cet abonnement ?", "Supprimer l'abonnement", {
+        messageBox.danger(t('u.supprimer_cet_abonnement'), t('u.supprimer_l_abonnement'), {
             onConfirm: async () => {
                 try {
                     await api.delete(`subscriptions/${id}/`);
                     await fetchSubscriptions();
-                    toast.success('Abonnement supprimé avec succès.');
+                    toast.success(t('u.abonnement_supprim_avec_succs'));
                 } catch (error) {
                     console.error("Erreur lors de la suppression", error);
-                    toast.error("Erreur lors de la suppression.");
+                    toast.error(t('u.erreur_lors_de_la_suppression'));
                 }
             }
         });
@@ -136,12 +137,12 @@ const Subscriptions = () => {
     return (
         <>
             <PageHeader
-                eyebrow="Administration Système"
-                title="Gestion des Abonnements"
-                description="Abonnements SaaS des agences (plan, période, prix, statut)."
+                eyebrow={t('u.administration_systme')}
+                title={t('u.gestion_des_abonnements')}
+                description={t('u.abonnements_saas_des_agences_pla')}
                 actions={
                     <Button icon="workspace_premium" size="lg" onClick={() => openModal()}>
-                        Nouvel Abonnement
+                        {t('u.nouvel_abonnement')}
                     </Button>
                 }
             />
@@ -150,13 +151,13 @@ const Subscriptions = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="text-left border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-4">Agence</th>
-                                <th className="px-6 py-4">Plan</th>
+                            <tr className="text-start border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
+                                <th className="px-6 py-4">{t('u.agence')}</th>
+                                <th className="px-6 py-4">{t('u.plan')}</th>
                                 <th className="px-6 py-4">Prix / mois</th>
-                                <th className="px-6 py-4">Période</th>
-                                <th className="px-6 py-4">Statut</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4">{t('u.priode')}</th>
+                                <th className="px-6 py-4">{t('u.statut')}</th>
+                                <th className="px-6 py-4 text-end">{t('u.actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stroke">
@@ -165,8 +166,8 @@ const Subscriptions = () => {
                                     <td colSpan="6" className="px-6 py-4">
                                         <EmptyState
                                             icon="workspace_premium"
-                                            title="Aucun abonnement"
-                                            description="Créez un premier abonnement pour une agence."
+                                            title={t('u.aucun_abonnement')}
+                                            description={t('u.crez_un_premier_abonnement_pour_')}
                                         />
                                     </td>
                                 </tr>
@@ -200,17 +201,17 @@ const Subscriptions = () => {
                                             <StatusBadge
                                                 variant={STATUS_BADGES[sub.status] || 'neutral'}
                                                 appearance="dot"
-                                                label={STATUS_OPTIONS.find(s => s.value === sub.status)?.label || sub.status}
+                                                label={statusOptions.find(s => s.value === sub.status)?.label || sub.status}
                                             />
                                             {sub.is_current && (
-                                                <StatusBadge variant="success" appearance="pill" label="En cours" />
+                                                <StatusBadge variant="success" appearance="pill" label={t('u.en_cours')} />
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-5 text-right">
+                                    <td className="px-6 py-5 text-end">
                                         <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity justify-end">
-                                            <Button variant="ghost" iconOnly icon="edit" aria-label="Modifier" onClick={() => openModal(sub)} />
-                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label="Supprimer" onClick={() => handleDelete(sub.id)} />
+                                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(sub)} />
+                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label={t('u.supprimer')} onClick={() => handleDelete(sub.id)} />
                                         </div>
                                     </td>
                                 </tr>
@@ -223,18 +224,18 @@ const Subscriptions = () => {
             <Modal
                 isOpen={showModal}
                 onClose={closeModal}
-                title={isEditing ? "Modifier l'abonnement" : "Ajouter un abonnement"}
+                title={isEditing ? t('u.modifier_l_abonnement') : t('u.ajouter_un_abonnement')}
                 labelId="subscription-modal-title"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={closeModal}>Annuler</Button>
-                        <Button type="submit" form="subscription-form" icon="save">Enregistrer</Button>
+                        <Button variant="ghost" onClick={closeModal}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="subscription-form" icon="save">{t('u.enregistrer')}</Button>
                     </>
                 }
             >
                 <form id="subscription-form" onSubmit={handleSave} className="space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <Field label="Agence" required className="md:col-span-2">
+                        <Field label={t('u.agence')} required className="md:col-span-2">
                             <Dropdown
                                 options={agencies.map(a => ({ value: String(a.id), label: a.nom_agence }))}
                                 value={form.agency}
@@ -242,14 +243,14 @@ const Subscriptions = () => {
                                 isSearchable
                             />
                         </Field>
-                        <Field label="Plan">
+                        <Field label={t('u.plan')}>
                             <Dropdown
-                                options={PLAN_OPTIONS}
+                                options={planOptions}
                                 value={form.plan}
                                 onChange={(v) => setField('plan', v)}
                             />
                         </Field>
-                        <Field label="Prix mensuel (MAD)" required>
+                        <Field label={t('u.prix_mensuel_mad')} required>
                             <input
                                 className="field w-full"
                                 type="number"
@@ -260,7 +261,7 @@ const Subscriptions = () => {
                                 required
                             />
                         </Field>
-                        <Field label="Date de début" required>
+                        <Field label={t('u.date_de_dbut')} required>
                             <input
                                 className="field w-full"
                                 type="date"
@@ -269,7 +270,7 @@ const Subscriptions = () => {
                                 required
                             />
                         </Field>
-                        <Field label="Date de fin" required>
+                        <Field label={t('u.date_de_fin')} required>
                             <input
                                 className="field w-full"
                                 type="date"
@@ -278,9 +279,9 @@ const Subscriptions = () => {
                                 required
                             />
                         </Field>
-                        <Field label="Statut" className="md:col-span-2">
+                        <Field label={t('u.statut')} className="md:col-span-2">
                             <Dropdown
-                                options={STATUS_OPTIONS}
+                                options={statusOptions}
                                 value={form.status}
                                 onChange={(v) => setField('status', v)}
                             />

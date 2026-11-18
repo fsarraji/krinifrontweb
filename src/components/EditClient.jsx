@@ -1,4 +1,6 @@
+import { tNow } from '../i18n/runtime';
 import { apiErrorText } from '../utils/apiErrorText';
+import { translateOr } from '../i18n/helpers';
 import React, { useState, useEffect } from 'react';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Button from './ui/Button';
@@ -11,8 +13,10 @@ import AuditTimeline from './AuditTimeline';
 import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstants';
 import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
 import { optimizeImageFile } from '../utils/imageUtils';
+import { useI18n } from '../i18n/context';
 
 const EditClient = () => {
+    const { t } = useI18n();
     const { formProps, markClean } = useUnsavedChanges();
     const { id } = useParams();
     const navigate = useNavigate();
@@ -41,17 +45,17 @@ const EditClient = () => {
     const [fieldErrors, setFieldErrors] = useState({});
 
     const REQUIRED_FIELDS = [
-        { key: 'prenom', label: 'Prénom', check: () => !formData.prenom },
-        { key: 'nom', label: 'Nom', check: () => !formData.nom },
-        { key: 'cin_passport', label: 'CIN / Passeport', check: () => !formData.cin_passport },
-        { key: 'telephone', label: 'Téléphone', check: () => !formData.telephone },
-        { key: 'adresse', label: 'Adresse', check: () => !formData.adresse },
-        { key: 'permis_conduite', label: 'N° de permis', check: () => !formData.permis_conduite },
+        { key: 'prenom', label: t('u.prnom'), check: () => !formData.prenom },
+        { key: 'nom', label: t('u.nom'), check: () => !formData.nom },
+        { key: 'cin_passport', label: t('u.cin_passeport'), check: () => !formData.cin_passport },
+        { key: 'telephone', label: t('u.tlphone'), check: () => !formData.telephone },
+        { key: 'adresse', label: t('u.adresse'), check: () => !formData.adresse },
+        { key: 'permis_conduite', label: t('u.n_de_permis'), check: () => !formData.permis_conduite },
     ];
 
     const hasError = (name) => Boolean(fieldErrors[name]) || Boolean(uniqueErrors[name]);
 
-    const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? 'Champ requis' : '');
+    const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? t('u.champ_requis') : '');
 
     const checkUnique = async (field, value) => {
         const available = await apiCheckUnique({ field, value, excludeId: id });
@@ -79,7 +83,7 @@ const EditClient = () => {
                 setLoading(false);
             } catch (err) {
                 console.error("Error fetching client data:", err);
-                setError("Une erreur est survenue lors de la récupération des données.");
+                setError(tNow('u.une_erreur_est_survenue_lors_de__3'));
                 setLoading(false);
             }
         };
@@ -118,7 +122,7 @@ const EditClient = () => {
                 missing.forEach((f) => { next[f.key] = true; });
                 return next;
             });
-            toast.error(`Champs requis manquants : ${missing.map((m) => m.label).join(', ')}`);
+            toast.error(t('u.champs_requis_manquants', { fields: missing.map((m) => m.label).join(', ') }));
             return;
         }
 
@@ -152,32 +156,32 @@ const EditClient = () => {
             await api.patch(`clients/${id}/`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            toast.success('Client mis à jour avec succès.');
+            toast.success(t('u.client_mis_jour_avec_succs'));
             markClean();
             navigate('/clients');
         } catch (err) {
             console.error("Error updating client:", err);
-            setError("Erreur lors de la sauvegarde.");
+            setError(t('u.erreur_lors_de_la_sauvegarde'));
             setSaving(false);
         }
     };
 
     const handleDelete = () => {
-        messageBox.danger("Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.", "Supprimer le client", {
+        messageBox.danger(t('u.tes_vous_sr_de_vouloir_supprimer'), t('u.supprimer_le_client'), {
             onConfirm: async () => {
                 try {
                     await api.delete(`clients/${id}/`);
-                    toast.success('Client supprimé avec succès.');
+                    toast.success(t('u.client_supprim_avec_succs'));
                     navigate('/clients');
                 } catch (err) {
                     console.error("Error deleting client:", err);
-                    toast.error(apiErrorText(err, "Erreur lors de la suppression."));
+                    toast.error(apiErrorText(err, t('u.erreur_lors_de_la_suppression')));
                 }
             }
         });
     };
 
-    if (loading) return <div className="p-8 flex items-center justify-center gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> Chargement du profil client…</div>;
+    if (loading) return <div className="p-8 flex items-center justify-center gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> {t('u.chargement_du_profil_client')}</div>;
 
     const totalSpent = contracts.reduce((sum, c) => sum + parseFloat(c.montant_total || 0), 0);
     const rentalCount = contracts.length;
@@ -194,20 +198,20 @@ const EditClient = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                        <Link to="/clients" className="hover:underline">Clients</Link> / Modifier
+                        <Link to="/clients" className="hover:underline">{t('u.clients')}</Link> / Modifier
                     </p>
                     <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                        Modifier le client
+                        {t('u.modifier_le_client')}
                     </h1>
                     <p className="text-[13px] font-medium mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
-                        {formData.prenom} {formData.nom} — {formData.cin_passport || `${cinLabelFor(formData.nationalite)} non renseigné`}
+                        {formData.prenom} {formData.nom} — {formData.cin_passport || t('u.non_renseign', { label: cinLabelFor(formData.nationalite) })}
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <Button variant="ghost" icon="delete" className="!text-danger-dark hover:!bg-danger-bg" onClick={handleDelete}>Supprimer</Button>
-                    <Button variant="outline" onClick={() => navigate('/clients')}>Annuler</Button>
+                    <Button variant="ghost" icon="delete" className="!text-danger-dark hover:!bg-danger-bg" onClick={handleDelete}>{t('u.supprimer')}</Button>
+                    <Button variant="outline" onClick={() => navigate('/clients')}>{t('u.annuler')}</Button>
                     <Button type="submit" form="client-form" icon="save" loading={saving}>
-                        {saving ? 'Enregistrement…' : 'Sauvegarder'}
+                        {saving ? t('u.enregistrement') : t('u.sauvegarder')}
                     </Button>
                 </div>
             </div>
@@ -225,7 +229,7 @@ const EditClient = () => {
                     {/* Section 1: Personal Information */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label className="label">Prénom</label>
+                                <label className="label">{t('u.prnom')}</label>
                                 <input name="prenom" value={formData.prenom || ''} onChange={handleChange} className={fieldClass('prenom')} type="text" />
                                 {fieldErrorMsg('prenom') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
@@ -235,7 +239,7 @@ const EditClient = () => {
                                 )}
                             </div>
                             <div>
-                                <label className="label">Nom</label>
+                                <label className="label">{t('u.nom')}</label>
                                 <input name="nom" value={formData.nom || ''} onChange={handleChange} className={fieldClass('nom')} type="text" />
                                 {fieldErrorMsg('nom') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
@@ -255,7 +259,7 @@ const EditClient = () => {
                                 )}
                             </div>
                             <div>
-                                <label className="label">Adresse Email</label>
+                                <label className="label">{t('u.adresse_email')}</label>
                                 <input name="email" value={formData.email || ''} onChange={handleChange} onBlur={handleBlurUnique('email')} className={fieldClass('email')} type="email" />
                                 {fieldErrorMsg('email') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
@@ -265,7 +269,7 @@ const EditClient = () => {
                                 )}
                             </div>
                             <div>
-                                <label className="label">Numéro de Téléphone</label>
+                                <label className="label">{t('u.numro_de_tlphone')}</label>
                                 <input name="telephone" value={formData.telephone || ''} onChange={handleChange} onBlur={handleBlurUnique('telephone')} className={fieldClass('telephone')} type="tel" />
                                 {fieldErrorMsg('telephone') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
@@ -275,7 +279,7 @@ const EditClient = () => {
                                 )}
                             </div>
                             <div>
-                                <label className="label">Sexe</label>
+                                <label className="label">{t('u.sexe')}</label>
                                 <div className="flex gap-3">
                                     {SEXE_OPTIONS.map(opt => (
                                         <label
@@ -294,30 +298,30 @@ const EditClient = () => {
                                                 onChange={handleChange}
                                                 className="accent-[var(--primary-container)]"
                                             />
-                                            <span className="text-sm font-semibold" style={{ color: 'var(--on-surface)' }}>{opt.label}</span>
+                                            <span className="text-sm font-semibold" style={{ color: 'var(--on-surface)' }}>{translateOr(t, `sexe.${opt.value}`, opt.label)}</span>
                                         </label>
                                     ))}
                                 </div>
                             </div>
                             <div>
-                                <label className="label">Nationalité</label>
+                                <label className="label">{t('u.nationalit')}</label>
                                 <select name="nationalite" value={formData.nationalite || ''} onChange={handleChange} className={fieldClass('nationalite')}>
-                                    <option value="">-- Sélectionner --</option>
+                                    <option value="">{t('u.slectionner_2')}</option>
                                     {NATIONALITES.map(n => (
-                                        <option key={n} value={n}>{n}</option>
+                                        <option key={n} value={n}>{translateOr(t, `nat.${n}`, n)}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="label">Ville</label>
+                                <label className="label">{t('u.ville')}</label>
                                 <input name="ville" value={formData.ville || ''} onChange={handleChange} className={fieldClass('ville')} type="text" />
                             </div>
                             <div>
-                                <label className="label">Pays</label>
+                                <label className="label">{t('u.pays')}</label>
                                 <input name="pays" value={formData.pays || ''} onChange={handleChange} className={fieldClass('pays')} type="text" />
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="label">Adresse</label>
+                                <label className="label">{t('u.adresse')}</label>
                                 <input name="adresse" value={formData.adresse || ''} onChange={handleChange} className={fieldClass('adresse')} type="text" />
                                 {fieldErrorMsg('adresse') && (
                                     <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
@@ -334,11 +338,11 @@ const EditClient = () => {
                             <div>
                                 <div className="flex items-center gap-2 mb-5">
                                     <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>card_membership</span>
-                                    <p className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>Permis de Conduire</p>
+                                    <p className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>{t('u.permis_de_conduire_3')}</p>
                                 </div>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="label">N° de permis</label>
+                                        <label className="label">{t('u.n_de_permis')}</label>
                                         <input name="permis_conduite" value={formData.permis_conduite || ''} onChange={handleChange} onBlur={handleBlurUnique('permis_conduite')} className={fieldClass('permis_conduite')} type="text" />
                                         {fieldErrorMsg('permis_conduite') && (
                                             <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
@@ -348,21 +352,21 @@ const EditClient = () => {
                                         )}
                                     </div>
                                     <div>
-                                        <label className="label">Date de délivrance</label>
+                                        <label className="label">{t('u.date_de_dlivrance')}</label>
                                         <input name="date_delivrance_permis" value={formData.date_delivrance_permis || ''} onChange={handleChange} className={fieldClass('date_delivrance_permis')} type="date" />
                                     </div>
                                     <div>
-                                        <label className="label">Scan du permis</label>
+                                        <label className="label">{t('u.scan_du_permis')}</label>
                                         {formData.scan_permis && !files.scan_permis && (
                                             <a href={formData.scan_permis} target="_blank" rel="noreferrer" className="text-xs font-bold mb-2 inline-flex items-center gap-1" style={{ color: 'var(--primary-container)' }}>
                                                 <span className="material-symbols-outlined text-[14px]">visibility</span>
-                                                Voir le scan actuel
+                                                {t('u.voir_le_scan_actuel')}
                                             </a>
                                         )}
                                         <label className="dropzone p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
                                             <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>upload_file</span>
                                             <p className="text-[11px] font-semibold text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_permis ? files.scan_permis.name : "Télécharger un nouveau document"}
+                                                {files.scan_permis ? files.scan_permis.name : t('u.tlcharger_un_nouveau_document')}
                                             </p>
                                             <input type="file" name="scan_permis" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
                                         </label>
@@ -377,21 +381,21 @@ const EditClient = () => {
                                 </div>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="label">N° de document</label>
+                                        <label className="label">{t('u.n_de_document')}</label>
                                         <input name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} className={fieldClass('cin_passport')} type="text" />
                                     </div>
                                     <div>
-                                        <label className="label">Scan d'identité</label>
+                                        <label className="label">{t('u.scan_d_identit')}</label>
                                         {formData.scan_cin && !files.scan_cin && (
                                             <a href={formData.scan_cin} target="_blank" rel="noreferrer" className="text-xs font-bold mb-2 inline-flex items-center gap-1" style={{ color: 'var(--primary-container)' }}>
                                                 <span className="material-symbols-outlined text-[14px]">visibility</span>
-                                                Voir le scan actuel
+                                                {t('u.voir_le_scan_actuel')}
                                             </a>
                                         )}
                                         <label className="dropzone p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
                                             <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>upload_file</span>
                                             <p className="text-[11px] font-semibold text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_cin ? files.scan_cin.name : "Télécharger un nouveau document"}
+                                                {files.scan_cin ? files.scan_cin.name : t('u.tlcharger_un_nouveau_document')}
                                             </p>
                                             <input type="file" name="scan_cin" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
                                         </label>
@@ -402,13 +406,13 @@ const EditClient = () => {
 
                     {/* Section 3: Rental History */}
                     <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                            <table className="w-full text-start">
                                 <thead>
                                     <tr className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                        <th className="pb-4 px-2">Véhicule</th>
-                                        <th className="pb-4 px-2">Période</th>
-                                        <th className="pb-4 px-2 text-right">Revenu</th>
-                                        <th className="pb-4 px-2 text-right">Statut</th>
+                                        <th className="pb-4 px-2">{t('u.vhicule')}</th>
+                                        <th className="pb-4 px-2">{t('u.priode')}</th>
+                                        <th className="pb-4 px-2 text-end">{t('u.revenu')}</th>
+                                        <th className="pb-4 px-2 text-end">{t('u.statut')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-sm">
@@ -423,8 +427,8 @@ const EditClient = () => {
                                                 </p>
                                                 <p className="text-[10px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{contract.jours} Jours</p>
                                             </td>
-                                            <td className="py-4 px-2 text-right font-bold" style={{ color: 'var(--primary-container)' }}>{contract.montant_total} MAD</td>
-                                            <td className="py-4 px-2 text-right">
+                                            <td className="py-4 px-2 text-end font-bold" style={{ color: 'var(--primary-container)' }}>{contract.montant_total} MAD</td>
+                                            <td className="py-4 px-2 text-end">
                                                 <span className="text-[10px] px-2 py-1 rounded font-bold" style={
                                                     contract.statut === 'TERMINE'
                                                         ? { background: 'var(--slate-bg)', color: 'var(--secondary)' }
@@ -440,7 +444,7 @@ const EditClient = () => {
                                     {contracts.length === 0 && (
                                         <tr>
                                             <td colSpan="4" className="py-8 text-center italic" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                Aucun contrat trouvé pour ce client.
+                                                {t('u.aucun_contrat_trouv_pour_ce_clie')}
                                             </td>
                                         </tr>
                                     )}
@@ -457,35 +461,35 @@ const EditClient = () => {
                             <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'var(--primary-container)', color: '#fff' }}>
                                 <span className="material-symbols-outlined text-4xl">person</span>
                             </div>
-                            <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-white" style={{ background: 'var(--success)', color: '#fff' }}>
+                            <div className="absolute bottom-1 end-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-white" style={{ background: 'var(--success)', color: '#fff' }}>
                                 <span className="material-symbols-outlined text-[14px]">verified</span>
                             </div>
                         </div>
                         <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--on-surface)' }}>{formData.prenom} {formData.nom}</h3>
                         <p className="text-xs mb-5" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
-                            {formData.email || 'Aucun email renseigné'}
+                            {formData.email || t('u.aucun_email_renseign')}
                         </p>
                         <div className="flex gap-2 mb-6">
-                            <span className="text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>Vérifié</span>
-                            <span className="text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider" style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}>Client</span>
+                            <span className="text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>{t('u.vrifi')}</span>
+                            <span className="text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider" style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}>{t('u.client')}</span>
                         </div>
-                        <div className="w-full grid grid-cols-2 gap-4 text-left border-t pt-6" style={{ borderColor: 'var(--stroke)' }}>
+                        <div className="w-full grid grid-cols-2 gap-4 text-start border-t pt-6" style={{ borderColor: 'var(--stroke)' }}>
                             <div>
-                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Total Dépensé</p>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.total_dpens')}</p>
                                 <p className="text-lg font-extrabold" style={{ color: 'var(--primary-container)' }}>{totalSpent.toLocaleString()} MAD</p>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Locations</p>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.locations')}</p>
                                 <p className="text-lg font-extrabold" style={{ color: 'var(--on-surface)' }}>{rentalCount}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Points Fidélité</p>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.points_fidlit')}</p>
                                 <p className="text-lg font-extrabold" style={{ color: 'var(--on-surface)' }}>{Math.floor(totalSpent / 100)}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Profil Risque</p>
+                                <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.profil_risque')}</p>
                                 <p className="text-lg font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--success)' }}>
-                                    {formData.liste_noire ? 'Bloqué' : 'Faible'}
+                                    {formData.liste_noire ? t('u.bloqu') : t('u.faible')}
                                 </p>
                             </div>
                         </div>
@@ -493,13 +497,13 @@ const EditClient = () => {
 
                     {/* Internal Notes */}
                     <div className="card shadow-l1 p-6">
-                        <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>Notes de gestion interne</h3>
+                        <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>{t('u.notes_de_gestion_interne')}</h3>
                         <textarea
                             name="remarques"
                             value={formData.remarques || ''}
                             onChange={handleChange}
                             className="field resize-none"
-                            placeholder="Ajoutez des notes confidentielles sur l'interaction avec le client..."
+                            placeholder={t('u.ajoutez_des_notes_confidentielle')}
                             rows="4"
                         ></textarea>
                     </div>
@@ -508,8 +512,8 @@ const EditClient = () => {
                     <div className="card shadow-l1 p-6" style={formData.liste_noire ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}}>
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--on-surface)' }}>Liste Noire</h3>
-                                <p className="text-xs mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>Bloquer les futures locations</p>
+                                <h3 className="text-sm font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--on-surface)' }}>{t('u.liste_noire_2')}</h3>
+                                <p className="text-xs mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.bloquer_les_futures_locations')}</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input
@@ -526,7 +530,7 @@ const EditClient = () => {
 
                     {/* Historique des modifications */}
                     <div className="rounded-lg p-6 border border-stroke bg-white">
-                        <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-slate-600">Historique</h3>
+                        <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-slate-600">{t('u.historique')}</h3>
                         <AuditTimeline model="client" id={id} />
                     </div>
 
@@ -534,10 +538,10 @@ const EditClient = () => {
                     <div className="rounded-lg p-6 border" style={{ background: 'var(--danger-bg)', borderColor: 'var(--danger)' }}>
                         <div className="flex items-center gap-2 mb-4" style={{ color: 'var(--danger)' }}>
                             <span className="material-symbols-outlined text-[20px]">warning</span>
-                            <h3 className="text-sm font-bold uppercase tracking-wider">Zone de Danger</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider">{t('u.zone_de_danger')}</h3>
                         </div>
                         <p className="text-xs mb-6" style={{ color: 'var(--danger)', opacity: 0.7 }}>
-                            La suppression d'un client archivera ses données. Il ne pourra plus louer de véhicules.
+                            {t('u.la_suppression_d_un_client_archi')}
                         </p>
                         <button
                             onClick={handleDelete}
@@ -546,7 +550,7 @@ const EditClient = () => {
                             onMouseOver={(e) => { e.currentTarget.style.background = 'var(--danger)'; e.currentTarget.style.color = '#fff'; }}
                             onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = 'var(--danger)'; }}
                         >
-                            SUPPRIMER LE PROFIL CLIENT
+                            {t('u.supprimer_le_profil_client')}
                         </button>
                     </div>
                 </div>

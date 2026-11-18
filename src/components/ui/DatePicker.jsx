@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { formatDate } from '../../utils/formatters';
+import { useI18n } from '../../i18n/context';
 
-const WEEKDAYS = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
-const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
 const pad = (n) => String(n).padStart(2, '0');
 const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -25,7 +25,7 @@ function formatDisplay(value) {
   const [y, m, d] = datePart.split('-').map(Number);
   if (!y || !m || !d) return value || '';
   const date = new Date(y, m - 1, d);
-  const dateStr = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  const dateStr = formatDate(date, { day: 'numeric', month: 'short', year: 'numeric' });
   return timePart ? `${dateStr} · ${timePart.slice(0, 5)}` : dateStr;
 }
 
@@ -37,9 +37,10 @@ export default function DatePicker({
   withTime = true,
   className = '',
   disabled = false,
-  placeholder = 'Sélectionner une date',
+  placeholder,
   id = undefined,
 }) {
+  const { t, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState(() => {
     const base = value ? new Date(value) : new Date();
@@ -77,6 +78,9 @@ export default function DatePicker({
   for (let i = 0; i < mondayIndex(first); i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(view.year, view.month, d));
 
+  // Lundi = 2024-01-01 : libellés des jours et du mois dans la langue courante
+  const weekdays = Array.from({ length: 7 }, (_, i) => formatDate(new Date(2024, 0, 1 + i), { weekday: 'short' }).replace('.', ''));
+  const monthLabel = formatDate(new Date(view.year, view.month, 1), { month: 'long' });
   const selectedKey = value ? value.slice(0, 10) : '';
   const todayKey = toKey(new Date());
 
@@ -88,9 +92,9 @@ export default function DatePicker({
           id={id}
           disabled={disabled}
           onClick={() => setOpen((o) => !o)}
-          className={`${className} text-left disabled:cursor-not-allowed`}
+          className={`${className} text-start disabled:cursor-not-allowed`}
         >
-          {value ? formatDisplay(value) : <span className="opacity-60">{placeholder}</span>}
+          {value ? formatDisplay(value) : <span className="opacity-60">{placeholder ?? t('u.slectionner_une_date')}</span>}
         </button>
         {withTime && (
           <input
@@ -106,12 +110,12 @@ export default function DatePicker({
       {open && (
         <div className="absolute z-50 mt-2 bg-white rounded-xl shadow-lg border border-slate-200 p-3 w-72">
           <div className="flex items-center justify-between mb-2">
-            <button type="button" onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600" aria-label="Mois précédent">‹</button>
-            <div className="font-bold text-sm text-slate-800">{MONTHS[view.month]} {view.year}</div>
-            <button type="button" onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600" aria-label="Mois suivant">›</button>
+            <button type="button" onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600" aria-label={t('u.mois_prcdent')}>{dir === 'rtl' ? '›' : '‹'}</button>
+            <div className="font-bold text-sm text-slate-800">{monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)} {view.year}</div>
+            <button type="button" onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600" aria-label={t('u.mois_suivant')}>{dir === 'rtl' ? '‹' : '›'}</button>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center">
-            {WEEKDAYS.map((w) => (
+            {weekdays.map((w) => (
               <div key={w} className="text-[10px] font-bold text-slate-400 uppercase py-1">{w}</div>
             ))}
             {cells.map((d, i) => {
@@ -126,7 +130,7 @@ export default function DatePicker({
                   type="button"
                   disabled={unavailable}
                   onClick={() => selectDay(d)}
-                  title={unavailable ? 'Date indisponible' : undefined}
+                  title={unavailable ? t('u.date_indisponible') : undefined}
                   className={`text-[13px] h-8 rounded-lg transition-colors ${
                     selected
                       ? 'bg-primary text-white font-bold'
@@ -140,7 +144,7 @@ export default function DatePicker({
               );
             })}
           </div>
-          <p className="mt-2 text-[10px] text-slate-400 text-center">Les dates barrées en rouge sont indisponibles.</p>
+          <p className="mt-2 text-[10px] text-slate-400 text-center">{t('u.les_dates_barres_en_rouge_sont_i')}</p>
         </div>
       )}
     </div>

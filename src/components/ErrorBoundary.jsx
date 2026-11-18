@@ -1,4 +1,5 @@
 import React from 'react';
+import { tNow } from '../i18n/runtime';
 
 // Filet de sécurité : une erreur de rendu n'affiche plus un écran blanc.
 export default class ErrorBoundary extends React.Component {
@@ -20,14 +21,14 @@ export default class ErrorBoundary extends React.Component {
         return (
             <div role="alert" className="min-h-screen flex items-center justify-center p-6 text-center">
                 <div className="max-w-md space-y-4">
-                    <h1 className="text-xl font-extrabold text-slate-900">Une erreur est survenue</h1>
-                    <p className="text-sm text-slate-500">La page n'a pas pu s'afficher. Rechargez-la ; si le problème persiste, contactez le support.</p>
+                    <h1 className="text-xl font-extrabold text-slate-900">{tNow('u.une_erreur_est_survenue')}</h1>
+                    <p className="text-sm text-slate-500">{tNow('u.la_page_n_a_pas_pu_s_afficher_re')}</p>
                     <button
                         type="button"
                         onClick={() => window.location.reload()}
                         className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold"
                     >
-                        Recharger
+                        {tNow('u.recharger')}
                     </button>
                 </div>
             </div>

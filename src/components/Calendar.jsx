@@ -7,8 +7,10 @@ import Modal from './ui/Modal';
 import { formatDate, formatMoney } from '../utils/formatters';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
+import { useI18n } from '../i18n/context';
 
 const Calendar = () => {
+    const { t } = useI18n();
     const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [contracts, setContracts] = useState([]);
@@ -31,19 +33,15 @@ const Calendar = () => {
     const daysInMonthCount = new Date(currentYear, currentMonth + 1, 0).getDate();
     const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
 
-    const monthNames = [
-        "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-    ];
-    const monthDisplay = `${monthNames[currentMonth]} ${currentYear}`;
-    const daysOfWeek = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
+    const monthLabel = formatDate(new Date(currentYear, currentMonth, 1), { month: 'long', year: 'numeric' });
+    const monthDisplay = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
 
     const FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Toute la flotte', dot: 'bg-primary' },
-        { value: 'Rented', label: 'En location', dot: 'bg-success' },
-        { value: 'Reserved', label: 'Réservés', dot: 'bg-indigo-500' },
-        { value: 'Available', label: 'Disponibles', dot: 'bg-slate-400' },
-        { value: 'Maintenance', label: 'Maintenance', dot: 'bg-danger' },
+        { value: 'ALL', label: t('u.toute_la_flotte'), dot: 'bg-primary' },
+        { value: 'Rented', label: t('u.en_location'), dot: 'bg-success' },
+        { value: 'Reserved', label: t('u.rservs'), dot: 'bg-indigo-500' },
+        { value: 'Available', label: t('u.disponibles'), dot: 'bg-slate-400' },
+        { value: 'Maintenance', label: t('status.Maintenance'), dot: 'bg-danger' },
     ];
 
     useEffect(() => {
@@ -66,8 +64,9 @@ const Calendar = () => {
 
     const getDayName = (day) => {
         const date = new Date(currentYear, currentMonth, day);
-        return daysOfWeek[date.getDay()];
+        return formatDate(date, { weekday: 'short' }).replace('.', '').toUpperCase();
     };
+    const isWeekendDay = (day) => [0, 6].includes(new Date(currentYear, currentMonth, day).getDay());
 
     const getPosition = (dateStr) => {
         const date = new Date(dateStr);
@@ -131,25 +130,25 @@ const Calendar = () => {
             {/* Header */}
             <div className="flex flex-wrap justify-between items-end gap-4">
                 <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Planning & Flotte</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Planning Interactif (Gantt)</h2>
+                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">{t('u.planning_flotte')}</p>
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('u.planning_interactif_gantt')}</h2>
                 </div>
 
                 {/* Month Navigator Controls */}
                 <div className="flex items-center justify-between gap-1 sm:gap-3 w-full sm:w-auto bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-                    <Button variant="ghost" iconOnly icon="chevron_left" onClick={handlePrevMonth} aria-label="Mois précédent" title="Mois précédent" />
-                    <Button variant="secondary" size="sm" onClick={handleToday}>Aujourd'hui</Button>
+                    <Button variant="ghost" iconOnly icon="chevron_left" onClick={handlePrevMonth} aria-label={t('u.mois_prcdent')} title={t('u.mois_prcdent')} />
+                    <Button variant="secondary" size="sm" onClick={handleToday}>{t('u.aujourd_hui')}</Button>
                     <span className="text-sm font-extrabold text-slate-900 px-1 sm:px-2 flex-1 sm:flex-none sm:min-w-[140px] text-center truncate">
                         {monthDisplay}
                     </span>
-                    <Button variant="ghost" iconOnly icon="chevron_right" onClick={handleNextMonth} aria-label="Mois suivant" title="Mois suivant" />
+                    <Button variant="ghost" iconOnly icon="chevron_right" onClick={handleNextMonth} aria-label={t('u.mois_suivant')} title={t('u.mois_suivant')} />
                 </div>
             </div>
 
             {/* Search & Filter Bar */}
             <div>
                 <SearchFilterBar
-                    placeholder="Filtrer le planning (matricule, marque, modèle)..."
+                    placeholder={t('u.filtrer_le_planning_matricule_ma')}
                     search={search}
                     onSearchChange={setSearch}
                     options={FILTER_OPTIONS}
@@ -162,20 +161,20 @@ const Calendar = () => {
             <div className="flex flex-wrap items-center justify-between gap-2 px-2 text-xs font-semibold text-slate-600">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-success"></span> Location En Cours
+                        <span className="w-2.5 h-2.5 rounded-full bg-success"></span> {t('u.location_en_cours')}
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-primary"></span> Réservation Confirmée
+                        <span className="w-2.5 h-2.5 rounded-full bg-primary"></span> {t('u.rservation_confirme')}
                     </span>
                     <span className="flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-danger"></span> Maintenance
                     </span>
                 </div>
-                <span className="text-slate-400 font-medium">Cliquez sur un contrat pour afficher les détails</span>
+                <span className="text-slate-400 font-medium">{t('u.cliquez_sur_un_contrat_pour_affi')}</span>
             </div>
 
             {/* Gantt Timeline Board */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            <div dir="ltr" className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
                 <div className="overflow-x-auto">
                     <div className="min-w-max flex flex-col">
                         {/* Days Header */}
@@ -183,7 +182,7 @@ const Calendar = () => {
                             {/* Vehicle Column Header */}
                             <div className="w-[245px] shrink-0 h-[54px] px-4 border-r border-slate-100 bg-app-bg sticky left-0 top-0 z-40 shadow-[4px_0_10px_-4px_rgba(16,24,40,0.10)] font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                 <span className="material-symbols-outlined text-base">directions_car</span>
-                                Véhicule
+                                {t('u.vhicule')}
                             </div>
 
                             {/* Days Timeline */}
@@ -191,7 +190,7 @@ const Calendar = () => {
                                 {daysInMonth.map((day) => {
                                     const dayName = getDayName(day);
                                     const isToday = day === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
-                                    const isWeekend = dayName === "SAM" || dayName === "DIM";
+                                    const isWeekend = isWeekendDay(day);
                                     return (
                                         <div
                                             key={day}
@@ -239,7 +238,7 @@ const Calendar = () => {
                                                     </span>
                                                     {isMaintenance && (
                                                         <span className="text-[9px] font-bold text-danger-dark bg-danger-bg px-1.5 py-0.5 rounded">
-                                                            Maint.
+                                                            {t('u.maint')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -266,7 +265,7 @@ const Calendar = () => {
                                                         type="button"
                                                         key={contract.id}
                                                         onClick={() => setSelectedContract(contract)}
-                                                        aria-label={`Contrat ${contract.id} : ${contract.client_name || contract.client_prenom}`}
+                                                        aria-label={t('u.contrat', { id: contract.id, name: contract.client_name || contract.client_prenom })}
                                                         style={barStyle}
                                                         className={`absolute top-[18px] h-10 rounded-xl px-3 flex items-center justify-between gap-2 cursor-pointer transition-all z-20 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                                                             isActive
@@ -286,7 +285,7 @@ const Calendar = () => {
                                             {isMaintenance && vehicleContracts.length === 0 && (
                                                 <div className="absolute inset-x-2 top-[18px] h-10 rounded-xl bg-danger text-white shadow-[0_3px_8px_rgba(225,29,72,0.35)] flex items-center justify-center gap-2 text-xs font-bold z-10">
                                                     <span className="material-symbols-outlined text-base text-white/90">build</span>
-                                                    <span>Véhicule en Maintenance</span>
+                                                    <span>{t('u.vhicule_en_maintenance')}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -296,7 +295,7 @@ const Calendar = () => {
 
                             {filteredVehicles.length === 0 && (
                                 <div className="p-12 text-center text-slate-400 font-medium">
-                                    Aucun véhicule trouvé pour ce filtre.
+                                    {t('u.aucun_vhicule_trouv_pour_ce_filt')}
                                 </div>
                             )}
                         </div>
@@ -309,22 +308,22 @@ const Calendar = () => {
                 isOpen={Boolean(selectedContract)}
                 onClose={() => setSelectedContract(null)}
                 title={selectedContract ? `#CTR-${selectedContract.id.toString().padStart(5, '0')}` : ''}
-                subtitle="Détails du contrat"
+                subtitle={t('u.dtails_du_contrat')}
                 size="sm"
                 footer={(
                     <>
-                        <Button variant="outline" onClick={() => setSelectedContract(null)}>Fermer</Button>
-                        <Button icon="edit" onClick={() => navigate(`/contracts/edit/${selectedContract.id}`)}>Modifier</Button>
+                        <Button variant="outline" onClick={() => setSelectedContract(null)}>{t('u.fermer')}</Button>
+                        <Button icon="edit" onClick={() => navigate(`/contracts/edit/${selectedContract.id}`)}>{t('u.modifier')}</Button>
                     </>
                 )}
             >
                 {selectedContract && (
                     <dl className="space-y-4 text-sm">
                         {[
-                            ['Client', `${selectedContract.client_name} ${selectedContract.client_prenom}`],
-                            ['Véhicule', `${selectedContract.vehicle_name} (${selectedContract.vehicle_matricule})`],
-                            ['Période', `${formatDate(selectedContract.date_sortie)} ➔ ${formatDate(selectedContract.date_retour_prevue)}`],
-                            ['Montant total', `${formatMoney(selectedContract.montant_total)} (${selectedContract.jours} jours)`],
+                            [t('u.client'), `${selectedContract.client_name} ${selectedContract.client_prenom}`],
+                            [t('u.vhicule'), `${selectedContract.vehicle_name} (${selectedContract.vehicle_matricule})`],
+                            [t('u.priode'), `${formatDate(selectedContract.date_sortie)} ➔ ${formatDate(selectedContract.date_retour_prevue)}`],
+                            [t('u.montant_total'), `${formatMoney(selectedContract.montant_total)} (${t('u.jours', { n: selectedContract.jours })})`],
                         ].map(([label, value]) => (
                             <div key={label} className="flex justify-between items-center gap-4 pb-3 border-b border-stroke">
                                 <dt className="text-label-sm uppercase tracking-wider text-text-muted">{label}</dt>
@@ -332,10 +331,10 @@ const Calendar = () => {
                             </div>
                         ))}
                         <div className="flex justify-between items-center gap-4">
-                            <dt className="text-label-sm uppercase tracking-wider text-text-muted">Statut</dt>
+                            <dt className="text-label-sm uppercase tracking-wider text-text-muted">{t('u.statut')}</dt>
                             <dd>
                                 <span className={`px-3 py-1 text-label-sm rounded-full ${selectedContract.statut === 'EN_COURS' ? 'bg-success-bg text-success-dark ring-1 ring-success-border' : 'bg-primary-light text-primary-deep ring-1 ring-primary-border'}`}>
-                                    {selectedContract.statut === 'EN_COURS' ? 'En Cours (Loué)' : 'Réservé'}
+                                    {selectedContract.statut === 'EN_COURS' ? t('u.en_cours_lou') : t('u.rserv')}
                                 </span>
                             </dd>
                         </div>

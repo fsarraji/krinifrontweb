@@ -6,6 +6,7 @@ import Button from './ui/Button';
 import Field from './ui/Field';
 import { Input } from './ui/Input';
 import Modal from './ui/Modal';
+import { useI18n } from '../i18n/context';
 
 const EMPTY = {
     prenom: '',
@@ -29,6 +30,7 @@ const EMPTY = {
  * - onClientCreated: (client) => void
  */
 const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
+    const { t } = useI18n();
     const [formData, setFormData] = useState(EMPTY);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -55,7 +57,7 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
         e.preventDefault();
         const duplicates = Object.keys(UNIQUE_FIELDS).filter((k) => uniqueErrors[k]);
         if (duplicates.length > 0) {
-            setError(`Corrigez d'abord les champs en double : ${duplicates.map((k) => UNIQUE_FIELDS[k]).join(', ')}`);
+            setError(t('u.corrigez_d_abord_les_champs_en_d', { fields: duplicates.map((k) => UNIQUE_FIELDS[k]).join(', ') }));
             return;
         }
         setLoading(true);
@@ -68,7 +70,7 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
             setUniqueErrors({});
         } catch (err) {
             console.error('Error creating client:', err);
-            setError(apiErrorText(err, 'Une erreur est survenue.'));
+            setError(apiErrorText(err, t('u.une_erreur_est_survenue_2')));
         } finally {
             setLoading(false);
         }
@@ -79,11 +81,11 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
             isOpen={isOpen}
             onClose={onClose}
             size="lg"
-            title="Nouveau client rapide"
+            title={t('u.nouveau_client_rapide')}
             footer={(
                 <>
-                    <Button variant="outline" onClick={onClose}>Annuler</Button>
-                    <Button type="submit" form="quick-client-form" loading={loading}>Créer et sélectionner</Button>
+                    <Button variant="outline" onClick={onClose}>{t('u.annuler')}</Button>
+                    <Button type="submit" form="quick-client-form" loading={loading}>{t('u.crer_et_slectionner')}</Button>
                 </>
             )}
         >
@@ -93,30 +95,30 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Field label="Prénom" required>
-                        <Input name="prenom" value={formData.prenom} onChange={handleChange} required placeholder="ex. Adam" />
+                    <Field label={t('u.prnom')} required>
+                        <Input name="prenom" value={formData.prenom} onChange={handleChange} required placeholder={t('u.ex_adam')} />
                     </Field>
-                    <Field label="Nom" required>
-                        <Input name="nom" value={formData.nom} onChange={handleChange} required placeholder="ex. Bennett" />
+                    <Field label={t('u.nom')} required>
+                        <Input name="nom" value={formData.nom} onChange={handleChange} required placeholder={t('u.ex_bennett')} />
                     </Field>
-                    <Field label="CIN / Passeport" required error={uniqueErrors.cin_passport || undefined}>
+                    <Field label={t('u.cin_passeport')} required error={uniqueErrors.cin_passport || undefined}>
                         <Input
                             name="cin_passport" value={formData.cin_passport} onChange={handleChange}
-                            onBlur={handleBlurUnique('cin_passport')} required placeholder="ex. AB123456"
+                            onBlur={handleBlurUnique('cin_passport')} required placeholder={t('u.ex_ab123456')}
                             invalid={Boolean(uniqueErrors.cin_passport)}
                         />
                     </Field>
-                    <Field label="Téléphone" required error={uniqueErrors.telephone || undefined}>
+                    <Field label={t('u.tlphone')} required error={uniqueErrors.telephone || undefined}>
                         <Input
                             name="telephone" value={formData.telephone} onChange={handleChange}
                             onBlur={handleBlurUnique('telephone')} required placeholder="+212 6..."
                             invalid={Boolean(uniqueErrors.telephone)}
                         />
                     </Field>
-                    <Field label="Permis de conduire" required className="sm:col-span-2" error={uniqueErrors.permis_conduite || undefined}>
+                    <Field label={t('u.permis_de_conduire')} required className="sm:col-span-2" error={uniqueErrors.permis_conduite || undefined}>
                         <Input
                             name="permis_conduite" value={formData.permis_conduite} onChange={handleChange}
-                            onBlur={handleBlurUnique('permis_conduite')} required placeholder="Numéro de permis"
+                            onBlur={handleBlurUnique('permis_conduite')} required placeholder={t('u.numro_de_permis')}
                             invalid={Boolean(uniqueErrors.permis_conduite)}
                         />
                     </Field>

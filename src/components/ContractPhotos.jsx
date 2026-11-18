@@ -6,13 +6,13 @@ import Button from './ui/Button';
 import Dropdown from './Dropdown';
 import { apiErrorText } from '../utils/apiErrorText';
 import { optimizeImageFile } from '../utils/imageUtils';
+import { useI18n } from '../i18n/context';
 
 const KINDS = [
-    { value: 'DEPART', label: 'Départ' },
-    { value: 'RETOUR', label: 'Retour' },
-    { value: 'DOMMAGE', label: 'Dommage' },
+    { value: 'DEPART', labelKey: 'u.dpart' },
+    { value: 'RETOUR', labelKey: 'u.retour' },
+    { value: 'DOMMAGE', labelKey: 'u.dommage' },
 ];
-const KIND_LABEL = Object.fromEntries(KINDS.map((k) => [k.value, k.label]));
 const MAX_BYTES = 10 * 1024 * 1024;
 
 /**
@@ -20,7 +20,10 @@ const MAX_BYTES = 10 * 1024 * 1024;
  * Envoi multipart vers /api/contract-photos/ ; 40 photos maximum par contrat.
  */
 const ContractPhotos = ({ contractId, locked = false }) => {
+    const { t } = useI18n();
     const [photos, setPhotos] = useState([]);
+    const kindOptions = KINDS.map((k) => ({ value: k.value, label: t(k.labelKey) }));
+    const KIND_LABEL = Object.fromEntries(kindOptions.map((k) => [k.value, k.label]));
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [kind, setKind] = useState('DEPART');
@@ -31,11 +34,11 @@ const ContractPhotos = ({ contractId, locked = false }) => {
             const { data } = await api.get('contract-photos/', { params: { contract: contractId } });
             setPhotos(Array.isArray(data) ? data : data.results || []);
         } catch (err) {
-            toast.error(apiErrorText(err, 'Impossible de charger les photos.'));
+            toast.error(apiErrorText(err, t('u.impossible_de_charger_les_photos')));
         } finally {
             setLoading(false);
         }
-    }, [contractId]);
+    }, [contractId, t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -44,11 +47,11 @@ const ContractPhotos = ({ contractId, locked = false }) => {
         event.target.value = '';
         if (!file) return;
         if (!file.type.startsWith('image/')) {
-            toast.error('Le fichier doit être une image.');
+            toast.error(t('u.le_fichier_doit_tre_une_image'));
             return;
         }
         if (file.size > MAX_BYTES) {
-            toast.error('Image trop volumineuse (10 Mo maximum).');
+            toast.error(t('u.image_trop_volumineuse_10_mo_max'));
             return;
         }
         setUploading(true);
@@ -61,27 +64,27 @@ const ContractPhotos = ({ contractId, locked = false }) => {
             form.append('kind', kind);
             form.append('image', toSend, toSend.name || file.name);
             await api.post('contract-photos/', form);
-            toast.success('Photo ajoutée.');
+            toast.success(t('u.photo_ajoute'));
             await load();
         } catch (err) {
-            toast.error(apiErrorText(err, "Échec de l'envoi de la photo."));
+            toast.error(apiErrorText(err, t('u.chec_de_l_envoi_de_la_photo')));
         } finally {
             setUploading(false);
         }
     };
 
     const handleDelete = async (photo) => {
-        const confirmed = await messageBox.ask('Supprimer cette photo ?', 'Supprimer la photo', {
+        const confirmed = await messageBox.ask(t('u.supprimer_cette_photo'), t('u.supprimer_la_photo_2'), {
             destructive: true,
-            confirmText: 'Supprimer',
+            confirmText: t('clients.menu.delete'),
         });
         if (!confirmed) return;
         try {
             await api.delete(`contract-photos/${photo.id}/`);
             setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
-            toast.success('Photo supprimée.');
+            toast.success(t('u.photo_supprime'));
         } catch (err) {
-            toast.error(apiErrorText(err, 'Suppression impossible.'));
+            toast.error(apiErrorText(err, t('u.suppression_impossible')));
         }
     };
 
@@ -89,7 +92,7 @@ const ContractPhotos = ({ contractId, locked = false }) => {
         <section aria-labelledby="contract-photos-title" className="border border-slate-100 rounded-lg overflow-hidden">
             <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex justify-between items-center">
                 <h3 id="contract-photos-title" className="text-xs font-bold uppercase text-slate-500">
-                    Photos de l'état des lieux
+                    {t('u.photos_de_l_tat_des_lieux')}
                 </h3>
                 <span className="text-xs text-slate-500">{photos.length} photo{photos.length > 1 ? 's' : ''}</span>
             </div>
@@ -97,8 +100,8 @@ const ContractPhotos = ({ contractId, locked = false }) => {
             {!locked && (
                 <div className="p-4 flex flex-wrap items-end gap-3 border-b border-slate-100">
                     <div className="w-44">
-                        <p className="label mb-1.5">Type de photo</p>
-                        <Dropdown options={KINDS} value={kind} onChange={(v) => setKind(v || 'DEPART')} />
+                        <p className="label mb-1.5">{t('u.type_de_photo')}</p>
+                        <Dropdown options={kindOptions} value={kind} onChange={(v) => setKind(v || 'DEPART')} />
                     </div>
                     <input
                         ref={fileRef}
@@ -106,20 +109,20 @@ const ContractPhotos = ({ contractId, locked = false }) => {
                         accept="image/*"
                         capture="environment"
                         className="sr-only"
-                        aria-label="Choisir une photo"
+                        aria-label={t('u.choisir_une_photo')}
                         onChange={handleFile}
                     />
                     <Button size="sm" icon="add_a_photo" loading={uploading} onClick={() => fileRef.current?.click()}>
-                        Ajouter une photo
+                        {t('u.ajouter_une_photo')}
                     </Button>
                 </div>
             )}
 
             <div className="p-4">
                 {loading ? (
-                    <p className="text-sm text-slate-500" role="status">Chargement…</p>
+                    <p className="text-sm text-slate-500" role="status">{t('u.chargement')}</p>
                 ) : photos.length === 0 ? (
-                    <p className="text-sm text-slate-500">Aucune photo pour ce contrat.</p>
+                    <p className="text-sm text-slate-500">{t('u.aucune_photo_pour_ce_contrat')}</p>
                 ) : (
                     <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {photos.map((photo) => (
@@ -127,7 +130,7 @@ const ContractPhotos = ({ contractId, locked = false }) => {
                                 <a href={photo.image} target="_blank" rel="noreferrer">
                                     <img
                                         src={photo.image}
-                                        alt={photo.caption || `Photo ${KIND_LABEL[photo.kind] || ''}`.trim()}
+                                        alt={photo.caption || t('u.photo', { kind: KIND_LABEL[photo.kind] || '' }).trim()}
                                         loading="lazy"
                                         className="w-full h-28 object-cover"
                                     />
@@ -137,8 +140,8 @@ const ContractPhotos = ({ contractId, locked = false }) => {
                                     <button
                                         type="button"
                                         onClick={() => handleDelete(photo)}
-                                        aria-label={`Supprimer la photo ${KIND_LABEL[photo.kind] || ''}`.trim()}
-                                        className="absolute top-1 right-1 rounded-full bg-white/90 p-1 text-danger shadow"
+                                        aria-label={t('u.supprimer_la_photo', { kind: KIND_LABEL[photo.kind] || '' }).trim()}
+                                        className="absolute top-1 end-1 rounded-full bg-white/90 p-1 text-danger shadow"
                                     >
                                         <span className="material-symbols-outlined text-[16px]" aria-hidden="true">delete</span>
                                     </button>

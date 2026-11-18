@@ -1,3 +1,4 @@
+import { tNow } from '../i18n/runtime';
 import GeofenceManager from './GeofenceManager';
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
@@ -5,6 +6,7 @@ import api from '../api';
 import { formatMoney } from '../utils/formatters';
 import { jwtDecode } from 'jwt-decode';
 import { optimizeImageFile } from '../utils/imageUtils';
+import { useI18n } from '../i18n/context';
 
 const ToggleSwitch = ({ checked, onChange, disabled }) => (
     <label className="relative inline-flex items-center cursor-pointer">
@@ -24,6 +26,7 @@ const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 text-sm 
 const fieldLabel = "block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2";
 
 const Settings = () => {
+    const { t } = useI18n();
     const [settings, setSettings] = useState({
         nom_agence: '',
         adresse: '',
@@ -104,7 +107,7 @@ const Settings = () => {
             setSelectedBrands((res.data.brands || []).map(String));
         } catch (error) {
             console.error("Error fetching settings:", error);
-            setMessage({ text: 'Erreur lors du chargement des paramètres.', type: 'error' });
+            setMessage({ text: tNow('u.erreur_lors_du_chargement_des_pa'), type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -121,7 +124,7 @@ const Settings = () => {
             });
         } catch (error) {
             console.error("Error fetching account:", error);
-            setAccountMessage({ text: 'Erreur lors du chargement du compte.', type: 'error' });
+            setAccountMessage({ text: tNow('u.erreur_lors_du_chargement_du_com'), type: 'error' });
         } finally {
             setAccountLoading(false);
         }
@@ -167,11 +170,11 @@ const Settings = () => {
             setTraccarPassword('');
             setClearTraccarPassword(false);
 
-            setMessage({ text: 'Paramètres sauvegardés avec succès.', type: 'success' });
+            setMessage({ text: t('u.paramtres_sauvegards_avec_succs'), type: 'success' });
             setTimeout(() => setMessage({ text: '', type: '' }), 3000);
         } catch (error) {
             console.error("Error saving settings:", error);
-            setMessage({ text: "Erreur lors de la sauvegarde (Non autorisé ou erreur serveur).", type: 'error' });
+            setMessage({ text: t('u.erreur_lors_de_la_sauvegarde_non'), type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -195,12 +198,12 @@ const Settings = () => {
             }
             await api.put('users/me/', payload);
             setPasswordForm({ current_password: '', new_password: '' });
-            setAccountMessage({ text: 'Compte mis à jour avec succès.', type: 'success' });
+            setAccountMessage({ text: t('u.compte_mis_jour_avec_succs'), type: 'success' });
             setTimeout(() => setAccountMessage({ text: '', type: '' }), 3000);
         } catch (error) {
             console.error("Error saving account:", error);
             const data = error.response?.data;
-            let msg = "Erreur lors de la mise à jour du compte.";
+            let msg = t('u.erreur_lors_de_la_mise_jour_du_c');
             if (data) {
                 if (typeof data === 'string') msg = data;
                 else if (data.detail) msg = data.detail;
@@ -221,7 +224,7 @@ const Settings = () => {
     if (loading || accountLoading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <p className="text-slate-500 font-semibold animate-pulse">Chargement des paramètres...</p>
+                <p className="text-slate-500 font-semibold animate-pulse">{t('u.chargement_des_paramtres')}</p>
             </div>
         );
     }
@@ -237,7 +240,7 @@ const Settings = () => {
                 </h2>
                 <p className="text-slate-500 text-sm mt-1">
                     {description}
-                    {!isOwner && <span className="font-bold text-danger ml-1">(Seul le propriétaire peut modifier)</span>}
+                    {!isOwner && <span className="font-bold text-danger ms-1">{t('u.seul_le_propritaire_peut_modifie')}</span>}
                 </p>
             </div>
             <div className="p-6 space-y-6">{children}</div>
@@ -272,15 +275,15 @@ const Settings = () => {
             {/* Editorial Header Section */}
             <div className="flex justify-between items-end">
                 <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Configuration</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Paramètres</h2>
+                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">{t('u.configuration')}</p>
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('u.paramtres')}</h2>
                 </div>
             </div>
 
             {/* Tabs */}
             <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
-                <TabButton tabKey="agency" icon="storefront" label="Agence" />
-                <TabButton tabKey="account" icon="person" label="Compte" />
+                <TabButton tabKey="agency" icon="storefront" label={t('u.agence')} />
+                <TabButton tabKey="account" icon="person" label={t('u.compte')} />
             </div>
 
             {activeTab === 'agency' ? (
@@ -288,14 +291,14 @@ const Settings = () => {
                     <Message msg={message} />
 
                     {/* Section Informations de l'agence */}
-                    <SectionCard icon="storefront" title="Informations de l'agence" description="Coordonnées affichées sur vos contrats et documents officiels.">
+                    <SectionCard icon="storefront" title={t('u.informations_de_l_agence')} description={t('u.coordonnes_affiches_sur_vos_cont')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className={fieldLabel}>Nom de l'agence</label>
+                                <label className={fieldLabel}>{t('u.nom_de_l_agence')}</label>
                                 <input type="text" value={settings.nom_agence} disabled className={inputClass} />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Email</label>
+                                <label className={fieldLabel}>{t('u.email')}</label>
                                 <input
                                     type="email"
                                     value={settings.email}
@@ -306,7 +309,7 @@ const Settings = () => {
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Téléphone</label>
+                                <label className={fieldLabel}>{t('u.tlphone')}</label>
                                 <input
                                     type="tel"
                                     value={settings.telephone}
@@ -317,7 +320,7 @@ const Settings = () => {
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Ville</label>
+                                <label className={fieldLabel}>{t('u.ville')}</label>
                                 <input
                                     type="text"
                                     value={settings.ville}
@@ -328,13 +331,13 @@ const Settings = () => {
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label className={fieldLabel}>Adresse</label>
+                                <label className={fieldLabel}>{t('u.adresse')}</label>
                                 <textarea
                                     rows={2}
                                     value={settings.adresse}
                                     onChange={(e) => setSettings({ ...settings, adresse: e.target.value })}
                                     disabled={!isOwner || saving}
-                                    placeholder="Adresse complète de l'agence"
+                                    placeholder={t('u.adresse_complte_de_l_agence')}
                                     className={`${inputClass} resize-none`}
                                 />
                             </div>
@@ -342,11 +345,11 @@ const Settings = () => {
                     </SectionCard>
 
                     {/* Section Caution */}
-                    <SectionCard icon="security" title="Gestion de la Caution" description="Définissez si les locations nécessitent une caution et fixez son montant par défaut.">
+                    <SectionCard icon="security" title={t('u.gestion_de_la_caution')} description={t('u.dfinissez_si_les_locations_ncess')}>
                         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                             <div>
-                                <h3 className="font-bold text-slate-800">Activer la Caution</h3>
-                                <p className="text-xs text-slate-500 mt-1">Si désactivée, aucune caution ne sera demandée lors de la création d'un contrat.</p>
+                                <h3 className="font-bold text-slate-800">{t('u.activer_la_caution')}</h3>
+                                <p className="text-xs text-slate-500 mt-1">{t('u.si_dsactive_aucune_caution_ne_se')}</p>
                             </div>
                             <ToggleSwitch
                                 checked={settings.caution_active}
@@ -356,44 +359,44 @@ const Settings = () => {
                         </div>
 
                         <div className={`transition-all duration-300 ${!settings.caution_active ? 'opacity-40 pointer-events-none' : ''}`}>
-                            <label className={fieldLabel}>Montant de la caution (MAD)</label>
+                            <label className={fieldLabel}>{t('u.montant_de_la_caution_mad')}</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">MAD</span>
+                                <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">MAD</span>
                                 <input
                                     type="number" min="0" step="100"
                                     value={settings.caution_montant}
                                     onChange={(e) => setSettings({ ...settings, caution_montant: e.target.value })}
                                     disabled={!isOwner || saving || !settings.caution_active}
-                                    className={`${inputClass} pl-12`}
+                                    className={`${inputClass} ps-12`}
                                 />
                             </div>
                         </div>
                     </SectionCard>
 
                     {/* Section TVA / Facturation */}
-                    <SectionCard icon="receipt_long" title="Facturation & TVA" description="Taux de TVA appliqué aux factures et avoirs. Les montants des contrats sont saisis TTC ; le HT et la TVA en sont déduits.">
+                    <SectionCard icon="receipt_long" title={t('u.facturation_tva')} description={t('u.taux_de_tva_appliqu_aux_factures')}>
                         <div>
-                            <label className={fieldLabel}>Taux de TVA (%)</label>
+                            <label className={fieldLabel}>{t('u.taux_de_tva')}</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                                <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
                                 <input
                                     type="number" min="0" max="100" step="0.01"
                                     value={settings.tva_rate}
                                     onChange={(e) => setSettings({ ...settings, tva_rate: e.target.value })}
                                     disabled={!isOwner || saving}
-                                    className={`${inputClass} pl-12`}
+                                    className={`${inputClass} ps-12`}
                                 />
                             </div>
-                            <p className="text-xs text-slate-500 mt-2">N'affecte que les nouvelles factures : les factures déjà émises restent inchangées.</p>
+                            <p className="text-xs text-slate-500 mt-2">{t('u.n_affecte_que_les_nouvelles_fact')}</p>
                         </div>
                     </SectionCard>
 
                     {/* Section Kilométrage */}
-                    <SectionCard icon="speed" title="Kilométrage Inclus & Supplément" description="Définissez le nombre de km inclus par jour et le tarif facturé par km supplémentaire.">
+                    <SectionCard icon="speed" title={t('u.kilomtrage_inclus_supplment')} description={t('u.dfinissez_le_nombre_de_km_inclus')}>
                         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                             <div>
-                                <h3 className="font-bold text-slate-800">Activer la facturation des km supplémentaires</h3>
-                                <p className="text-xs text-slate-500 mt-1">Si désactivé, le kilométrage sera illimité sans supplément.</p>
+                                <h3 className="font-bold text-slate-800">{t('u.activer_la_facturation_des_km_su')}</h3>
+                                <p className="text-xs text-slate-500 mt-1">{t('u.si_dsactiv_le_kilomtrage_sera_il')}</p>
                             </div>
                             <ToggleSwitch
                                 checked={settings.km_extra_active}
@@ -404,32 +407,32 @@ const Settings = () => {
 
                         <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 ${!settings.km_extra_active ? 'opacity-40 pointer-events-none' : ''}`}>
                             <div>
-                                <label className={fieldLabel}>Km inclus par jour</label>
+                                <label className={fieldLabel}>{t('u.km_inclus_par_jour')}</label>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">KM</span>
+                                    <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">KM</span>
                                     <input
                                         type="number" min="0" step="10"
                                         value={settings.km_par_jour}
                                         onChange={(e) => setSettings({ ...settings, km_par_jour: e.target.value })}
                                         disabled={!isOwner || saving || !settings.km_extra_active}
-                                        className={`${inputClass} pl-12`}
+                                        className={`${inputClass} ps-12`}
                                     />
                                 </div>
-                                <p className="text-xs text-slate-400 mt-1.5 ml-1">Défaut recommandé : 250 km/jour</p>
+                                <p className="text-xs text-slate-400 mt-1.5 ms-1">{t('u.dfaut_recommand_250_km_jour')}</p>
                             </div>
                             <div>
-                                <label className={fieldLabel}>Tarif par km supplémentaire (MAD)</label>
+                                <label className={fieldLabel}>{t('u.tarif_par_km_supplmentaire_mad')}</label>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">MAD</span>
+                                    <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">MAD</span>
                                     <input
                                         type="number" min="0" step="0.5"
                                         value={settings.km_tarif_extra_defaut}
                                         onChange={(e) => setSettings({ ...settings, km_tarif_extra_defaut: e.target.value })}
                                         disabled={!isOwner || saving || !settings.km_extra_active}
-                                        className={`${inputClass} pl-12`}
+                                        className={`${inputClass} ps-12`}
                                     />
                                 </div>
-                                <p className="text-xs text-slate-400 mt-1.5 ml-1">Tarif par défaut pour tous les véhicules</p>
+                                <p className="text-xs text-slate-400 mt-1.5 ms-1">{t('u.tarif_par_dfaut_pour_tous_les_vh')}</p>
                             </div>
                         </div>
 
@@ -438,15 +441,15 @@ const Settings = () => {
                             <div className="p-4 bg-surface-container-high rounded-xl border border-primary-light">
                                 <p className="text-xs font-bold text-primary-deep uppercase tracking-wider mb-2 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">info</span>
-                                    Exemple de calcul (3 jours, 900 km parcourus)
+                                    {t('u.exemple_de_calcul_3_jours_900_km')}
                                 </p>
                                 <div className="space-y-1 text-xs text-primary">
-                                    <p>• Km inclus : {settings.km_par_jour} km/j × 3 jours = <strong>{settings.km_par_jour * 3} km</strong></p>
-                                    <p>• Km parcourus : 900 km</p>
+                                    <p>{t('u.km_inclus_km_j_3_jours', { perDay: settings.km_par_jour })} = <strong>{settings.km_par_jour * 3} {t('veh.kmUnit')}</strong></p>
+                                    <p>{t('u.km_parcourus_900_km')}</p>
                                     {900 > settings.km_par_jour * 3 ? (
-                                        <p className="text-orange-600 font-bold">• Dépassement : {900 - settings.km_par_jour * 3} km × {settings.km_tarif_extra_defaut} MAD = <strong>{formatMoney((900 - settings.km_par_jour * 3) * settings.km_tarif_extra_defaut)} de supplément</strong></p>
+                                        <p className="text-orange-600 font-bold">{t('u.dpassement_km_mad_de_supplment', { km: 900 - settings.km_par_jour * 3, rate: settings.km_tarif_extra_defaut, total: formatMoney((900 - settings.km_par_jour * 3) * settings.km_tarif_extra_defaut) })}</p>
                                     ) : (
-                                        <p className="text-success font-bold">• Aucun dépassement — inclus dans le forfait ✓</p>
+                                        <p className="text-success font-bold">{t('u.aucun_dpassement_inclus_dans_le_')}</p>
                                     )}
                                 </div>
                             </div>
@@ -457,14 +460,14 @@ const Settings = () => {
                     <GeofenceManager canEdit={isOwner} />
 
                     {/* Section Suivi GPS / Traccar */}
-                    <SectionCard icon="satellite_alt" title="Suivi GPS (Traccar)" description="Connectez le compte serveur Traccar de votre agence pour suivre vos véhicules en temps réel.">
+                    <SectionCard icon="satellite_alt" title={t('u.suivi_gps_traccar')} description={t('u.connectez_le_compte_serveur_trac')}>
                         <div className={`flex items-center gap-2 mb-4 text-sm font-bold ${traccarConfigured ? 'text-success' : 'text-danger'}`}>
                             <span className="material-symbols-outlined text-base">{traccarConfigured ? 'check_circle' : 'cancel'}</span>
-                            {traccarConfigured ? 'Compte Traccar connecté' : 'Compte Traccar non configuré'}
+                            {traccarConfigured ? t('u.compte_traccar_connect') : t('u.compte_traccar_non_configur')}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                             <div>
-                                <label className={fieldLabel}>URL du serveur</label>
+                                <label className={fieldLabel}>{t('u.url_du_serveur')}</label>
                                 <input
                                     type="url"
                                     value={settings.traccar_url}
@@ -475,23 +478,23 @@ const Settings = () => {
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Utilisateur</label>
+                                <label className={fieldLabel}>{t('u.utilisateur')}</label>
                                 <input
                                     type="text"
                                     value={settings.traccar_username}
                                     onChange={(e) => setSettings(prev => ({ ...prev, traccar_username: e.target.value }))}
-                                    placeholder="Utilisateur Traccar"
+                                    placeholder={t('u.utilisateur_traccar')}
                                     disabled={!isOwner || saving}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Mot de passe</label>
+                                <label className={fieldLabel}>{t('u.mot_de_passe')}</label>
                                 <input
                                     type="password"
                                     value={traccarPassword}
                                     onChange={(e) => setTraccarPassword(e.target.value)}
-                                    placeholder={traccarPasswordSet ? '•••••••• (laisser vide pour conserver)' : 'Mot de passe Traccar'}
+                                    placeholder={traccarPasswordSet ? t('u.laisser_vide_pour_conserver') : t('u.mot_de_passe_traccar')}
                                     disabled={!isOwner || saving}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
@@ -506,7 +509,7 @@ const Settings = () => {
                                             disabled={!isOwner || saving}
                                             className="w-4 h-4 accent-red-600"
                                         />
-                                        Effacer le mot de passe enregistré
+                                        {t('u.effacer_le_mot_de_passe_enregist')}
                                     </label>
                                 </div>
                             )}
@@ -514,9 +517,9 @@ const Settings = () => {
                     </SectionCard>
 
                     {/* Section Marques affichées */}
-                    <SectionCard icon="directions_car" title="Marques affichées" description="Sélectionnez les marques à afficher dans les formulaires de véhicule. Aucune sélection = toutes les marques.">
+                    <SectionCard icon="directions_car" title={t('u.marques_affiches')} description={t('u.slectionnez_les_marques_afficher')}>
                         {allBrands.length === 0 ? (
-                            <p className="text-sm text-slate-400">Aucune marque disponible.</p>
+                            <p className="text-sm text-slate-400">{t('u.aucune_marque_disponible')}</p>
                         ) : (
                             <Select
                                 isMulti
@@ -528,8 +531,8 @@ const Settings = () => {
                                     .map(b => ({ value: String(b.id), label: b.name }))}
                                 onChange={(selected) => setSelectedBrands((selected || []).map(o => o.value))}
                                 isDisabled={!isOwner || saving}
-                                placeholder="Rechercher et sélectionner les marques..."
-                                noOptionsMessage={() => 'Aucune marque'}
+                                placeholder={t('u.rechercher_et_slectionner_les_ma')}
+                                noOptionsMessage={() => t('u.aucune_marque')}
                                 className="text-sm"
                                 classNamePrefix="react-select"
                                 styles={{
@@ -555,19 +558,19 @@ const Settings = () => {
                             />
                         )}
                         {selectedBrands.length > 0 && (
-                            <p className="text-xs text-slate-500 mt-3 ml-1">
+                            <p className="text-xs text-slate-500 mt-3 ms-1">
                                 <span className="font-bold text-primary">{selectedBrands.length}</span> marque(s) sélectionnée(s) pour l'affichage.
                             </p>
                         )}
                     </SectionCard>
 
                     {/* Section Branding / Cachet */}
-                    <SectionCard icon="verified" title="Branding et Documents" description="Configurez les éléments visuels de vos documents officiels.">
+                    <SectionCard icon="verified" title={t('u.branding_et_documents')} description={t('u.configurez_les_lments_visuels_de')}>
                         <div className="grid grid-cols-1 gap-8">
                             {/* Logo */}
                             <div>
-                                <label className={fieldLabel}>Logo de l'Agence</label>
-                                <p className="text-xs text-slate-500 mb-4">Ce logo sera utilisé sur vos contrats de location et documents officiels.</p>
+                                <label className={fieldLabel}>{t('u.logo_de_l_agence')}</label>
+                                <p className="text-xs text-slate-500 mb-4">{t('u.ce_logo_sera_utilis_sur_vos_cont')}</p>
 
                                 <div className="flex items-center gap-6">
                                     {/* Preview box */}
@@ -575,11 +578,11 @@ const Settings = () => {
                                         {logoFile ? (
                                             <img src={URL.createObjectURL(logoFile)} alt="Logo preview" className="max-w-full max-h-full object-contain p-2" />
                                         ) : settings.logo ? (
-                                            <img src={settings.logo} alt="Logo actuel" className="max-w-full max-h-full object-contain p-2" />
+                                            <img src={settings.logo} alt={t('u.logo_actuel')} className="max-w-full max-h-full object-contain p-2" />
                                         ) : (
                                             <div className="text-center text-slate-400">
                                                 <span className="material-symbols-outlined text-3xl">image</span>
-                                                <p className="text-[10px] mt-1 font-semibold uppercase">Aucun logo</p>
+                                                <p className="text-[10px] mt-1 font-semibold uppercase">{t('u.aucun_logo')}</p>
                                             </div>
                                         )}
                                     </div>
@@ -588,7 +591,7 @@ const Settings = () => {
                                     <div className="flex-1">
                                         <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-primary hover:border-indigo-300'}`}>
                                             <span className="material-symbols-outlined text-[20px]">upload_file</span>
-                                            {logoFile ? 'Changer le logo' : 'Importer un logo (PNG/JPG)'}
+                                            {logoFile ? t('u.changer_le_logo') : t('u.importer_un_logo_png_jpg')}
                                             <input
                                                 type="file"
                                                 accept=".png,.jpg,.jpeg"
@@ -602,9 +605,9 @@ const Settings = () => {
                                             />
                                         </label>
                                         {logoFile && (
-                                            <p className="text-xs text-primary font-bold mt-2 ml-1 flex items-center gap-1">
+                                            <p className="text-xs text-primary font-bold mt-2 ms-1 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                                Fichier prêt à être sauvegardé
+                                                {t('u.fichier_prt_tre_sauvegard')}
                                             </p>
                                         )}
                                     </div>
@@ -613,8 +616,8 @@ const Settings = () => {
 
                             {/* Cachet & Signature */}
                             <div>
-                                <label className={fieldLabel}>Cachet & Signature de l'Agence</label>
-                                <p className="text-xs text-slate-500 mb-4">Cette image (idéalement au format PNG avec fond transparent) sera utilisée sur les contrats de location générés en PDF.</p>
+                                <label className={fieldLabel}>{t('u.cachet_signature_de_l_agence')}</label>
+                                <p className="text-xs text-slate-500 mb-4">{t('u.cette_image_idalement_au_format_')}</p>
 
                                 <div className="flex items-center gap-6">
                                     {/* Preview box */}
@@ -622,11 +625,11 @@ const Settings = () => {
                                         {cachetFile ? (
                                             <img src={URL.createObjectURL(cachetFile)} alt="Cachet preview" className="max-w-full max-h-full object-contain p-2" />
                                         ) : settings.cachet_signature ? (
-                                            <img src={settings.cachet_signature} alt="Cachet actuel" className="max-w-full max-h-full object-contain p-2" />
+                                            <img src={settings.cachet_signature} alt={t('u.cachet_actuel')} className="max-w-full max-h-full object-contain p-2" />
                                         ) : (
                                             <div className="text-center text-slate-400">
                                                 <span className="material-symbols-outlined text-3xl">image</span>
-                                                <p className="text-[10px] mt-1 font-semibold uppercase">Aucun cachet</p>
+                                                <p className="text-[10px] mt-1 font-semibold uppercase">{t('u.aucun_cachet')}</p>
                                             </div>
                                         )}
                                     </div>
@@ -635,7 +638,7 @@ const Settings = () => {
                                     <div className="flex-1">
                                         <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-primary hover:border-indigo-300'}`}>
                                             <span className="material-symbols-outlined text-[20px]">upload_file</span>
-                                            {cachetFile ? 'Changer l\'image' : 'Importer un cachet (PNG/JPG)'}
+                                            {cachetFile ? t('u.changer_l_image') : t('u.importer_un_cachet_png_jpg')}
                                             <input
                                                 type="file"
                                                 accept=".png,.jpg,.jpeg"
@@ -649,9 +652,9 @@ const Settings = () => {
                                             />
                                         </label>
                                         {cachetFile && (
-                                            <p className="text-xs text-primary font-bold mt-2 ml-1 flex items-center gap-1">
+                                            <p className="text-xs text-primary font-bold mt-2 ms-1 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                                Fichier prêt à être sauvegardé
+                                                {t('u.fichier_prt_tre_sauvegard')}
                                             </p>
                                         )}
                                     </div>
@@ -669,9 +672,9 @@ const Settings = () => {
                                 className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {saving ? (
-                                    <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> Sauvegarde en cours...</>
+                                    <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> {t('u.sauvegarde_en_cours')}</>
                                 ) : (
-                                    <><span className="material-symbols-outlined text-sm">save</span> Enregistrer toutes les modifications</>
+                                    <><span className="material-symbols-outlined text-sm">save</span> {t('u.enregistrer_toutes_les_modificat')}</>
                                 )}
                             </button>
                         </div>
@@ -682,20 +685,20 @@ const Settings = () => {
                     <Message msg={accountMessage} />
 
                     {/* Section Informations du compte */}
-                    <SectionCard icon="person" title="Informations du compte" description="Modifiez les informations de votre compte utilisateur.">
+                    <SectionCard icon="person" title={t('u.informations_du_compte')} description={t('u.modifiez_les_informations_de_vot')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className={fieldLabel}>Nom d'utilisateur</label>
+                                <label className={fieldLabel}>{t('u.nom_d_utilisateur')}</label>
                                 <input
                                     type="text"
                                     value={account.username}
                                     onChange={(e) => setAccount({ ...account, username: e.target.value })}
-                                    placeholder="Nom d'utilisateur"
+                                    placeholder={t('u.nom_d_utilisateur')}
                                     className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Email</label>
+                                <label className={fieldLabel}>{t('u.email')}</label>
                                 <input
                                     type="email"
                                     value={account.email}
@@ -705,22 +708,22 @@ const Settings = () => {
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Prénom</label>
+                                <label className={fieldLabel}>{t('u.prnom')}</label>
                                 <input
                                     type="text"
                                     value={account.first_name}
                                     onChange={(e) => setAccount({ ...account, first_name: e.target.value })}
-                                    placeholder="Prénom"
+                                    placeholder={t('u.prnom')}
                                     className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Nom</label>
+                                <label className={fieldLabel}>{t('u.nom')}</label>
                                 <input
                                     type="text"
                                     value={account.last_name}
                                     onChange={(e) => setAccount({ ...account, last_name: e.target.value })}
-                                    placeholder="Nom"
+                                    placeholder={t('u.nom')}
                                     className={inputClass}
                                 />
                             </div>
@@ -728,25 +731,25 @@ const Settings = () => {
                     </SectionCard>
 
                     {/* Section Mot de passe */}
-                    <SectionCard icon="lock" title="Changer le mot de passe" description="Laissez ces champs vides pour conserver votre mot de passe actuel.">
+                    <SectionCard icon="lock" title={t('u.changer_le_mot_de_passe')} description={t('u.laissez_ces_champs_vides_pour_co')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className={fieldLabel}>Mot de passe actuel</label>
+                                <label className={fieldLabel}>{t('u.mot_de_passe_actuel')}</label>
                                 <input
                                     type="password"
                                     value={passwordForm.current_password}
                                     onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
-                                    placeholder="Mot de passe actuel"
+                                    placeholder={t('u.mot_de_passe_actuel')}
                                     className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className={fieldLabel}>Nouveau mot de passe</label>
+                                <label className={fieldLabel}>{t('u.nouveau_mot_de_passe')}</label>
                                 <input
                                     type="password"
                                     value={passwordForm.new_password}
                                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                                    placeholder="Nouveau mot de passe"
+                                    placeholder={t('u.nouveau_mot_de_passe')}
                                     className={inputClass}
                                 />
                             </div>
@@ -761,9 +764,9 @@ const Settings = () => {
                             className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-200/50 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {accountSaving ? (
-                                <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> Sauvegarde en cours...</>
+                                <><span className="material-symbols-outlined animate-spin text-sm">refresh</span> {t('u.sauvegarde_en_cours')}</>
                             ) : (
-                                <><span className="material-symbols-outlined text-sm">save</span> Enregistrer le compte</>
+                                <><span className="material-symbols-outlined text-sm">save</span> {t('u.enregistrer_le_compte')}</>
                             )}
                         </button>
                     </div>

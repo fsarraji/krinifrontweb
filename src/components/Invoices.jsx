@@ -10,10 +10,11 @@ import { Input, Select } from './ui/Input';
 import Modal from './ui/Modal';
 import PageHeader from './ui/PageHeader';
 import Table from './ui/Table';
+import { useI18n } from '../i18n/context';
 
 const STATUS = {
-    EMISE: { label: 'Émise', cls: 'bg-badge-info-bg text-badge-info-text border-badge-info-border' },
-    ANNULEE: { label: 'Annulée', cls: 'bg-badge-neutral-bg text-badge-neutral-text border-badge-neutral-border' },
+    EMISE: { labelKey: 'u.mise', cls: 'bg-badge-info-bg text-badge-info-text border-badge-info-border' },
+    ANNULEE: { labelKey: 'u.annule', cls: 'bg-badge-neutral-bg text-badge-neutral-text border-badge-neutral-border' },
 };
 
 const errText = (err, fallback) => {
@@ -32,6 +33,7 @@ const Stat = ({ label, value }) => (
 );
 
 const Invoices = () => {
+    const { t } = useI18n();
     const role = getClaims()?.role;
     const isManager = role === 'OWNER' || role === 'SUPERADMIN';
 
@@ -55,11 +57,11 @@ const Invoices = () => {
             setInvoices(await fetchAllPages('invoices/', { ordering: '-date_emission' }));
         } catch (err) {
             console.error('Erreur chargement factures', err);
-            toast.error('Impossible de charger les factures.');
+            toast.error(t('u.impossible_de_charger_les_factur'));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -70,7 +72,7 @@ const Invoices = () => {
             setContracts(all.filter((c) => c.statut !== 'ANNULE'));
         } catch (err) {
             console.error(err);
-            toast.error('Impossible de charger les contrats.');
+            toast.error(t('u.impossible_de_charger_les_contra'));
         }
     };
 
@@ -87,12 +89,12 @@ const Invoices = () => {
         setBusy(true);
         try {
             await api.post('invoices/', { contract: Number(contractId) });
-            toast.success('Facture émise.');
+            toast.success(t('u.facture_mise'));
             setIssueOpen(false);
             setContractId('');
             await load();
         } catch (err) {
-            toast.error(errText(err, "Échec de l'émission."));
+            toast.error(errText(err, t('u.chec_de_l_mission')));
         } finally {
             setBusy(false);
         }
@@ -111,11 +113,11 @@ const Invoices = () => {
             const body = { reason: creditReason };
             if (creditAmount !== '') body.amount = creditAmount;
             await api.post(`invoices/${creditFor.id}/credit-note/`, body);
-            toast.success('Avoir émis.');
+            toast.success(t('u.avoir_mis'));
             closeCredit();
             await load();
         } catch (err) {
-            toast.error(errText(err, "Échec de l'émission de l'avoir."));
+            toast.error(errText(err, t('u.chec_de_l_mission_de_l_avoir')));
         } finally {
             setBusy(false);
         }
@@ -132,7 +134,7 @@ const Invoices = () => {
 
     const columns = [
         {
-            key: 'number', label: 'N°', sortable: true,
+            key: 'number', label: t('u.n'), sortable: true,
             render: (v, inv) => (
                 <span className="font-bold text-on-surface">
                     {v}
@@ -140,35 +142,35 @@ const Invoices = () => {
                         <button
                             type="button"
                             onClick={() => setExpanded(expanded === inv.id ? null : inv.id)}
-                            className="ml-2 text-label-sm text-primary hover:underline"
+                            className="ms-2 text-label-sm text-primary hover:underline"
                             aria-expanded={expanded === inv.id}
                         >
-                            {inv.credit_notes.length} avoir(s)
+                            {t('u.avoir_s', { n: inv.credit_notes.length })}
                         </button>
                     )}
                 </span>
             ),
         },
-        { key: 'client_name', label: 'Client', sortable: true },
-        { key: 'date_emission', label: 'Date', sortable: true, render: (v) => formatDate(v) },
-        { key: 'montant_ht', label: 'HT', align: 'right', sortable: true, render: (v) => formatMoney(v) },
-        { key: 'montant_tva', label: 'TVA', align: 'right', render: (v) => formatMoney(v) },
-        { key: 'montant_ttc', label: 'TTC', align: 'right', sortable: true, render: (v) => <strong>{formatMoney(v)}</strong> },
+        { key: 'client_name', label: t('u.client'), sortable: true },
+        { key: 'date_emission', label: t('u.date'), sortable: true, render: (v) => formatDate(v) },
+        { key: 'montant_ht', label: t('u.ht'), align: 'right', sortable: true, render: (v) => formatMoney(v) },
+        { key: 'montant_tva', label: t('u.tva'), align: 'right', render: (v) => formatMoney(v) },
+        { key: 'montant_ttc', label: t('u.ttc'), align: 'right', sortable: true, render: (v) => <strong>{formatMoney(v)}</strong> },
         {
-            key: 'statut', label: 'Statut',
+            key: 'statut', label: t('u.statut'),
             render: (v) => (
                 <span className={`inline-flex px-2 py-0.5 rounded-token border text-label-sm ${STATUS[v]?.cls || ''}`}>
-                    {STATUS[v]?.label || v}
+                    {STATUS[v] ? t(STATUS[v].labelKey) : v}
                 </span>
             ),
         },
         {
-            key: 'actions', label: 'Actions', align: 'right',
+            key: 'actions', label: t('u.actions'), align: 'right',
             render: (_, inv) => (
                 <span className="inline-flex gap-1 whitespace-nowrap">
                     <Button variant="ghost" size="sm" icon="picture_as_pdf" onClick={() => openPdf(`invoices/${inv.id}/pdf/`)}>PDF</Button>
                     {isManager && inv.statut === 'EMISE' && (
-                        <Button variant="ghost" size="sm" className="!text-danger-dark" icon="undo" onClick={() => setCreditFor(inv)}>Avoir</Button>
+                        <Button variant="ghost" size="sm" className="!text-danger-dark" icon="undo" onClick={() => setCreditFor(inv)}>{t('u.avoir')}</Button>
                     )}
                 </span>
             ),
@@ -181,20 +183,20 @@ const Invoices = () => {
         <div className="space-y-6">
             <PageHeader
                 className="!mb-0"
-                title="Factures & avoirs"
-                description="Numérotation séquentielle par agence. Une facture émise est immuable : on la corrige par un avoir."
+                title={t('u.factures_avoirs')}
+                description={t('u.numrotation_squentielle_par_agen')}
                 actions={(
                     <>
-                        <Button variant="outline" icon="download" onClick={() => downloadFile('invoices/export/', 'factures.csv')}>Export CSV</Button>
-                        <Button icon="add" onClick={openIssue}>Nouvelle facture</Button>
+                        <Button variant="outline" icon="download" onClick={() => downloadFile('invoices/export/', 'factures.csv')}>{t('u.export_csv')}</Button>
+                        <Button icon="add" onClick={openIssue}>{t('u.nouvelle_facture')}</Button>
                     </>
                 )}
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Stat label="Factures" value={filtered.length} />
-                <Stat label="Total TTC" value={formatMoney(totalTtc)} />
-                <Stat label="Avoirs émis" value={formatMoney(totalCredit)} />
+                <Stat label={t('u.factures')} value={filtered.length} />
+                <Stat label={t('u.total_ttc')} value={formatMoney(totalTtc)} />
+                <Stat label={t('u.avoirs_mis')} value={formatMoney(totalCredit)} />
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -202,37 +204,37 @@ const Invoices = () => {
                     type="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Rechercher (n° facture, client)…"
-                    aria-label="Rechercher une facture"
+                    placeholder={t('u.rechercher_n_facture_client')}
+                    aria-label={t('u.rechercher_une_facture')}
                     className="flex-1 min-w-[220px] !w-auto"
                 />
                 <Select
                     value={statut}
                     onChange={(e) => setStatut(e.target.value)}
-                    aria-label="Filtrer par statut"
+                    aria-label={t('u.filtrer_par_statut')}
                     className="!w-auto"
                 >
-                    <option value="ALL">Tous les statuts</option>
-                    <option value="EMISE">Émises</option>
-                    <option value="ANNULEE">Annulées</option>
+                    <option value="ALL">{t('u.tous_les_statuts')}</option>
+                    <option value="EMISE">{t('u.mises')}</option>
+                    <option value="ANNULEE">{t('u.annules')}</option>
                 </Select>
             </div>
 
             <Table
-                caption="Liste des factures"
+                caption={t('u.liste_des_factures')}
                 columns={columns}
                 rows={filtered}
                 paginate
                 defaultSort={{ key: 'date_emission', dir: 'desc' }}
                 loading={loading}
-                emptyTitle="Aucune facture"
-                emptyDescription="Émettez une facture depuis un contrat pour la voir apparaître ici."
+                emptyTitle={t('u.aucune_facture')}
+                emptyDescription={t('u.mettez_une_facture_depuis_un_con')}
                 footer={expanded && (() => {
                     const inv = invoices.find((i) => i.id === expanded);
                     if (!inv) return null;
                     return (
                         <div className="border-t border-stroke bg-surface px-4 py-3 space-y-2">
-                            <p className="text-label-sm uppercase tracking-wider text-text-muted">Avoirs sur {inv.number}</p>
+                            <p className="text-label-sm uppercase tracking-wider text-text-muted">{t('u.avoirs_sur', { number: inv.number })}</p>
                             {creditNotesOf(inv).map((n) => (
                                 <div key={n.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
                                     <span className="font-semibold">{n.number}</span>
@@ -249,19 +251,19 @@ const Invoices = () => {
             <Modal
                 isOpen={issueOpen}
                 onClose={() => setIssueOpen(false)}
-                title="Émettre une facture"
+                title={t('u.mettre_une_facture')}
                 size="md"
                 footer={(
                     <>
-                        <Button variant="outline" onClick={() => setIssueOpen(false)}>Annuler</Button>
-                        <Button type="submit" form="issue-invoice-form" loading={busy} disabled={!contractId}>Émettre</Button>
+                        <Button variant="outline" onClick={() => setIssueOpen(false)}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="issue-invoice-form" loading={busy} disabled={!contractId}>{t('u.mettre')}</Button>
                     </>
                 )}
             >
                 <form id="issue-invoice-form" onSubmit={issue}>
-                    <Field label="Contrat à facturer" required hint="Seuls les contrats non annulés et non encore facturés sont proposés.">
+                    <Field label={t('u.contrat_facturer')} required hint={t('u.seuls_les_contrats_non_annuls_et')}>
                         <Select required value={contractId} onChange={(e) => setContractId(e.target.value)}>
-                            <option value="">— Choisir —</option>
+                            <option value="">{t('u.choisir')}</option>
                             {invoiceable.map((c) => (
                                 <option key={c.id} value={c.id}>
                                     #{c.id} — {c.client_prenom} {c.client_name} — {c.vehicle_matricule} ({formatMoney(c.montant_total)})
@@ -275,23 +277,23 @@ const Invoices = () => {
             <Modal
                 isOpen={Boolean(creditFor)}
                 onClose={closeCredit}
-                title={`Avoir sur ${creditFor?.number || ''}`}
+                title={t('u.avoir_sur', { number: creditFor?.number || '' })}
                 size="md"
                 footer={(
                     <>
-                        <Button variant="outline" onClick={closeCredit}>Annuler</Button>
-                        <Button type="submit" form="credit-note-form" variant="danger" loading={busy}>Émettre l'avoir</Button>
+                        <Button variant="outline" onClick={closeCredit}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="credit-note-form" variant="danger" loading={busy}>{t('u.mettre_l_avoir')}</Button>
                     </>
                 )}
             >
                 <form id="credit-note-form" onSubmit={submitCredit} className="space-y-4">
                     <p className="text-sm text-text-muted">
-                        Laissez le montant vide pour un avoir total du solde restant. Un avoir total annule la facture.
+                        {t('u.laissez_le_montant_vide_pour_un_')}
                     </p>
-                    <Field label="Montant TTC (optionnel)">
+                    <Field label={t('u.montant_ttc_optionnel')}>
                         <Input type="number" min="0.01" step="0.01" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} />
                     </Field>
-                    <Field label="Motif">
+                    <Field label={t('u.motif')}>
                         <Input type="text" value={creditReason} onChange={(e) => setCreditReason(e.target.value)} />
                     </Field>
                 </form>

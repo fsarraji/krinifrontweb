@@ -1,11 +1,12 @@
 import React from 'react';
 import Select from 'react-select';
+import { useI18n } from '../i18n/context';
 
 const Dropdown = ({
     options,
     value,
     onChange,
-    placeholder = 'Sélectionner...',
+    placeholder,
     isSearchable = false,
     isClearable = false,
     isDisabled = false,
@@ -14,6 +15,7 @@ const Dropdown = ({
     styles,
     ...rest
 }) => {
+    const { t } = useI18n();
     const selected = Array.isArray(options) && value !== undefined && value !== null && value !== ''
         ? options.find(o => String(o.value) === String(value)) || null
         : null;
@@ -23,7 +25,8 @@ const Dropdown = ({
             options={options || []}
             value={selected}
             onChange={(opt) => { if (onChange) onChange(opt ? opt.value : ''); }}
-            placeholder={placeholder}
+            placeholder={placeholder ?? t('u.slectionner')}
+            noOptionsMessage={() => t('u.aucune_option')}
             isSearchable={isSearchable}
             isClearable={isClearable}
             isDisabled={isDisabled}

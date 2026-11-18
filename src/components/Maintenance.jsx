@@ -9,6 +9,7 @@ import { Input, Select } from './ui/Input';
 import Modal from './ui/Modal';
 import PageHeader from './ui/PageHeader';
 import Table from './ui/Table';
+import { useI18n } from '../i18n/context';
 
 const TYPES = [
     ['VIDANGE', 'Vidange'],
@@ -33,6 +34,7 @@ const fieldErrors = (err) => {
 };
 
 const Maintenance = () => {
+    const { t } = useI18n();
     const [records, setRecords] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -42,6 +44,11 @@ const Maintenance = () => {
     const [form, setForm] = useState(emptyForm);
     const [errors, setErrors] = useState({});
     const [busy, setBusy] = useState(false);
+
+    const typeLabels = {
+        VIDANGE: t('u.vidange'), PNEUS: t('u.pneus'), FREINS: t('u.freins'),
+        CARROSSERIE: t('u.carrosserie'), AUTRE: t('u.autre'),
+    };
 
     const load = useCallback(async () => {
         try {
@@ -53,11 +60,11 @@ const Maintenance = () => {
             setVehicles(vehs);
         } catch (err) {
             console.error('Erreur chargement maintenance', err);
-            toast.error("Impossible de charger l'historique de maintenance.");
+            toast.error(t('u.impossible_de_charger_l_historiq'));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -77,13 +84,13 @@ const Maintenance = () => {
             // Les champs optionnels vides ne doivent pas être envoyés ("" invalide pour un nombre/date).
             const body = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ''));
             await api.post('maintenance/', body);
-            toast.success('Intervention enregistrée.');
+            toast.success(t('u.intervention_enregistre'));
             closeForm();
             await load();
         } catch (err) {
             const fe = fieldErrors(err);
             setErrors(fe);
-            if (Object.keys(fe).length === 0 || fe.detail) toast.error(fe.detail || "Échec de l'enregistrement.");
+            if (Object.keys(fe).length === 0 || fe.detail) toast.error(fe.detail || t('u.chec_de_l_enregistrement'));
         } finally {
             setBusy(false);
         }
@@ -91,18 +98,18 @@ const Maintenance = () => {
 
     const remove = async (r) => {
         const ok = await messageBox.ask(
-            `Supprimer l'intervention du ${formatDate(r.date)} (${r.vehicle_matricule}) ?`,
-            'Supprimer l\'intervention',
-            { destructive: true, confirmText: 'Supprimer' }
+            t('u.supprimer_l_intervention_du', { date: formatDate(r.date), plate: r.vehicle_matricule }),
+            t('u.supprimer_l_intervention'),
+            { destructive: true, confirmText: t('clients.menu.delete') }
         );
         if (ok !== true) return;
         try {
             await api.delete(`maintenance/${r.id}/`);
             setRecords((prev) => prev.filter((x) => x.id !== r.id));
-            toast.success('Intervention supprimée.');
+            toast.success(t('u.intervention_supprime'));
         } catch (err) {
             console.error(err);
-            toast.error('Suppression impossible.');
+            toast.error(t('u.suppression_impossible'));
         }
     };
 
@@ -113,22 +120,22 @@ const Maintenance = () => {
     const totalCost = visible.reduce((s, r) => s + Number(r.cost || 0), 0);
 
     const columns = [
-        { key: 'date', label: 'Date', sortable: true, render: (v) => formatDate(v) },
-        { key: 'vehicle_matricule', label: 'Véhicule', sortable: true, render: (v) => <strong>{v}</strong> },
-        { key: 'type_label', label: 'Type', sortable: true },
-        { key: 'km', label: 'Km', align: 'right', sortable: true, render: (v) => formatNumber(v) },
-        { key: 'cost', label: 'Coût', align: 'right', sortable: true, render: (v) => formatMoney(v) },
+        { key: 'date', label: t('u.date'), sortable: true, render: (v) => formatDate(v) },
+        { key: 'vehicle_matricule', label: t('u.vhicule'), sortable: true, render: (v) => <strong>{v}</strong> },
+        { key: 'type_label', label: t('u.type'), sortable: true, render: (_, r) => typeLabels[r.type] || r.type_label },
+        { key: 'km', label: t('u.km'), align: 'right', sortable: true, render: (v) => formatNumber(v) },
+        { key: 'cost', label: t('u.cot'), align: 'right', sortable: true, render: (v) => formatMoney(v) },
         {
-            key: 'prochain_km', label: 'Prochaine échéance',
+            key: 'prochain_km', label: t('u.prochaine_chance'),
             render: (_, r) => [
-                r.prochain_km ? `${formatNumber(r.prochain_km)} km` : null,
+                r.prochain_km ? `${formatNumber(r.prochain_km)} ${t('veh.kmUnit')}` : null,
                 r.prochaine_date ? formatDate(r.prochaine_date) : null,
             ].filter(Boolean).join(' / ') || '—',
         },
         {
             key: 'actions', label: '', align: 'right',
             render: (_, r) => (
-                <Button variant="ghost" size="sm" iconOnly icon="delete" className="!text-danger-dark" aria-label={`Supprimer l'intervention du ${formatDate(r.date)}`} onClick={() => remove(r)} />
+                <Button variant="ghost" size="sm" iconOnly icon="delete" className="!text-danger-dark" aria-label={t('u.supprimer_l_intervention_du_2', { date: formatDate(r.date) })} onClick={() => remove(r)} />
             ),
         },
     ];
@@ -137,81 +144,81 @@ const Maintenance = () => {
         <div className="space-y-6">
             <PageHeader
                 className="!mb-0"
-                title="Maintenance"
-                description="Historique des interventions. Une vidange met à jour le prochain kilométrage d'alerte du véhicule."
-                actions={<Button icon="add" onClick={() => setOpen(true)}>Nouvelle intervention</Button>}
+                title={t('u.maintenance')}
+                description={t('u.historique_des_interventions_une')}
+                actions={<Button icon="add" onClick={() => setOpen(true)}>{t('u.nouvelle_intervention')}</Button>}
             />
 
             <div className="flex flex-wrap gap-3 items-center">
-                <Select value={vehicleFilter} onChange={(e) => setVehicleFilter(e.target.value)} aria-label="Filtrer par véhicule" className="!w-auto">
-                    <option value="">Tous les véhicules</option>
+                <Select value={vehicleFilter} onChange={(e) => setVehicleFilter(e.target.value)} aria-label={t('u.filtrer_par_vhicule')} className="!w-auto">
+                    <option value="">{t('u.tous_les_vhicules')}</option>
                     {vehicles.map((v) => <option key={v.id} value={v.id}>{v.matricule}</option>)}
                 </Select>
-                <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} aria-label="Filtrer par type" className="!w-auto">
-                    <option value="ALL">Tous les types</option>
-                    {TYPES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} aria-label={t('u.filtrer_par_type')} className="!w-auto">
+                    <option value="ALL">{t('u.tous_les_types')}</option>
+                    {TYPES.map(([v]) => <option key={v} value={v}>{typeLabels[v]}</option>)}
                 </Select>
-                <span className="ml-auto text-sm font-bold text-on-surface">Coût total : {formatMoney(totalCost)}</span>
+                <span className="ms-auto text-sm font-bold text-on-surface">{t('u.cot_total', { total: formatMoney(totalCost) })}</span>
             </div>
 
             <Table
-                caption="Historique de maintenance"
+                caption={t('u.historique_de_maintenance')}
                 columns={columns}
                 rows={visible}
                 loading={loading}
                 paginate
                 defaultSort={{ key: 'date', dir: 'desc' }}
-                emptyTitle="Aucune intervention"
-                emptyDescription="Enregistrez une vidange, un changement de pneus ou toute autre intervention."
+                emptyTitle={t('u.aucune_intervention')}
+                emptyDescription={t('u.enregistrez_une_vidange_un_chang')}
             />
 
             <Modal
                 isOpen={open}
                 onClose={closeForm}
-                title="Nouvelle intervention"
+                title={t('u.nouvelle_intervention')}
                 size="lg"
                 footer={(
                     <>
-                        <Button variant="outline" onClick={closeForm}>Annuler</Button>
-                        <Button type="submit" form="maintenance-form" loading={busy}>Enregistrer</Button>
+                        <Button variant="outline" onClick={closeForm}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="maintenance-form" loading={busy}>{t('u.enregistrer')}</Button>
                     </>
                 )}
             >
                 <form id="maintenance-form" onSubmit={submit} className="space-y-4">
-                    <Field label="Véhicule" required error={errors.vehicle}>
+                    <Field label={t('u.vhicule')} required error={errors.vehicle}>
                         <Select required value={form.vehicle} onChange={set('vehicle')}>
-                            <option value="">— Choisir —</option>
+                            <option value="">{t('u.choisir')}</option>
                             {vehicles.map((v) => <option key={v.id} value={v.id}>{v.matricule}</option>)}
                         </Select>
                     </Field>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field label="Type" error={errors.type}>
                             <Select value={form.type} onChange={set('type')}>
-                                {TYPES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                                {TYPES.map(([v]) => <option key={v} value={v}>{typeLabels[v]}</option>)}
                             </Select>
                         </Field>
-                        <Field label="Date" required error={errors.date}>
+                        <Field label={t('u.date')} required error={errors.date}>
                             <Input type="date" required value={form.date} onChange={set('date')} />
                         </Field>
-                        <Field label="Kilométrage" error={errors.km}>
+                        <Field label={t('u.kilomtrage')} error={errors.km}>
                             <Input type="number" min="0" value={form.km} onChange={set('km')} />
                         </Field>
-                        <Field label="Coût (MAD)" error={errors.cost}>
+                        <Field label={t('u.cot_mad')} error={errors.cost}>
                             <Input type="number" min="0" step="0.01" value={form.cost} onChange={set('cost')} />
                         </Field>
-                        <Field label="Prochain km" error={errors.prochain_km}>
+                        <Field label={t('u.prochain_km')} error={errors.prochain_km}>
                             <Input type="number" min="0" value={form.prochain_km} onChange={set('prochain_km')} />
                         </Field>
-                        <Field label="Prochaine date" error={errors.prochaine_date}>
+                        <Field label={t('u.prochaine_date')} error={errors.prochaine_date}>
                             <Input type="date" value={form.prochaine_date} onChange={set('prochaine_date')} />
                         </Field>
                     </div>
-                    <Field label="Notes" error={errors.notes}>
+                    <Field label={t('u.notes')} error={errors.notes}>
                         <Input type="text" value={form.notes} onChange={set('notes')} />
                     </Field>
                     <label className="flex items-center gap-2 text-sm font-medium text-on-surface">
                         <input type="checkbox" className="accent-primary" checked={form.create_expense} onChange={set('create_expense')} />
-                        Enregistrer aussi comme dépense (catégorie Maintenance)
+                        {t('u.enregistrer_aussi_comme_dpense_c')}
                     </label>
                 </form>
             </Modal>

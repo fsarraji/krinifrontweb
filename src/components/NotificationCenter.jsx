@@ -1,22 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import { translateOr } from '../i18n/helpers';
 import { toast } from './Toast';
 import { formatDate } from '../utils/formatters';
+import { useI18n } from '../i18n/context';
 
 // Icône / couleur selon le type d'alerte renvoyé par /api/notifications/
 const KIND_META = {
-    INSURANCE: { type: 'INSURANCE', category: 'Échéance Assurance', icon: 'verified_user', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
-    VISITE: { type: 'TECHNICAL', category: 'Visite Technique', icon: 'build', color: 'bg-warning-bg text-warning-dark ring-warning-bg' },
-    VIDANGE: { type: 'TECHNICAL', category: 'Vidange', icon: 'oil_barrel', color: 'bg-warning-bg text-warning-dark ring-warning-bg' },
-    RETURN_DUE: { type: 'RETURN', category: 'Retour prévu', icon: 'event_available', color: 'bg-primary-light text-primary-deep ring-primary-border/30' },
-    RETURN_OVERDUE: { type: 'RETURN', category: 'Retour en retard', icon: 'alarm', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
-    GEOFENCE: { type: 'TECHNICAL', category: 'Hors zone autorisée', icon: 'wrong_location', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
+    INSURANCE: { type: 'INSURANCE', category: 'u.chance_assurance', icon: 'verified_user', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
+    VISITE: { type: 'TECHNICAL', category: 'u.visite_technique_2', icon: 'build', color: 'bg-warning-bg text-warning-dark ring-warning-bg' },
+    VIDANGE: { type: 'TECHNICAL', category: 'u.vidange', icon: 'oil_barrel', color: 'bg-warning-bg text-warning-dark ring-warning-bg' },
+    RETURN_DUE: { type: 'RETURN', category: 'u.retour_prvu', icon: 'event_available', color: 'bg-primary-light text-primary-deep ring-primary-border/30' },
+    RETURN_OVERDUE: { type: 'RETURN', category: 'u.retour_en_retard', icon: 'alarm', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
+    GEOFENCE: { type: 'TECHNICAL', category: 'u.hors_zone_autorise', icon: 'wrong_location', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
 };
 
 const asList = (data) => (Array.isArray(data) ? data : (data?.results || []));
 
 const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
+    const { t } = useI18n();
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,18 +42,18 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
             // Demandes en attente (pas des Notification : toujours « non lues »)
             asList(requestsRes.data).forEach(req => {
                 items.push({
-                    id: `req-${req.id}`, type: 'REQUEST', category: 'Demande Client', unread: true,
-                    title: `Nouvelle demande de réservation #${req.id}`,
-                    subtitle: `${req.client_name || req.nom} — ${req.vehicle_name || 'Véhicule'}`,
+                    id: `req-${req.id}`, type: 'REQUEST', category: 'u.demande_client', unread: true,
+                    title: t('u.nouvelle_demande_de_rservation', { id: req.id }),
+                    subtitle: `${req.client_name || req.nom} — ${req.vehicle_name || t('veh.col.vehicle')}`,
                     date: req.created_at || req.date_sortie, icon: 'event_note',
                     color: 'bg-primary-light text-primary-deep ring-primary-border/30', link: '/reservations',
                 });
             });
             asList(reservationsRes.data).forEach(req => {
                 items.push({
-                    id: `res-${req.id}`, type: 'REQUEST', category: 'Réservation Client', unread: true,
-                    title: `Nouvelle réservation client #${req.id}`,
-                    subtitle: `${req.client_name || 'Client'} — ${req.vehicle_name || 'Véhicule'}`,
+                    id: `res-${req.id}`, type: 'REQUEST', category: 'u.rservation_client', unread: true,
+                    title: t('u.nouvelle_rservation_client', { id: req.id }),
+                    subtitle: `${req.client_name || t('res.col.client')} — ${req.vehicle_name || t('veh.col.vehicle')}`,
                     date: req.created_at || req.date_sortie, icon: 'event_note',
                     color: 'bg-primary-light text-primary-deep ring-primary-border/30', link: '/reservations',
                 });
@@ -62,7 +65,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                 items.push({
                     id: `n-${n.id}`, notifId: n.id, type: meta.type, category: meta.category,
                     unread: !n.is_read, title: n.title,
-                    subtitle: n.message || (n.vehicle_matricule ? `Matricule ${n.vehicle_matricule}` : ''),
+                    subtitle: n.message || (n.vehicle_matricule ? `${t('veh.col.plate')} ${n.vehicle_matricule}` : ''),
                     date: n.created_at, icon: meta.icon, color: meta.color,
                     link: n.contract ? `/contracts/edit/${n.contract}` : (n.vehicle ? `/vehicles/edit/${n.vehicle}` : '/dashboard'),
                 });
@@ -73,11 +76,11 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
             if (onCountChange) onCountChange(items.filter(i => i.unread).length);
         } catch (err) {
             console.error("Erreur lors de la récupération des notifications", err);
-            toast.error("Impossible de charger les notifications.");
+            toast.error(t('u.impossible_de_charger_les_notifi'));
         } finally {
             setLoading(false);
         }
-    }, [onCountChange]);
+    }, [onCountChange, t]);
 
     const markRead = async (item) => {
         if (!item.notifId || !item.unread) return;
@@ -97,7 +100,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
             await fetchNotifications();
         } catch (err) {
             console.error("Erreur mark_all_read", err);
-            toast.error("Action impossible.");
+            toast.error(t('u.action_impossible'));
         }
     };
 
@@ -120,14 +123,14 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
 
     const requestWebPush = async () => {
         if (!('Notification' in window)) {
-            toast.warning("Votre navigateur ne supporte pas les notifications Web.");
+            toast.warning(t('u.votre_navigateur_ne_supporte_pas'));
             return;
         }
         const perm = await Notification.requestPermission();
         setPushPermission(perm);
         if (perm === 'granted') {
-            new Notification("Notifications Krinicar Activées 🚀", {
-                body: "Vous recevrez désormais les alerte de réservations et d'assurance en temps réel.",
+            new Notification(t('u.notifications_krinicar_actives'), {
+                body: t('u.vous_recevrez_dsormais_les_alert'),
                 icon: "/favicon.ico"
             });
         }
@@ -157,7 +160,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
             <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Centre de notifications"
+                aria-label={t('u.centre_de_notifications')}
                 onClick={(e) => e.stopPropagation()}
                 className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
             >
@@ -168,11 +171,11 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                             <span className="material-symbols-outlined text-xl">notifications_active</span>
                         </div>
                         <div>
-                            <h3 className="text-lg font-extrabold text-slate-900">Centre de Notifications</h3>
-                            <p className="text-xs text-slate-500 font-medium">{notifications.filter(n => n.unread).length} non lue{notifications.filter(n => n.unread).length !== 1 ? 's' : ''}</p>
+                            <h3 className="text-lg font-extrabold text-slate-900">{t('u.centre_de_notifications_2')}</h3>
+                            <p className="text-xs text-slate-500 font-medium">{t('u.non_lue_s', { n: notifications.filter(n => n.unread).length })}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} aria-label="Fermer les notifications" className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
+                    <button onClick={onClose} aria-label={t('u.fermer_les_notifications')} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
                         <span className="material-symbols-outlined text-xl">close</span>
                     </button>
                 </div>
@@ -182,13 +185,13 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                     <div className="bg-primary-light border-b border-primary-light p-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary text-lg">campaign</span>
-                            <p className="text-xs font-semibold text-primary-deep">Activer les notifications navigateur ?</p>
+                            <p className="text-xs font-semibold text-primary-deep">{t('u.activer_les_notifications_naviga')}</p>
                         </div>
                         <button
                             onClick={requestWebPush}
                             className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-lg text-xs shadow-sm transition-all"
                         >
-                            Activer
+                            {t('u.activer')}
                         </button>
                     </div>
                 )}
@@ -199,30 +202,30 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                         onClick={() => setFilterTab('ALL')}
                         className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${filterTab === 'ALL' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
                     >
-                        Toutes ({notifications.length})
+                        {t('u.toutes')} ({notifications.length})
                     </button>
                     <button
                         onClick={() => setFilterTab('REQUESTS')}
                         className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${filterTab === 'REQUESTS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
                     >
-                        Demandes ({notifications.filter(n => n.type === 'REQUEST').length})
+                        {t('u.demandes')} ({notifications.filter(n => n.type === 'REQUEST').length})
                     </button>
                     <button
                         onClick={() => setFilterTab('ALERTS')}
                         className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${filterTab === 'ALERTS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
                     >
-                        Flotte ({notifications.filter(n => n.type !== 'REQUEST').length})
+                        {t('u.flotte')} ({notifications.filter(n => n.type !== 'REQUEST').length})
                     </button>
                 </div>
 
                 {/* Notifications List */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-3">
                     {loading ? (
-                        <div className="text-center py-12 font-bold text-primary">Chargement des notifications...</div>
+                        <div className="text-center py-12 font-bold text-primary">{t('u.chargement_des_notifications')}</div>
                     ) : filteredItems.length === 0 ? (
                         <div className="py-16 text-center text-slate-400 font-medium flex flex-col items-center gap-2">
                             <span className="material-symbols-outlined text-4xl text-slate-300">notifications_off</span>
-                            <p>Aucune notification pour le moment.</p>
+                            <p>{t('u.aucune_notification_pour_le_mome')}</p>
                         </div>
                     ) : (
                         filteredItems.map(item => (
@@ -240,7 +243,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{item.category}</span>
+                                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{translateOr(t, item.category, item.category)}</span>
                                         {item.date && (
                                             <span className="text-[10px] text-slate-400 font-medium">
                                                 {formatDate(item.date)}
@@ -248,7 +251,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                                         )}
                                     </div>
                                     <h4 className={`text-xs text-slate-900 group-hover:text-primary transition-colors mt-0.5 ${item.unread ? 'font-extrabold' : 'font-medium opacity-70'}`}>
-                                        {item.unread && <span className="inline-block w-2 h-2 rounded-full bg-primary mr-1.5 align-middle" />}{item.title}
+                                        {item.unread && <span className="inline-block w-2 h-2 rounded-full bg-primary me-1.5 align-middle" />}{item.title}
                                     </h4>
                                     <p className="text-xs text-slate-500 font-medium mt-1 truncate">{item.subtitle}</p>
                                 </div>
@@ -264,13 +267,13 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                         onClick={markAllRead}
                         className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
-                        <span className="material-symbols-outlined text-sm">done_all</span> Tout marquer lu
+                        <span className="material-symbols-outlined text-sm">done_all</span> {t('u.tout_marquer_lu')}
                     </button>
                     <button
                         onClick={refreshAlerts}
                         className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
-                        <span className="material-symbols-outlined text-sm">refresh</span> Actualiser
+                        <span className="material-symbols-outlined text-sm">refresh</span> {t('u.actualiser')}
                     </button>
                 </div>
             </div>

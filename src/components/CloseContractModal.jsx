@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { translateOr } from '../i18n/helpers';
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import FuelGaugeSelector from './FuelGaugeSelector';
@@ -9,12 +10,13 @@ import Button from './ui/Button';
 import Modal from './ui/Modal';
 import { formatDate, formatMoney, formatNumber } from '../utils/formatters';
 import { ACCESSORY_LABELS } from '../utils/vehicleAccessories';
+import { useI18n } from '../i18n/context';
 
 const STEPS = [
-  { id: 1, label: 'Dates & Kilométrage', icon: 'speed' },
-  { id: 2, label: 'Carburant & Accessoires', icon: 'local_gas_station' },
-  { id: 3, label: 'Dégâts au retour', icon: 'car_crash' },
-  { id: 4, label: 'Règlement & Facture', icon: 'payments' },
+  { id: 1, labelKey: 'u.dates_kilomtrage', icon: 'speed' },
+  { id: 2, labelKey: 'u.carburant_accessoires', icon: 'local_gas_station' },
+  { id: 3, labelKey: 'u.dgts_au_retour', icon: 'car_crash' },
+  { id: 4, labelKey: 'u.rglement_facture', icon: 'payments' },
 ];
 
 const nowLocalISO = () => {
@@ -24,6 +26,7 @@ const nowLocalISO = () => {
 };
 
 const CloseContractModal = ({ contract, onClose, onSuccess }) => {
+    const { t } = useI18n();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -113,15 +116,15 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
   const validateStep = (stepNum) => {
     const errors = {};
     if (stepNum === 1) {
-      if (!dateRetour) errors.dateRetour = "La date et heure de retour est obligatoire.";
-      if (!kmRetour) errors.kmRetour = "Le kilométrage au retour est obligatoire.";
-      else if (parseInt(kmRetour) <= contract.km_sortie) errors.kmRetour = `Le kilométrage au retour doit être supérieur au kilométrage de départ (${contract.km_sortie} km).`;
+      if (!dateRetour) errors.dateRetour = t('u.la_date_et_heure_de_retour_est_o');
+      if (!kmRetour) errors.kmRetour = t('u.le_kilomtrage_au_retour_est_obli');
+      else if (parseInt(kmRetour) <= contract.km_sortie) errors.kmRetour = t('u.le_kilomtrage_au_retour_doit_tre', { km: contract.km_sortie });
     }
     if (stepNum === 4) {
       if (paymentAmount === '' || paymentAmount === null || paymentAmount === undefined) {
-        errors.paymentAmount = "Le montant versé est obligatoire.";
+        errors.paymentAmount = t('u.le_montant_vers_est_obligatoire');
       } else if (parseFloat(paymentAmount) < 0) {
-        errors.paymentAmount = "Le montant versé doit être positif ou nul.";
+        errors.paymentAmount = t('u.le_montant_vers_doit_tre_positif');
       }
     }
     return errors;
@@ -137,7 +140,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
   };
 
   const fetchGpsKm = async () => {
-    if (!contract?.vehicle) { toast.error("Véhicule introuvable."); return; }
+    if (!contract?.vehicle) { toast.error(t('u.vhicule_introuvable')); return; }
     setKmLoading(true);
     try {
       const { data } = await api.get(`gps/positions/${contract.vehicle}/`);
@@ -146,13 +149,13 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
         const km = Math.round(odometer / 1000);
         setKmRetour(km.toString());
         clearFieldError('kmRetour');
-        toast.success(`Kilométrage GPS : ${formatNumber(km)} km`);
+        toast.success(t('u.kilomtrage_gps_km', { km: formatNumber(km) }));
       } else {
-        toast.error("Aucune position GPS / kilométrage disponible pour ce véhicule.");
+        toast.error(t('u.aucune_position_gps_kilomtrage_d'));
       }
     } catch (err) {
       console.error("Erreur lors de la récupération du kilométrage GPS", err);
-      toast.error("Impossible de récupérer le kilométrage GPS.");
+      toast.error(t('u.impossible_de_rcuprer_le_kilomtr'));
     } finally {
       setKmLoading(false);
     }
@@ -191,7 +194,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
       });
       onSuccess();
     } catch (err) {
-      setError(apiErrorText(err, "Une erreur est survenue lors de la clôture du contrat."));
+      setError(apiErrorText(err, t('u.une_erreur_est_survenue_lors_de_')));
     } finally {
       setLoading(false);
     }
@@ -225,16 +228,16 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
   const footerNode = (
     <div className="flex items-center justify-between gap-4 w-full">
       <Button variant="outline" icon="arrow_back" onClick={step > 1 ? () => setStep((s) => s - 1) : onClose}>
-        {step > 1 ? 'Précédent' : 'Annuler'}
+        {step > 1 ? t('u.prcdent') : t('u.annuler')}
       </Button>
       {step < STEPS.length ? (
         <Button onClick={() => goToStep(step + 1)}>
-          Suivant
+          {t('u.suivant')}
           <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">arrow_forward</span>
         </Button>
       ) : (
         <Button icon="verified" loading={loading} onClick={handleSubmit}>
-          {loading ? 'Clôture…' : 'Valider la clôture'}
+          {loading ? t('u.clture') : t('u.valider_la_clture')}
         </Button>
       )}
     </div>
@@ -245,14 +248,14 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
       isOpen
       onClose={onClose}
       size="xl"
-      title={`Clôturer le contrat #${String(contract.id).padStart(5, '0')}`}
+      title={t('u.clturer_le_contrat', { id: String(contract.id).padStart(5, '0') })}
       subtitle={`${contract.client_name} ${contract.client_prenom} | ${contract.vehicle_name} (${contract.vehicle_matricule})`}
       footer={footerNode}
     >
         {isEarlyReturn && (
           <span className="mb-3 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-label-sm bg-warning-bg text-warning-dark">
             <span className="material-symbols-outlined text-[14px]" aria-hidden="true">schedule</span>
-            Retour anticipé
+            {t('u.retour_anticip')}
           </span>
         )}
 
@@ -300,7 +303,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                         : { fontWeight: state === 'done' ? 600 : 500, color: state === 'done' ? 'var(--on-surface)' : 'var(--on-surface-variant)', opacity: state === 'idle' ? 0.6 : 1 }
                     }
                   >
-                    {s.label}
+                    {t(s.labelKey)}
                   </span>
                 </button>
               </React.Fragment>
@@ -321,14 +324,14 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
           {/* Step 1: Dates & KM */}
           {step === 1 && (
             <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
-              <SectionTitle icon="speed" title="Dates & Kilométrage" />
+              <SectionTitle icon="speed" title={t('u.dates_kilomtrage')} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div className="p-3 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
-                  <p className="label mb-1">Km au Départ</p>
+                  <p className="label mb-1">{t('u.km_au_dpart')}</p>
                   <p className="text-xl font-headline font-bold text-on-surface">{formatNumber(contract.km_sortie)} <span className="text-xs font-medium" style={{ color: 'var(--on-surface-variant)' }}>KM</span></p>
                 </div>
                 <div className="p-3 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
-                  <p className="label mb-1" style={{ color: 'var(--primary)' }}>Distance Parcourue</p>
+                  <p className="label mb-1" style={{ color: 'var(--primary)' }}>{t('u.distance_parcourue')}</p>
                   <p className={`text-xl font-headline font-bold ${kmDiff >= 0 ? '' : 'text-red-600'}`} style={kmDiff >= 0 ? { color: 'var(--primary)' } : {}}>
                     {kmDiff >= 0 ? '+' : ''}{formatNumber(kmDiff)} <span className="text-xs font-medium opacity-50">KM</span>
                   </p>
@@ -343,7 +346,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label mb-1">
-                    Date et Heure de Retour Réelle
+                    {t('u.date_et_heure_de_retour_relle')}
                     <span style={{ color: 'var(--danger)' }}>*</span>
                   </label>
                   <input
@@ -364,19 +367,19 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
 
                 <div>
                   <label className="label mb-1">
-                    Kilométrage au Retour
+                    {t('u.kilomtrage_au_retour')}
                     <span style={{ color: 'var(--danger)' }}>*</span>
                   </label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <span className="absolute right-4 top-3 text-slate-400 text-xs font-bold uppercase tracking-widest">KM</span>
+                      <span className="absolute end-4 top-3 text-slate-400 text-xs font-bold uppercase tracking-widest">KM</span>
                       <input
                         type="number"
                         value={kmRetour}
                         min={contract.km_sortie + 1}
                         onChange={e => { setKmRetour(e.target.value); clearFieldError('kmRetour'); }}
                         placeholder={`min. ${formatNumber(contract.km_sortie)} km`}
-                        className="field font-bold pr-12"
+                        className="field font-bold pe-12"
                         style={fieldErrors.kmRetour ? { borderColor: 'var(--danger)', background: 'var(--error-bg)' } : {}}
                       />
                     </div>
@@ -384,7 +387,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                       type="button"
                       onClick={fetchGpsKm}
                       disabled={kmLoading || !hasDevice}
-                      title={!hasDevice ? "Ce véhicule n'a pas de dispositif GPS (Traccar)" : "Remplir avec le kilométrage GPS (Traccar)"}
+                      title={!hasDevice ? t('u.ce_vhicule_n_a_pas_de_dispositif') : t('u.remplir_avec_le_kilomtrage_gps_t')}
                       className="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                       style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
                     >
@@ -409,13 +412,13 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   <SectionTitle icon="local_gas_station" title="Carburant" />
                   <div className="space-y-2">
                     <div className="space-y-0.5">
-                      <p className="label mb-1 text-center" style={{ color: 'var(--on-surface-variant)' }}>Départ (Réf)</p>
+                      <p className="label mb-1 text-center" style={{ color: 'var(--on-surface-variant)' }}>{t('u.dpart_rf')}</p>
                       <div className="opacity-40 grayscale pointer-events-none">
                         <FuelGaugeSelector value={contract.carburant_sortie} onChange={() => {}} compact />
                       </div>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="label mb-1 text-center" style={{ color: 'var(--primary-container)' }}>Retour</p>
+                      <p className="label mb-1 text-center" style={{ color: 'var(--primary-container)' }}>{t('u.retour')}</p>
                       <div className="transition-transform">
                         <FuelGaugeSelector value={carburant} onChange={setCarburant} compact />
                       </div>
@@ -423,11 +426,12 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   </div>
                 </div>
 
-                <div className="sm:col-span-2 sm:border-l sm:border-outline-variant/30 sm:pl-5">
-                  <SectionTitle icon="checklist" title="Vérification des Accessoires" />
-                  <p className="text-[11px] font-medium mb-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>État au départ indiqué pour comparaison</p>
+                <div className="sm:col-span-2 sm:border-l sm:border-outline-variant/30 sm:ps-5">
+                  <SectionTitle icon="checklist" title={t('u.vrification_des_accessoires')} />
+                  <p className="text-[11px] font-medium mb-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.tat_au_dpart_indiqu_pour_compara')}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {Object.entries(ACCESSORY_LABELS).map(([key, { label, icon }]) => {
+                    {Object.entries(ACCESSORY_LABELS).map(([key, { label: accLabel, icon }]) => {
+                      const label = translateOr(t, `acc.${key}`, accLabel);
                       const departurState = contract[key];
                       const returnState  = accessories[key];
                       const mismatch     = departurState && !returnState;
@@ -452,8 +456,8 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                           <div className="flex-1 min-w-0">
                             <p className={`text-[11px] font-bold tracking-tight ${returnState ? 'text-on-surface' : 'text-slate-500'}`}>{label}</p>
                             <p className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: 'var(--on-surface-variant)', opacity: departurState ? 0.8 : 0.5 }}>
-                              Départ: {departurState ? 'Présent' : 'Absent'}
-                              {mismatch && <span className="font-black underline ml-2" style={{ color: 'var(--danger)' }}>Manquant !</span>}
+                              {t('u.dpart')}: {departurState ? t('u.prsent') : t('u.absent')}
+                              {mismatch && <span className="font-black underline ms-2" style={{ color: 'var(--danger)' }}>{t('u.manquant')}</span>}
                             </p>
                           </div>
                         </label>
@@ -465,11 +469,11 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
 
               {/* Row 2: État Général & Observations */}
               <div className="mt-4 pt-4 sm:border-t sm:border-outline-variant/30">
-                <SectionTitle icon="notes" title="État Général & Observations" />
+                <SectionTitle icon="notes" title={t('u.tat_gnral_observations')} />
                 <textarea
                   value={etatGeneral}
                   onChange={e => setEtatGeneral(e.target.value)}
-                  placeholder="Notes sur la propreté, l'état intérieur, dysfonctionnements..."
+                  placeholder={t('u.notes_sur_la_propret_l_tat_intri')}
                   rows={2}
                   className="field resize-none"
                 />
@@ -481,10 +485,10 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
           {step === 3 && (
             <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
               <div className="flex items-center justify-between mb-3">
-                <SectionTitle icon="car_crash" title="Revue des Dégâts au Retour" />
+                <SectionTitle icon="car_crash" title={t('u.revue_des_dgts_au_retour')} />
                 <div className="flex items-center gap-2 text-[11px] font-bold" style={{ color: 'var(--on-surface-variant)' }}>
                   <span className="w-2 h-2 rounded-full" style={{ background: 'var(--danger)' }}></span>
-                  Nouveaux Dégâts
+                  {t('u.nouveaux_dgts')}
                 </div>
               </div>
               <DamageSelector
@@ -499,23 +503,23 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
           {/* Step 4: Billing & Payment */}
           {step === 4 && (
             <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
-              <SectionTitle icon="payments" title="Règlement & Facture" />
+              <SectionTitle icon="payments" title={t('u.rglement_facture')} />
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div className="p-2.5 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
-                  <p className="label mb-0.5">Durée Initiale</p>
+                  <p className="label mb-0.5">{t('u.dure_initiale')}</p>
                   <p className="text-base font-headline font-bold text-on-surface">{contract.jours} J</p>
                 </div>
                 <div className="p-2.5 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
-                  <p className="label mb-0.5" style={{ color: 'var(--primary)' }}>Durée Réele</p>
+                  <p className="label mb-0.5" style={{ color: 'var(--primary)' }}>{t('u.dure_rele')}</p>
                   <p className="text-base font-headline font-bold" style={{ color: 'var(--primary)' }}>{recalculatedDays} J</p>
                 </div>
                 <div className="p-2.5 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
-                  <p className="label mb-0.5">Sous-total Initial</p>
+                  <p className="label mb-0.5">{t('u.sous_total_initial')}</p>
                   <p className="text-base font-headline font-bold text-on-surface line-through opacity-40">{formatMoney(contract.montant_total)}</p>
                 </div>
                 <div className="p-2.5 rounded-lg" style={{ background: 'var(--info-bg)', border: '1px solid var(--info-border)' }}>
-                  <p className="label mb-0.5" style={{ color: 'var(--primary)' }}>Sous-total Ajusté</p>
+                  <p className="label mb-0.5" style={{ color: 'var(--primary)' }}>{t('u.sous_total_ajust')}</p>
                   <p className="text-lg font-headline font-black" style={{ color: 'var(--primary)' }}>{formatMoney(recalculatedTotal)}</p>
                 </div>
               </div>
@@ -525,7 +529,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                 <div className="mt-3 p-3 rounded-lg" style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)' }}>
                   <p className="text-[11px] font-bold uppercase tracking-wide mb-1 flex items-center gap-1.5" style={{ color: 'var(--warning-dark)' }}>
                     <span className="material-symbols-outlined text-sm">speed</span>
-                    Supplément Kilométrique
+                    {t('u.supplment_kilomtrique')}
                   </p>
                   <div className="space-y-0.5 text-xs" style={{ color: 'var(--warning-dark)' }}>
                     <p>Km inclus : {formatNumber(kmInclus)} km ({agencySettings.km_par_jour} km/j × {recalculatedDays} j)</p>
@@ -540,18 +544,18 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                 <div className="mt-3 p-2.5 rounded-lg" style={{ background: 'var(--success-bg)', border: '1px solid var(--success-border)' }}>
                   <p className="text-[11px] font-bold uppercase tracking-wide flex items-center gap-1.5" style={{ color: 'var(--success)' }}>
                     <span className="material-symbols-outlined text-sm">check_circle</span>
-                    Kilométrage dans le forfait — Aucun supplément
+                    {t('u.kilomtrage_dans_le_forfait_aucun')}
                   </p>
                 </div>
               )}
 
               <div className="mt-3 pt-3 flex justify-between items-end" style={{ borderTop: '1px solid var(--stroke)' }}>
                 <div>
-                  <p className="label mb-0.5">Déjà réglé</p>
+                  <p className="label mb-0.5">{t('u.dj_rgl')}</p>
                   <p className="text-lg font-bold" style={{ color: 'var(--success)' }}>{formatMoney(contract.montant_paye)}</p>
                 </div>
-                <div className="text-right">
-                  <p className="label mb-0.5" style={{ color: 'var(--primary-container)' }}>Reste à payer</p>
+                <div className="text-end">
+                  <p className="label mb-0.5" style={{ color: 'var(--primary-container)' }}>{t('u.reste_payer_2')}</p>
                   <p className={`text-2xl font-headline font-black ${newBalance > 0 ? 'text-red-600' : ''}`} style={newBalance <= 0 ? { color: 'var(--success)' } : {}}>
                     {formatMoney(newBalance)}
                   </p>
@@ -560,7 +564,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
 
               <div className="mt-3 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ borderTop: '1px solid var(--stroke)' }}>
                 <div>
-                  <label className="label mb-1">Montant versé (MAD)</label>
+                  <label className="label mb-1">{t('u.montant_vers_mad')}</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -571,22 +575,22 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                     />
                     <button
                       onClick={() => setPaymentAmount(Math.max(0, newBalance).toString())}
-                      className="absolute right-3 top-2 text-[11px] font-bold px-2 py-1 rounded-lg hover:opacity-80"
+                      className="absolute end-3 top-2 text-[11px] font-bold px-2 py-1 rounded-lg hover:opacity-80"
                       style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
                     >
-                      SOLDE
+                      {t('u.solde')}
                     </button>
                   </div>
                   <FieldError message={fieldErrors.paymentAmount} />
                 </div>
                 <div>
-                  <label className="label mb-1">Mode de Paiement</label>
+                  <label className="label mb-1">{t('u.mode_de_paiement')}</label>
                   <Dropdown
                     options={[
-                        { value: 'Espèce', label: 'Espèce' },
-                        { value: 'Chèque', label: 'Chèque' },
-                        { value: 'Virement', label: 'Virement' },
-                        { value: 'TPE', label: 'TPE' }
+                        { value: 'Espèce', label: t('method.Espèce') },
+                        { value: 'Chèque', label: t('method.Chèque') },
+                        { value: 'Virement', label: t('method.Virement') },
+                        { value: 'TPE', label: t('method.TPE') }
                     ]}
                     value={paymentMethod}
                     onChange={(v) => setPaymentMethod(v)}

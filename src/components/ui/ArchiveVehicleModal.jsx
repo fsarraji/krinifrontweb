@@ -5,8 +5,10 @@ import Button from './Button';
 import Field from './Field';
 import { Input } from './Input';
 import Modal from './Modal';
+import { useI18n } from '../../i18n/context';
 
 const ArchiveVehicleModal = ({ isOpen, vehicle, onClose, onArchived }) => {
+    const { t } = useI18n();
     const [date, setDate] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -18,19 +20,19 @@ const ArchiveVehicleModal = ({ isOpen, vehicle, onClose, onArchived }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!date) {
-            setError('Indiquez la date de fin de travail.');
+            setError(t('u.indiquez_la_date_de_fin_de_trava'));
             return;
         }
         setLoading(true);
         setError(null);
         try {
             await api.patch(`vehicles/${vehicle.id}/`, { is_archived: true, date_fin_travail: date });
-            toast.success('Véhicule archivé.');
+            toast.success(t('u.vhicule_archiv'));
             onArchived();
             onClose();
         } catch (err) {
             console.error('Erreur archivage', err);
-            setError(err.response?.data?.detail || "Impossible d'archiver le véhicule.");
+            setError(err.response?.data?.detail || t('u.impossible_d_archiver_le_vhicule'));
             setLoading(false);
         }
     };
@@ -40,12 +42,12 @@ const ArchiveVehicleModal = ({ isOpen, vehicle, onClose, onArchived }) => {
             isOpen
             onClose={onClose}
             size="md"
-            title="Archiver le véhicule"
+            title={t('u.archiver_le_vhicule')}
             subtitle={`${vehicle.matricule} · ${vehicle.marque_name || vehicle.marque} ${vehicle.modele_name || vehicle.modele}`}
             footer={(
                 <>
-                    <Button variant="outline" onClick={onClose}>Annuler</Button>
-                    <Button type="submit" form="archive-vehicle-form" loading={loading}>Archiver</Button>
+                    <Button variant="outline" onClick={onClose}>{t('u.annuler')}</Button>
+                    <Button type="submit" form="archive-vehicle-form" loading={loading}>{t('u.archiver')}</Button>
                 </>
             )}
         >
@@ -53,7 +55,7 @@ const ArchiveVehicleModal = ({ isOpen, vehicle, onClose, onArchived }) => {
                 <div className="flex items-start gap-3 rounded-token p-4 bg-info-bg">
                     <span className="material-symbols-outlined text-[20px] text-info" aria-hidden="true">info</span>
                     <p className="text-sm font-medium text-on-surface-variant">
-                        Le véhicule sera retiré de la flotte active. Indiquez la date de fin de travail pour l'archiver.
+                        {t('u.le_vhicule_sera_retir_de_la_flot')}
                     </p>
                 </div>
 
@@ -64,7 +66,7 @@ const ArchiveVehicleModal = ({ isOpen, vehicle, onClose, onArchived }) => {
                     </div>
                 )}
 
-                <Field label="Date de fin de travail" required>
+                <Field label={t('u.date_de_fin_de_travail')} required>
                     <Input type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} />
                 </Field>
             </form>

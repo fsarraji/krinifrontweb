@@ -3,16 +3,18 @@
  * Utilisé par AddClient, AddClientModal et EditClient.
  */
 import api from '../api';
+import { tNow } from '../i18n/runtime';
 
+// Getters : le libellé suit la langue au moment de l'affichage.
 export const UNIQUE_FIELDS = {
-    cin_passport: 'CIN/passeport',
-    email: 'email',
-    telephone: 'téléphone',
-    permis_conduite: 'permis de conduire',
+    get cin_passport() { return tNow('u.cin_passeport_2'); },
+    get email() { return tNow('u.email_2'); },
+    get telephone() { return tNow('u.tlphone_2'); },
+    get permis_conduite() { return tNow('u.permis_de_conduire_2'); },
 };
 
 export const UNIQUE_MSG = (field) =>
-    `Un client de votre agence utilise déjà cet ${UNIQUE_FIELDS[field]}.`;
+    tNow('u.un_client_de_votre_agence_utilis', { field: UNIQUE_FIELDS[field] });
 
 /**
  * Vérifie l'unicité d'une valeur pour un champ donné.

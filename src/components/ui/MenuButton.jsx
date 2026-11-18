@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import DropdownMenu from './DropdownMenu';
+import { useI18n } from '../../i18n/context';
 
 /**
  * Bouton "..." avec DropdownMenu contextuel.
@@ -12,6 +13,7 @@ import DropdownMenu from './DropdownMenu';
  * - setMenuId: (id | null) => void
  */
 const MenuButton = ({ item, items, menuId, setMenuId }) => {
+    const { t } = useI18n();
     const btnRef = useRef(null);
     return (
         <div className="inline-block">
@@ -20,7 +22,7 @@ const MenuButton = ({ item, items, menuId, setMenuId }) => {
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === item.id ? null : item.id); }}
                 className="p-2 rounded-token hover:bg-slate-100 transition-colors"
                 style={{ color: 'var(--on-surface-variant)' }}
-                title="Options" aria-label="Options"
+                title={t('u.options')} aria-label={t('u.options')}
             >
                 <span className="material-symbols-outlined text-[18px]">more_vert</span>
             </button>
