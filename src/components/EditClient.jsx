@@ -7,6 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
+import AuditTimeline from './AuditTimeline';
 import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstants';
 import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
 import { optimizeImageFile } from '../utils/imageUtils';
@@ -521,6 +522,12 @@ const EditClient = () => {
                                 <div className="w-11 h-6 rounded-full peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ background: formData.liste_noire ? 'var(--danger)' : 'var(--stroke)', borderColor: 'var(--stroke)' }}></div>
                             </label>
                         </div>
+                    </div>
+
+                    {/* Historique des modifications */}
+                    <div className="rounded-lg p-6 border border-stroke bg-white">
+                        <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-slate-600">Historique</h3>
+                        <AuditTimeline model="client" id={id} />
                     </div>
 
                     {/* Danger Zone */}

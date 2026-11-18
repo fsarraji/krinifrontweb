@@ -11,6 +11,7 @@ import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import { optimizeImageFile } from '../utils/imageUtils';
+import AuditTimeline from './AuditTimeline';
 
 const VehicleForm = () => {
     const { formProps, markClean } = useUnsavedChanges();
@@ -1004,6 +1005,15 @@ const VehicleForm = () => {
                     </div>
                 </div>
             </form>
+
+            {isEditMode && (
+                <details className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+                    <summary className="cursor-pointer text-sm font-bold text-slate-700">Historique des modifications</summary>
+                    <div className="mt-3">
+                        <AuditTimeline model="vehicle" id={id} />
+                    </div>
+                </details>
+            )}
 
             {/* Bottom security + actions */}
             <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">

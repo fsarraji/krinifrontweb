@@ -10,6 +10,8 @@ import { Input, Textarea } from './ui/Input';
 import Modal from './ui/Modal';
 import Spinner from './ui/Spinner';
 import ContractFees from './ContractFees';
+import ContractPhotos from './ContractPhotos';
+import AuditTimeline from './AuditTimeline';
 import { formatDateTime, formatMoney } from '../utils/formatters';
 import { apiErrorText, fieldErrors } from '../utils/apiErrorText';
 
@@ -261,6 +263,9 @@ const EditContract = () => {
           {/* Frais supplémentaires */}
           <ContractFees contractId={id} locked={contract.statut === 'ANNULE'} onChanged={reloadContract} />
 
+          {/* Photos de l'état des lieux (verrouillé si le contrat est annulé) */}
+          <ContractPhotos contractId={id} locked={contract.statut === 'ANNULE'} />
+
           {/* Payments Section */}
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -334,6 +339,13 @@ const EditContract = () => {
           </div>
         </div>
       </div>
+
+      <details className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <summary className="cursor-pointer text-sm font-bold text-slate-700">Historique des modifications</summary>
+        <div className="mt-3">
+          <AuditTimeline model="contract" id={id} />
+        </div>
+      </details>
 
       {/* Payment Modal */}
       <Modal
