@@ -1,3 +1,4 @@
+import { apiErrorText } from '../utils/apiErrorText';
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import FuelGaugeSelector from './FuelGaugeSelector';
@@ -96,7 +97,11 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
   const tarifKmExtra = parseFloat(contract?.vehicle_tarif_km_extra || agencySettings.km_tarif_extra_defaut || 1.5);
   const montantKmExtra = agencySettings.km_extra_active ? (kmSupplementaires * tarifKmExtra) : 0;
 
-  const newBalance = contract ? (recalculatedTotal + montantKmExtra - parseFloat(contract.montant_paye)) : 0;
+  // Le solde inclut les frais supplémentaires déjà ajoutés au contrat (frais_supplementaires).
+  const fraisSupplementaires = parseFloat(contract?.frais_supplementaires || 0);
+  const newBalance = contract
+    ? (recalculatedTotal + montantKmExtra + fraisSupplementaires - parseFloat(contract.montant_paye))
+    : 0;
 
   // Auto-set payment amount to balance on step 5 entry? (Optional quality of life)
   useEffect(() => {
@@ -186,7 +191,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
       });
       onSuccess();
     } catch (err) {
-      setError(err.response?.data?.detail || "Une erreur est survenue lors de la clôture du contrat.");
+      setError(apiErrorText(err, "Une erreur est survenue lors de la clôture du contrat."));
     } finally {
       setLoading(false);
     }

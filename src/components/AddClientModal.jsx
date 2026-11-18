@@ -1,3 +1,4 @@
+import { apiErrorText } from '../utils/apiErrorText';
 import React, { useState } from 'react';
 import api from '../api';
 import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
@@ -67,7 +68,7 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
             setUniqueErrors({});
         } catch (err) {
             console.error('Error creating client:', err);
-            setError(err.response?.data ? JSON.stringify(err.response.data) : 'Une erreur est survenue.');
+            setError(apiErrorText(err, 'Une erreur est survenue.'));
         } finally {
             setLoading(false);
         }

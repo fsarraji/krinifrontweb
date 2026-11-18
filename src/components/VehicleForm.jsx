@@ -1,3 +1,4 @@
+import { apiErrorText } from '../utils/apiErrorText';
 import React, { useState, useEffect } from 'react';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Button from './ui/Button';
@@ -433,7 +434,7 @@ const VehicleForm = () => {
                     navigate('/vehicles');
                 } catch (error) {
                     console.error("Erreur lors de la suppression du véhicule", error);
-                    toast.error("Erreur lors de la suppression du véhicule.");
+                    toast.error(apiErrorText(error, "Erreur lors de la suppression du véhicule."));
                 }
             }
         });

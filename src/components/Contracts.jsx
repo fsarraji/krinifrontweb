@@ -51,6 +51,8 @@ const Contracts = () => {
         { key: 'vehicle_matricule', label: 'Matricule' },
         { key: 'jours', label: 'Durée (Jours)' },
         { key: 'montant_total', label: 'Montant Total (MAD)' },
+        { key: 'frais_supplementaires', label: 'Frais supplémentaires (MAD)' },
+        { key: 'reste_a_payer', label: 'Reste à payer (MAD)' },
         { key: 'statut', label: 'Statut Contrat' },
         { key: 'payment_status', label: 'Statut Paiement' },
     ];
@@ -249,6 +251,14 @@ const Contracts = () => {
                             ),
                         },
                         { key: 'montant_total', label: 'Montant', render: (v) => <strong>{formatMoney(v)}</strong> },
+                        {
+                            key: 'reste_a_payer', label: 'Reste à payer',
+                            render: (v) => (
+                                <span className={Number(v) > 0 ? 'font-semibold text-error' : 'text-on-surface-variant'}>
+                                    {formatMoney(v ?? 0)}
+                                </span>
+                            ),
+                        },
                         { key: 'statut', label: 'Statut', render: (v) => <StatusBadge status={v} /> },
                         {
                             key: 'payment_status', label: 'Paiement',

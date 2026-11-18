@@ -1,3 +1,4 @@
+import { apiErrorText } from '../utils/apiErrorText';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
@@ -87,7 +88,7 @@ const Reservations = () => {
                     fetchAll();
                 } catch (error) {
                     console.error("Erreur lors de la confirmation", error);
-                    toast.error(error.response?.data?.detail || "Erreur lors de la confirmation de la réservation.");
+                    toast.error(apiErrorText(error, "Erreur lors de la confirmation de la réservation."));
                 } finally {
                     setBusyId(null);
                 }
@@ -110,7 +111,7 @@ const Reservations = () => {
                     fetchAll();
                 } catch (error) {
                     console.error("Erreur lors du refus", error);
-                    toast.error(error.response?.data?.detail || "Erreur lors du refus de la réservation.");
+                    toast.error(apiErrorText(error, "Erreur lors du refus de la réservation."));
                 } finally {
                     setBusyId(null);
                 }
@@ -135,7 +136,7 @@ const Reservations = () => {
                     fetchAll();
                 } catch (error) {
                     console.error("Erreur lors de l'annulation", error);
-                    toast.error(error.response?.data?.detail || "Erreur lors de l'annulation de la réservation.");
+                    toast.error(apiErrorText(error, "Erreur lors de l'annulation de la réservation."));
                 } finally {
                     setBusyId(null);
                 }

@@ -10,6 +10,7 @@ import { Input, Textarea } from './ui/Input';
 import Modal from './ui/Modal';
 import Spinner from './ui/Spinner';
 import { formatDateTime, formatMoney } from '../utils/formatters';
+import { apiErrorText, fieldErrors } from '../utils/apiErrorText';
 
 const EditContract = () => {
   const { id } = useParams();
@@ -25,6 +26,8 @@ const EditContract = () => {
     reference: '',
     notes: ''
   });
+  const [paymentErrors, setPaymentErrors] = useState({});
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     statut: ''
   });
@@ -58,13 +61,42 @@ const EditContract = () => {
       navigate('/contracts');
     } catch (e) {
       console.error('Save error', e);
+      toast.error(apiErrorText(e, 'Erreur lors de l\'enregistrement du contrat.'));
     }
   };
 
   const handleDiscard = () => navigate('/contracts');
 
+  // Montants calculés par le serveur : reste à payer = location + frais - déjà payé
+  const resteAPayer = contract ? Number(contract.reste_a_payer ?? 0) : 0;
+  const fraisSupplementaires = contract ? Number(contract.frais_supplementaires ?? 0) : 0;
+  const totalDu = contract ? Number(contract.montant_total ?? 0) + fraisSupplementaires : 0;
+  const paidPercent = totalDu > 0 ? Math.min(100, (Number(contract?.montant_paye ?? 0) / totalDu) * 100) : 0;
+
+  const openPaymentModal = () => {
+    setPaymentErrors({});
+    setPaymentFormData({
+      amount: resteAPayer > 0 ? resteAPayer.toFixed(2) : '',
+      payment_method: 'Espèce',
+      reference: '',
+      notes: ''
+    });
+    setShowPaymentModal(true);
+  };
+
   const handleAddPayment = async (e) => {
     e.preventDefault();
+    const amount = Number(paymentFormData.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setPaymentErrors({ amount: 'Le montant doit être supérieur à zéro.' });
+      return;
+    }
+    if (amount > resteAPayer + 0.001) {
+      setPaymentErrors({ amount: `Le montant dépasse le reste à payer (${formatMoney(resteAPayer)}).` });
+      return;
+    }
+    setPaymentErrors({});
+    setPaymentSubmitting(true);
     try {
       const payload = {
         ...paymentFormData,
@@ -82,7 +114,14 @@ const EditContract = () => {
       toast.success('Paiement ajouté avec succès.');
     } catch (err) {
       console.error('Add payment error', err);
-      toast.error('Erreur lors de l\'ajout du paiement');
+      // Erreurs par champ (ex. montant) sous le champ, le reste en notification
+      const byField = fieldErrors(err);
+      setPaymentErrors(byField);
+      if (!byField.amount) {
+        toast.error(apiErrorText(err, 'Erreur lors de l\'ajout du paiement'));
+      }
+    } finally {
+      setPaymentSubmitting(false);
     }
   };
 
@@ -129,7 +168,7 @@ const EditContract = () => {
       setContract(data);
       setShowProlongModal(false);
     } catch (err) {
-      setProlongError(err?.response?.data?.detail || 'Erreur lors de la prolongation du contrat.');
+      setProlongError(apiErrorText(err, 'Erreur lors de la prolongation du contrat.'));
     } finally {
       setProlongSubmitting(false);
     }
@@ -213,17 +252,33 @@ const EditContract = () => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <div />
-              <Button size="sm" icon="add" onClick={() => setShowPaymentModal(true)}>Ajouter</Button>
+              <Button size="sm" icon="add" onClick={openPaymentModal}>Ajouter</Button>
             </div>
-            {/* Progress Bar */}
-            <div className="flex items-center gap-4 mb-4">
+            {/* Progress Bar : payé / (location + frais) */}
+            <div className="flex items-center gap-4 mb-2">
               <div className="flex-1 w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${contract.montant_total ? (contract.montant_paye / contract.montant_total) * 100 : 0}%` }}></div>
+                <div className="h-full bg-primary" style={{ width: `${paidPercent}%` }}></div>
               </div>
-              <span className="text-sm font-medium text-primary">
-                {contract.montant_total ? ((contract.montant_paye / contract.montant_total) * 100).toFixed(0) : 0}%
-              </span>
+              <span className="text-sm font-medium text-primary">{paidPercent.toFixed(0)}%</span>
             </div>
+            <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-sm">
+              <div>
+                <dt className="text-xs text-slate-500">Location</dt>
+                <dd className="font-semibold">{formatMoney(contract.montant_total)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Frais supplémentaires</dt>
+                <dd className="font-semibold">{formatMoney(fraisSupplementaires)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Déjà payé</dt>
+                <dd className="font-semibold">{formatMoney(contract.montant_paye)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Reste à payer</dt>
+                <dd className={`font-bold ${resteAPayer > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{formatMoney(resteAPayer)}</dd>
+              </div>
+            </dl>
             {/* Payments List */}
             {paymentsHistory.length > 0 && (
               <div className="border border-slate-100 rounded-lg overflow-hidden">
@@ -276,16 +331,24 @@ const EditContract = () => {
         footer={(
           <>
             <Button variant="outline" onClick={() => setShowPaymentModal(false)}>Annuler</Button>
-            <Button type="submit" form="add-payment-form">Valider le paiement</Button>
+            <Button type="submit" form="add-payment-form" loading={paymentSubmitting}>Valider le paiement</Button>
           </>
         )}
       >
         <form id="add-payment-form" onSubmit={handleAddPayment} className="space-y-4">
-          <Field label="Montant (MAD)" required>
+          <Field
+            label="Montant (MAD)"
+            required
+            hint={`Reste à payer : ${formatMoney(resteAPayer)}`}
+            error={paymentErrors.amount}
+          >
             <Input
-              type="number" required min="1" step="0.01" placeholder="Ex : 1500"
+              type="number" required min="0.01" max={resteAPayer > 0 ? resteAPayer : undefined} step="0.01" placeholder="Ex : 1500"
               value={paymentFormData.amount}
-              onChange={(e) => setPaymentFormData({ ...paymentFormData, amount: e.target.value })}
+              onChange={(e) => {
+                setPaymentFormData({ ...paymentFormData, amount: e.target.value });
+                if (paymentErrors.amount) setPaymentErrors({ ...paymentErrors, amount: undefined });
+              }}
             />
           </Field>
           <div>

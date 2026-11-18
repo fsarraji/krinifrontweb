@@ -1,3 +1,4 @@
+import { apiErrorText } from '../utils/apiErrorText';
 import React, { useState, useEffect } from 'react';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Button from './ui/Button';
@@ -169,7 +170,7 @@ const EditClient = () => {
                     navigate('/clients');
                 } catch (err) {
                     console.error("Error deleting client:", err);
-                    toast.error("Erreur lors de la suppression.");
+                    toast.error(apiErrorText(err, "Erreur lors de la suppression."));
                 }
             }
         });

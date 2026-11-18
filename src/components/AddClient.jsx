@@ -1,3 +1,4 @@
+import { apiErrorText } from '../utils/apiErrorText';
 import React, { useState } from 'react';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Button from './ui/Button';
@@ -180,7 +181,7 @@ const AddClient = () => {
             navigate('/clients');
         } catch (err) {
             console.error("Error creating client:", err);
-            setError(err.response?.data ? JSON.stringify(err.response.data) : "Une erreur est survenue lors de la création du client.");
+            setError(apiErrorText(err, "Une erreur est survenue lors de la création du client."));
             setLoading(false);
         }
     };

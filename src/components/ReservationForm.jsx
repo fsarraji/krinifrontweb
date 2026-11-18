@@ -1,3 +1,4 @@
+import { apiErrorText } from '../utils/apiErrorText';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Select from 'react-select';
@@ -143,13 +144,7 @@ const ReservationForm = () => {
             navigate('/reservations');
         } catch (error) {
             console.error("Erreur lors de la création", error);
-            if (error.response?.data?.non_field_errors) {
-                toast.error(error.response.data.non_field_errors[0]);
-            } else if (error.response?.data?.detail) {
-                toast.error(error.response.data.detail);
-            } else {
-                toast.error("Erreur lors de la création de la réservation. Vérifiez les champs.");
-            }
+            toast.error(apiErrorText(error, "Erreur lors de la création de la réservation. Vérifiez les champs."));
         }
     };
 
