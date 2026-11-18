@@ -9,6 +9,7 @@ import Field from './ui/Field';
 import { Input, Textarea } from './ui/Input';
 import Modal from './ui/Modal';
 import Spinner from './ui/Spinner';
+import ContractFees from './ContractFees';
 import { formatDateTime, formatMoney } from '../utils/formatters';
 import { apiErrorText, fieldErrors } from '../utils/apiErrorText';
 
@@ -72,6 +73,15 @@ const EditContract = () => {
   const fraisSupplementaires = contract ? Number(contract.frais_supplementaires ?? 0) : 0;
   const totalDu = contract ? Number(contract.montant_total ?? 0) + fraisSupplementaires : 0;
   const paidPercent = totalDu > 0 ? Math.min(100, (Number(contract?.montant_paye ?? 0) / totalDu) * 100) : 0;
+
+  const reloadContract = async () => {
+    try {
+      const { data } = await api.get(`contracts/${id}/`);
+      setContract(data);
+    } catch (err) {
+      toast.error(apiErrorText(err, 'Impossible de rafraîchir le contrat.'));
+    }
+  };
 
   const openPaymentModal = () => {
     setPaymentErrors({});
@@ -248,6 +258,9 @@ const EditContract = () => {
             )}
             </div>
 
+          {/* Frais supplémentaires */}
+          <ContractFees contractId={id} locked={contract.statut === 'ANNULE'} onChanged={reloadContract} />
+
           {/* Payments Section */}
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -361,7 +374,7 @@ const EditContract = () => {
                 { value: 'Chèque', label: 'Chèque' },
               ]}
               value={paymentFormData.payment_method}
-              onChange={(opt) => setPaymentFormData({ ...paymentFormData, payment_method: opt.value })}
+              onChange={(value) => setPaymentFormData({ ...paymentFormData, payment_method: value || 'Espèce' })}
             />
           </div>
           <Field label="Référence (optionnel)">

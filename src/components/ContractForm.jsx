@@ -76,6 +76,8 @@ const ContractForm = () => {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [showClientModal, setShowClientModal] = useState(false);
     const [unavailableRanges, setUnavailableRanges] = useState([]);
+    // Ids des véhicules libres sur la période choisie (null = inconnu / non filtré)
+    const [freeVehicleIds, setFreeVehicleIds] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -149,6 +151,18 @@ const ContractForm = () => {
         return () => { cancelled = true; };
     }, [formData.vehicle, formData.date_sortie, formData.date_retour_prevue]);
 
+    // Disponibilité réelle (contrats + réservations + délai de confort) sur la période choisie
+    useEffect(() => {
+        const start = formData.date_sortie;
+        const end = formData.date_retour_prevue;
+        if (!start || !end || end <= start) { setFreeVehicleIds(null); return undefined; }
+        let cancelled = false;
+        api.get('vehicles/free/', { params: { start, end } })
+            .then((res) => { if (!cancelled) setFreeVehicleIds(new Set((res.data?.ids || []).map(String))); })
+            .catch(() => { if (!cancelled) setFreeVehicleIds(null); });
+        return () => { cancelled = true; };
+    }, [formData.date_sortie, formData.date_retour_prevue]);
+
     const handleVehicleSelect = (vehicle) => {
         setSelectedVehicle(vehicle);
             setFieldErrors((prev) => ({ ...prev, vehicle: false }));
@@ -212,6 +226,17 @@ const ContractForm = () => {
             e.preventDefault();
             if (!formData.vehicle) { setFieldErrors((prev) => ({ ...prev, vehicle: true })); setCurrentStep(1); toast.error('Veuillez sélectionner un véhicule'); return; }
             if (!formData.client) { setFieldErrors((prev) => ({ ...prev, client: true })); setCurrentStep(2); toast.error('Veuillez sélectionner un client'); return; }
+            const advance = Number(formData.montant_paye || 0);
+            if (!Number.isFinite(advance) || advance < 0) {
+                setCurrentStep(4);
+                toast.error('Le montant versé ne peut pas être négatif.');
+                return;
+            }
+            if (advance > totalEstimate() + 0.001) {
+                setCurrentStep(4);
+                toast.error(`Le montant versé (${formatMoney(advance)}) dépasse le total estimé (${formatMoney(totalEstimate())}).`);
+                return;
+            }
             try {
                 const dataToSubmit = {
                     ...formData,
@@ -221,14 +246,8 @@ const ContractForm = () => {
                     date_sortie: `${formData.date_sortie}:00`,
                     date_retour_prevue: `${formData.date_retour_prevue}:00`,
                 };
+                // Le serveur passe lui-même le véhicule en « Loué » à la création d'un contrat en cours.
                 await api.post('contracts/', dataToSubmit);
-            if (dataToSubmit.vehicle && dataToSubmit.statut === 'EN_COURS') {
-                try {
-                    await api.patch(`vehicles/${dataToSubmit.vehicle}/`, { statut: 'Rented' });
-                } catch (vErr) {
-                    console.error("Erreur lors de la mise à jour du véhicule", vErr);
-                }
-            }
             markClean();
             navigate('/contracts');
             toast.success('Contrat créé avec succès.');
@@ -238,11 +257,13 @@ const ContractForm = () => {
             }
         };
     
-        const filteredVehicles = vehicles.filter(v => 
-            v.marque_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        const matchesSearch = (v) =>
+            v.marque_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             v.modele_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            v.matricule?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+            v.matricule?.toLowerCase().includes(searchTerm.toLowerCase());
+        const isFreeOnPeriod = (v) => freeVehicleIds === null || freeVehicleIds.has(String(v.id));
+        const filteredVehicles = vehicles.filter((v) => matchesSearch(v) && isFreeOnPeriod(v));
+        const hiddenBusyCount = vehicles.filter((v) => matchesSearch(v) && !isFreeOnPeriod(v)).length;
     
         if (loading) return <div className="p-8 text-center font-bold" style={{ color: 'var(--primary-container)' }}>Initialisation du Fleet Concierge...</div>;
 
@@ -313,6 +334,11 @@ const ContractForm = () => {
                                     </div>
                                 </div>
 
+                                {hiddenBusyCount > 0 && (
+                                    <p className="text-xs text-slate-500 mb-2" role="status">
+                                        {hiddenBusyCount} véhicule{hiddenBusyCount > 1 ? 's' : ''} masqué{hiddenBusyCount > 1 ? 's' : ''} : déjà loué{hiddenBusyCount > 1 ? 's' : ''} ou réservé{hiddenBusyCount > 1 ? 's' : ''} sur cette période.
+                                    </p>
+                                )}
                                 <div className="grid grid-cols-2 gap-4 max-h-80 overflow-y-auto p-1">
                                     {filteredVehicles.map(vehicle => (
                                         <div
@@ -496,6 +522,8 @@ const ContractForm = () => {
                                                     <input
                                                         className="field pl-10"
                                                         type="number"
+                                                        min="0"
+                                                        max={totalEstimate() || undefined}
                                                         value={formData.montant_paye}
                                                         onChange={(e) => setFormData({...formData, montant_paye: e.target.value})}
                                                     />

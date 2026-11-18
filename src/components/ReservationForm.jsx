@@ -121,7 +121,7 @@ const ReservationForm = () => {
             setStep(2);
         } catch (error) {
             console.error("Dispo erreur", error);
-            toast.error(error.response?.data?.detail || "Erreur de disponibilité");
+            toast.error(apiErrorText(error, "Erreur de disponibilité"));
         } finally {
             setLoading(false);
         }
@@ -129,6 +129,15 @@ const ReservationForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const advance = Number(formData.montant_paye || 0);
+        if (!Number.isFinite(advance) || advance < 0) {
+            toast.error('Le montant versé ne peut pas être négatif.');
+            return;
+        }
+        if (advance > totalEstimate() + 0.001) {
+            toast.error('Le montant versé dépasse le total estimé de la réservation.');
+            return;
+        }
         try {
             const dataToSubmit = {
                 ...formData,
