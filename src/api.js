@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { clearSession, getAccessToken, getRefreshToken, setTokens } from './utils/session';
+import { apiPathFromUrl } from './utils/pagination';
 
 // إعداد الرابط الأساسي للباكند
 const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/';
@@ -104,7 +105,8 @@ export const fetchAllPages = async (url, params = {}) => {
     let results = [...response.data];
     let nextUrl = response.data.next;
     while (nextUrl) {
-        response = await api.get(nextUrl);
+        // `next` est absolu : on ne garde que le chemin pour rester sur la baseURL (proxy, https).
+        response = await api.get(apiPathFromUrl(nextUrl));
         results = results.concat(response.data);
         nextUrl = response.data.next;
     }

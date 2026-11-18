@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useI18n } from '../i18n/context';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
@@ -29,6 +30,7 @@ const getInitials = (prenom, nom) => {
 };
 
 const Clients = () => {
+    const { t: tr } = useI18n();
     const navigate = useNavigate();
     const [clients, setClients] = useState([]);
     const [allClients, setAllClients] = useState([]); // for stats calculation
@@ -48,10 +50,10 @@ const Clients = () => {
     const isSuperAdmin = getRole() === 'SUPERADMIN';
 
     const FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Tous les clients', dot: 'bg-primary' },
-        { value: 'REGULAR', label: 'Clients réguliers', dot: 'bg-success' },
-        { value: 'BLACKLIST', label: 'Liste noire', dot: 'bg-danger' },
-        ...(isSuperAdmin ? [{ value: 'DELETED', label: 'Supprimés', dot: 'bg-secondary' }] : []),
+        { value: 'ALL', label: tr('clients.filter.all'), dot: 'bg-primary' },
+        { value: 'REGULAR', label: tr('clients.filter.regular'), dot: 'bg-success' },
+        { value: 'BLACKLIST', label: tr('clients.filter.blacklist'), dot: 'bg-danger' },
+        ...(isSuperAdmin ? [{ value: 'DELETED', label: tr('clients.filter.deleted'), dot: 'bg-secondary' }] : []),
     ];
 
     useEffect(() => {
@@ -186,24 +188,24 @@ const Clients = () => {
 
     const buildMenuItems = (c) => {
         const items = [
-            { key: 'info', icon: 'info', label: 'Informations', onClick: () => setInfoClient(c) },
+            { key: 'info', icon: 'info', label: tr('clients.menu.info'), onClick: () => setInfoClient(c) },
         ];
         if (c.is_deleted) {
-            items.push({ key: 'restaurer', icon: 'unarchive', label: 'Restaurer', color: 'var(--success)', onClick: () => handleRestore(c) });
+            items.push({ key: 'restaurer', icon: 'unarchive', label: tr('clients.menu.restore'), color: 'var(--success)', onClick: () => handleRestore(c) });
         } else {
-            items.push({ key: 'editer', icon: 'edit', label: 'Éditer', onClick: () => navigate(`/clients/edit/${c.id}`) });
-            items.push({ key: 'supprimer', icon: 'delete', label: 'Supprimer', color: 'var(--danger)', destructive: true, onClick: () => handleDelete(c) });
+            items.push({ key: 'editer', icon: 'edit', label: tr('clients.menu.edit'), onClick: () => navigate(`/clients/edit/${c.id}`) });
+            items.push({ key: 'supprimer', icon: 'delete', label: tr('clients.menu.delete'), color: 'var(--danger)', destructive: true, onClick: () => handleDelete(c) });
         }
         return items;
     };
 
     const ClientStatus = ({ client }) => (
         client.is_deleted ? (
-            <StatusBadge variant="danger" label="Supprimé" />
+            <StatusBadge variant="danger" label={tr('clients.status.deleted')} />
         ) : client.liste_noire ? (
-            <StatusBadge variant="danger" label="LISTE NOIRE" />
+            <StatusBadge variant="danger" label={tr('clients.status.blacklist')} />
         ) : (
-            <StatusBadge variant="success" label="ACTIF" />
+            <StatusBadge variant="success" label={tr('clients.status.active')} />
         )
     );
 
@@ -211,18 +213,18 @@ const Clients = () => {
         <div>
             {/* Header */}
             <PageHeader
-                eyebrow="Annuaire & Portefeuille"
-                title="Gestion des Clients"
+                eyebrow={tr('clients.eyebrow')}
+                title={tr('clients.title')}
                 actions={(
                     <>
                         <ExportButton
                             data={allClients.length ? allClients : clients}
                             filename="annuaire_clients"
                             columns={EXPORT_COLUMNS}
-                            label="Exporter (CSV)"
+                            label={tr('contracts.exportCsv')}
                         />
                         <Button icon="person_add" onClick={() => navigate('/clients/add')}>
-                            Nouveau Client
+                            {tr('clients.new')}
                         </Button>
                     </>
                 )}
@@ -230,17 +232,17 @@ const Clients = () => {
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-                <MetricCard icon="group" iconBg="bg-info-bg" iconColor="text-info" value={totalCount} label="Total Clients" />
-                <MetricCard icon="verified_user" iconBg="bg-success-bg" iconColor="text-success" value={activeCount} label="Clients Éligibles" />
-                <MetricCard icon="block" tone="danger" value={blacklistedCount} label="Liste Noire" />
-                <MetricCard icon="badge" iconBg="bg-secondary-container" iconColor="text-secondary" value={withEmailCount} label="Fiches Complètes" />
+                <MetricCard icon="group" iconBg="bg-info-bg" iconColor="text-info" value={totalCount} label={tr('clients.kpi.total')} />
+                <MetricCard icon="verified_user" iconBg="bg-success-bg" iconColor="text-success" value={activeCount} label={tr('clients.kpi.eligible')} />
+                <MetricCard icon="block" tone="danger" value={blacklistedCount} label={tr('clients.kpi.blacklist')} />
+                <MetricCard icon="badge" iconBg="bg-secondary-container" iconColor="text-secondary" value={withEmailCount} label={tr('clients.kpi.complete')} />
             </div>
 
             {/* Filter & View Switcher */}
             <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6">
                 <div className="flex-1">
                     <SearchFilterBar
-                        placeholder="Rechercher (nom, prénom, CIN, téléphone, permis)..."
+                        placeholder={tr('clients.search')}
                         search={search}
                         onSearchChange={setSearch}
                         options={FILTER_OPTIONS}
@@ -261,7 +263,7 @@ const Clients = () => {
                         style={{ color: viewMode === 'table' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
                     >
                         <span className="material-symbols-outlined text-[18px]">table_rows</span>
-                        Tableau
+                        {tr('clients.view.table')}
                     </button>
                     <button
                         onClick={() => setViewMode('grid')}
@@ -273,7 +275,7 @@ const Clients = () => {
                         style={{ color: viewMode === 'grid' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
                     >
                         <span className="material-symbols-outlined text-[18px]">grid_view</span>
-                        Grille
+                        {tr('clients.view.grid')}
                     </button>
                 </div>
             </div>
@@ -283,15 +285,15 @@ const Clients = () => {
                 {loading ? (
                     <div className="p-16 flex items-center justify-center"><Spinner size={28} /></div>
                 ) : clients.length === 0 ? (
-                    <EmptyState icon="person_off" title="Aucun client trouvé dans l'annuaire." />
+                    <EmptyState icon="person_off" title={tr('clients.empty')} />
                 ) : viewMode === 'table' ? (
                     <Table
                         className="!border-0 !rounded-none flex-1"
-                        caption="Annuaire des clients"
+                        caption={tr('clients.caption')}
                         rows={clients}
                         columns={[
                             {
-                                key: 'nom', label: 'Client',
+                                key: 'nom', label: tr('clients.col.client'),
                                 render: (_, client) => {
                                     const i = clients.indexOf(client);
                                     return (
@@ -312,23 +314,23 @@ const Clients = () => {
                                 },
                             },
                             {
-                                key: 'telephone', label: 'Téléphone & Email', className: 'text-on-surface-variant',
+                                key: 'telephone', label: tr('clients.col.contact'), className: 'text-on-surface-variant',
                                 render: (v, client) => (
                                     <>
                                         <div className="font-medium">{v}</div>
                                         {client.email ? (
                                             <div className="text-label-sm truncate max-w-[200px] opacity-70">{client.email}</div>
                                         ) : (
-                                            <div className="text-label-sm italic opacity-50">Pas d'email</div>
+                                            <div className="text-label-sm italic opacity-50">{tr('clients.noEmail')}</div>
                                         )}
                                     </>
                                 ),
                             },
-                            { key: 'cin_passport', label: 'CIN / Passeport', className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm font-bold">{v}</span> },
-                            { key: 'permis_conduite', label: 'Permis', className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm">{v || '—'}</span> },
-                            { key: 'statut', label: 'Statut', render: (_, client) => <ClientStatus client={client} /> },
+                            { key: 'cin_passport', label: tr('clients.col.cin'), className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm font-bold">{v}</span> },
+                            { key: 'permis_conduite', label: tr('clients.col.license'), className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm">{v || '—'}</span> },
+                            { key: 'statut', label: tr('clients.col.status'), render: (_, client) => <ClientStatus client={client} /> },
                             {
-                                key: 'actions', label: 'Actions', align: 'right',
+                                key: 'actions', label: tr('clients.col.actions'), align: 'right',
                                 render: (_, client) => (
                                     <div className="flex items-center justify-end gap-1">
                                         <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
@@ -366,20 +368,20 @@ const Clients = () => {
                                         <div className="space-y-2 text-label-md text-on-surface-variant border-t border-stroke pt-3">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm">call</span> Téléphone:
+                                                    <span className="material-symbols-outlined text-sm">call</span> {tr('clients.card.phone')}
                                                 </span>
                                                 <span className="font-semibold text-on-surface">{client.telephone}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm">badge</span> Permis:
+                                                    <span className="material-symbols-outlined text-sm">badge</span> {tr('clients.card.license')}
                                                 </span>
                                                 <span className="font-mono font-semibold text-on-surface">{client.permis_conduite || '—'}</span>
                                             </div>
                                             {client.email && (
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
-                                                        <span className="material-symbols-outlined text-sm">mail</span> Email:
+                                                        <span className="material-symbols-outlined text-sm">mail</span> {tr('clients.card.email')}
                                                     </span>
                                                     <span className="font-medium text-on-surface truncate max-w-[150px]">{client.email}</span>
                                                 </div>
@@ -393,7 +395,7 @@ const Clients = () => {
                                                 to={`/clients/edit/${client.id}`}
                                                 className="text-label-sm font-bold text-primary hover:underline flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
                                             >
-                                                Gérer la fiche <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                                {tr('clients.card.manage')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
                                         <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />

@@ -1,5 +1,6 @@
 import React from 'react';
 import STATUS_MAP from './statusMap';
+import { useI18n } from '../../i18n/context';
 
 // Système de badges Krincar Agency (code.html / DESIGN.md).
 // Tonalité = couleur sémantique ; appearance = forme.
@@ -69,11 +70,13 @@ export default function StatusBadge({
   count,
   className = '',
 }) {
+  const { t: tr } = useI18n();
   // Lookup insensible à la casse : 'AVAILABLE'/'available' -> STATUS_MAP['Available'].
   const key = String(status ?? '').trim();
-  const resolved = key && (STATUS_MAP[key] || Object.entries(STATUS_MAP).find(([k]) => k.toLowerCase() === key.toLowerCase())?.[1]);
+  const mapKey = key && (STATUS_MAP[key] ? key : Object.keys(STATUS_MAP).find((k) => k.toLowerCase() === key.toLowerCase()));
+  const resolved = mapKey ? STATUS_MAP[mapKey] : undefined;
   const tone = variant || resolved?.variant || 'neutral';
-  const finalLabel = label || resolved?.label || key || (count ? String(count) : '—');
+  const finalLabel = label || (mapKey ? tr(`status.${mapKey}`) : '') || key || (count ? String(count) : '—');
   const t = TONES[tone] || TONES.neutral;
   const cat = category && CATEGORIES[category];
   const iconName = icon || (cat ? cat.icon : t.icon);

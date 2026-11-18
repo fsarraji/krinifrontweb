@@ -1,3 +1,4 @@
+import { apiPathFromUrl } from '../utils/pagination';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +26,7 @@ const Marketplace = () => {
         while (url) {
           const { data } = await axios.get(url);
           if (Array.isArray(data)) { all = all.concat(data); url = null; }
-          else { all = all.concat(data.results || []); url = data.next || null; }
+          else { all = all.concat(data.results || []); url = data.next ? `${baseUrl}/${apiPathFromUrl(data.next)}` : null; }
         }
         if (!cancelled) setVehicles(all);
       } catch (error) {

@@ -1,5 +1,6 @@
 import Button from './Button';
 import { exportToCSV } from '../../utils/exportUtils';
+import { useI18n } from '../../i18n/context';
 
 /**
  * Bouton d'export CSV standard.
@@ -14,13 +15,15 @@ const ExportButton = ({
     data,
     filename = 'export',
     columns = null,
-    label = 'Exporter',
+    label,
     variant = 'secondary',
     size = 'md',
     icon = 'download',
     disabled = false,
     className = '',
-}) => (
+}) => {
+    const { t } = useI18n();
+    return (
     <Button
         variant={variant}
         size={size}
@@ -29,8 +32,9 @@ const ExportButton = ({
         disabled={disabled}
         className={className}
     >
-        {label}
+        {label ?? t('common.export')}
     </Button>
-);
+    );
+};
 
 export default ExportButton;

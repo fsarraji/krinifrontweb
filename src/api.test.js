@@ -32,3 +32,20 @@ describe('api : rafraîchissement du token sur 401', () => {
         post.mockRestore();
     });
 });
+
+describe('fetchAllPages : suit les pages via des chemins relatifs', () => {
+    it("n'appelle jamais l'URL absolue `next` renvoyée par DRF", async () => {
+        const { fetchAllPages } = await import('./api');
+        const urls = [];
+        api.defaults.adapter = async (config) => {
+            urls.push(config.url);
+            const page2 = config.url.includes('page=2');
+            const results = page2 ? [{ id: 3 }] : [{ id: 1 }, { id: 2 }];
+            const data = { count: 3, previous: null, next: page2 ? null : 'https://kriniback.onrender.com/api/contracts/?page=2', results };
+            return { data, status: 200, statusText: 'OK', headers: {}, config };
+        };
+        const all = await fetchAllPages('contracts/');
+        expect(all.map((c) => c.id)).toEqual([1, 2, 3]);
+        expect(urls).toEqual(['contracts/', 'contracts/?page=2']);
+    });
+});

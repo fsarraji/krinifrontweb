@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import { SkeletonTable } from '../Skeleton';
 import EmptyState from './EmptyState';
 import Pagination from '../Pagination';
+import { useI18n } from '../../i18n/context';
 
 // Tableau de données : en-tête collant, colonnes triables, états chargement/vide intégrés,
 // défilement horizontal sur mobile. Spec DESIGN.md : padding 16px horizontal / 12px vertical.
 //
 // columns : [{ key, label, align?: 'left'|'right'|'center', sortable?, sortValue?(row), render?(value,row), className? }]
-const ALIGN = { left: 'text-left', right: 'text-right', center: 'text-center' };
+// start/end suivent le sens de lecture (ltr/rtl) ; les valeurs d'API restent 'left'/'right'.
+const ALIGN = { left: 'text-start', right: 'text-end', center: 'text-center' };
 
 const compare = (a, b) => {
     if (a == null && b == null) return 0;
@@ -24,7 +26,7 @@ const Table = ({
     rows,
     rowKey = 'id',
     loading = false,
-    emptyTitle = 'Aucun résultat',
+    emptyTitle,
     emptyDescription,
     onRowClick,
     caption,
@@ -34,6 +36,7 @@ const Table = ({
     paginate = false, // pagination intégrée : tri global PUIS découpage en pages
     initialPageSize = 10,
 }) => {
+    const { t } = useI18n();
     const [sort, setSort] = useState(defaultSort);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(initialPageSize);
@@ -65,7 +68,7 @@ const Table = ({
     return (
         <div className={`bg-white border border-stroke rounded-token overflow-hidden ${className}`}>
             {sorted.length === 0 ? (
-                <EmptyState title={emptyTitle} description={emptyDescription} />
+                <EmptyState title={emptyTitle ?? t('common.noResult')} description={emptyDescription} />
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">

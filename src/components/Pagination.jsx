@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../i18n/context';
 
 /**
  * Pagination component — clean indigo-slate design.
@@ -19,6 +20,7 @@ const Pagination = ({
     pageSizeOptions = [10, 25, 50],
     onPageSizeChange,
 }) => {
+    const { t } = useI18n();
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
     const from = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
     const to = Math.min(currentPage * pageSize, totalItems);
@@ -44,7 +46,7 @@ const Pagination = ({
             {/* Left: count + page size selector */}
             <div className="flex items-center gap-3">
                 <span className="text-xs text-slate-500 font-medium">
-                    <span className="font-bold text-slate-700">{from}–{to}</span> sur{' '}
+                    <span className="font-bold text-slate-700">{from}–{to}</span> {t('common.of')}{' '}
                     <span className="font-bold text-slate-700">{totalItems}</span>
                 </span>
                 {onPageSizeChange && (
@@ -54,7 +56,7 @@ const Pagination = ({
                         className="text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
                     >
                         {pageSizeOptions.map(s => (
-                            <option key={s} value={s}>{s} / page</option>
+                            <option key={s} value={s}>{t('common.perPage', { n: s })}</option>
                         ))}
                     </select>
                 )}
@@ -67,9 +69,9 @@ const Pagination = ({
                     onClick={() => onPageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Page précédente"
+                    aria-label={t('common.prevPage')}
                 >
-                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                    <span className="material-symbols-outlined flip-rtl text-[18px]" aria-hidden="true">chevron_left</span>
                 </button>
 
                 {getPages().map((p, idx) =>
@@ -95,9 +97,9 @@ const Pagination = ({
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Page suivante"
+                    aria-label={t('common.nextPage')}
                 >
-                    <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                    <span className="material-symbols-outlined flip-rtl text-[18px]" aria-hidden="true">chevron_right</span>
                 </button>
             </div>
         </div>

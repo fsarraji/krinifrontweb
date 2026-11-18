@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/context';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
@@ -18,6 +19,7 @@ import { formatMoney, formatNumber } from '../utils/formatters';
 import { AVATAR_COLORS } from '../utils/avatarColors';
 
 const Contracts = () => {
+    const { t } = useI18n();
     const navigate = useNavigate();
     const [contracts, setContracts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -30,11 +32,11 @@ const Contracts = () => {
     const [reloadKey, setReloadKey] = useState(0);
 
     const FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
-        { value: 'RESERVE', label: 'Réservation', dot: 'bg-info' },
-        { value: 'EN_COURS', label: 'En cours', dot: 'bg-success' },
-        { value: 'TERMINE', label: 'Terminé', dot: 'bg-secondary' },
-        { value: 'ANNULE', label: 'Annulé', dot: 'bg-danger' },
+        { value: 'ALL', label: t('contracts.filter.all'), dot: 'bg-primary' },
+        { value: 'RESERVE', label: t('contracts.filter.reserve'), dot: 'bg-info' },
+        { value: 'EN_COURS', label: t('contracts.filter.enCours'), dot: 'bg-success' },
+        { value: 'TERMINE', label: t('contracts.filter.termine'), dot: 'bg-secondary' },
+        { value: 'ANNULE', label: t('contracts.filter.annule'), dot: 'bg-danger' },
     ];
 
     const handleCloseSuccess = () => {
@@ -129,16 +131,16 @@ const Contracts = () => {
                 <Modal
                     isOpen
                     size="sm"
-                    title="Imprimer le Contrat"
-                    subtitle="Souhaitez-vous inclure le cachet de l'agence sur ce contrat ?"
+                    title={t('contracts.print.title')}
+                    subtitle={t('contracts.print.subtitle')}
                     onClose={() => setPrintContractId(null)}
                     footer={(
                         <>
                             <Button variant="secondary" icon="description" onClick={() => handleDownloadPDF(printContractId, false)}>
-                                Sans cachet
+                                {t('contracts.print.without')}
                             </Button>
                             <Button icon="verified" onClick={() => handleDownloadPDF(printContractId, true)}>
-                                Avec cachet
+                                {t('contracts.print.with')}
                             </Button>
                         </>
                     )}
@@ -146,7 +148,7 @@ const Contracts = () => {
                     <div className="flex flex-col items-center gap-3 py-2">
                         <span className="material-symbols-outlined text-primary" style={{ fontSize: 44 }}>print</span>
                         <p className="text-label-md text-center text-on-surface-variant">
-                            Le PDF du contrat sera téléchargé avec ou sans cachet de l'agence.
+                            {t('contracts.print.info')}
                         </p>
                     </div>
                 </Modal>
@@ -154,17 +156,17 @@ const Contracts = () => {
 
             {/* Editorial Header */}
             <PageHeader
-                eyebrow="Opérations de Flotte"
-                title="Contrats de Location"
+                eyebrow={t('contracts.eyebrow')}
+                title={t('contracts.title')}
                 actions={(
                     <>
                         <ExportButton
                             data={filteredContracts}
                             filename="contrats_location"
                             columns={EXPORT_COLUMNS}
-                            label="Exporter (CSV)"
+                            label={t('contracts.exportCsv')}
                         />
-                        <Button icon="add" onClick={() => navigate('/contracts/new')}>Nouveau Contrat</Button>
+                        <Button icon="add" onClick={() => navigate('/contracts/new')}>{t('contracts.new')}</Button>
                     </>
                 )}
             />
@@ -176,8 +178,7 @@ const Contracts = () => {
                     iconBg="bg-info-bg"
                     iconColor="text-info"
                     value={activeRentals}
-                    label="Contrats Actifs"
-                    trend={{ value: '+12%', positive: true }}
+                    label={t('contracts.kpi.active')}
                 />
                 <MetricCard
                     icon="payments"
@@ -185,23 +186,22 @@ const Contracts = () => {
                     iconColor="text-secondary"
                     value={formatNumber(totalRevenue)}
                     unit="MAD"
-                    label="Chiffre d'Affaires"
-                    trend={{ value: '+5.4%', positive: true }}
+                    label={t('contracts.kpi.revenue')}
                 />
                 <MetricCard
                     icon="signature"
                     tone="primary"
                     value={contracts.filter(c => c.statut === 'RESERVE').length}
-                    label="Signatures en Attente"
+                    label={t('contracts.kpi.pending')}
                 >
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white bg-white/20">À traiter</span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white bg-white/20">{t('contracts.toProcess')}</span>
                 </MetricCard>
             </div>
 
             {/* Search & Filter */}
             <div className="mb-6">
                 <SearchFilterBar
-                    placeholder="Rechercher (client, matricule, marque)..."
+                    placeholder={t('contracts.search')}
                     search={search}
                     onSearchChange={handleSearchChange}
                     options={FILTER_OPTIONS}
@@ -213,12 +213,12 @@ const Contracts = () => {
             {/* Contracts Table */}
             <div className="overflow-hidden">
                 <Table
-                    caption="Liste des contrats"
+                    caption={t('contracts.caption')}
                     rows={paginatedContracts}
-                    emptyTitle="Aucun contrat enregistré."
+                    emptyTitle={t('contracts.empty')}
                     columns={[
                         {
-                            key: 'client_name', label: 'Client / ID Contrat',
+                            key: 'client_name', label: t('contracts.col.client'),
                             render: (_, contract) => {
                                 const idx = paginatedContracts.indexOf(contract);
                                 return (
@@ -233,7 +233,7 @@ const Contracts = () => {
                             },
                         },
                         {
-                            key: 'vehicle_name', label: 'Véhicule',
+                            key: 'vehicle_name', label: t('contracts.col.vehicle'),
                             render: (_, contract) => (
                                 <>
                                     <div className="font-semibold">{contract.vehicle_name}</div>
@@ -242,47 +242,47 @@ const Contracts = () => {
                             ),
                         },
                         {
-                            key: 'jours', label: 'Durée',
+                            key: 'jours', label: t('contracts.col.duration'),
                             render: (_, contract) => (
                                 <>
                                     <div className="text-label-md text-on-surface-variant">{contract.formatted_dates?.range}</div>
-                                    <div className="text-label-sm text-primary">{contract.jours} Jours</div>
+                                    <div className="text-label-sm text-primary">{t('contracts.days', { n: contract.jours })}</div>
                                 </>
                             ),
                         },
-                        { key: 'montant_total', label: 'Montant', render: (v) => <strong>{formatMoney(v)}</strong> },
+                        { key: 'montant_total', label: t('contracts.col.amount'), render: (v) => <strong>{formatMoney(v)}</strong> },
                         {
-                            key: 'reste_a_payer', label: 'Reste à payer',
+                            key: 'reste_a_payer', label: t('contracts.col.remaining'),
                             render: (v) => (
                                 <span className={Number(v) > 0 ? 'font-semibold text-error' : 'text-on-surface-variant'}>
                                     {formatMoney(v ?? 0)}
                                 </span>
                             ),
                         },
-                        { key: 'statut', label: 'Statut', render: (v) => <StatusBadge status={v} /> },
+                        { key: 'statut', label: t('contracts.col.status'), render: (v) => <StatusBadge status={v} /> },
                         {
-                            key: 'payment_status', label: 'Paiement',
+                            key: 'payment_status', label: t('contracts.col.payment'),
                             render: (v) => (
                                 <StatusBadge
                                     variant={v === 'Paid' ? 'success' : v === 'Partial' ? 'warning' : 'danger'}
-                                    label={v === 'Paid' ? 'Payé' : v === 'Partial' ? 'Partiel' : 'Non payé'}
+                                    label={v === 'Paid' ? t('pay.paid') : v === 'Partial' ? t('pay.partial') : t('pay.unpaid')}
                                 />
                             ),
                         },
                         {
-                            key: 'actions', label: 'Actions', align: 'right',
+                            key: 'actions', label: t('contracts.col.actions'), align: 'right',
                             render: (_, contract) => (
                                 <div className="flex items-center justify-end gap-1">
                                     {contract.statut === 'EN_COURS' && (
                                         <Button variant="ghost" size="sm" iconOnly icon="lock" className="!text-danger-dark hover:!bg-danger-bg"
-                                            aria-label={`Clôturer le contrat ${contract.id}`} title="Clôturer le contrat"
+                                            aria-label={t('contracts.closeAria', { id: contract.id })} title={t('contracts.close')}
                                             onClick={() => setCloseContract(contract)} />
                                     )}
                                     <Button variant="ghost" size="sm" iconOnly icon="edit"
-                                        aria-label={`Modifier le contrat ${contract.id}`} title="Modifier le contrat"
+                                        aria-label={t('contracts.editAria', { id: contract.id })} title={t('contracts.edit')}
                                         onClick={() => navigate(`/contracts/edit/${contract.id}`)} />
                                     <Button variant="ghost" size="sm" iconOnly icon="picture_as_pdf"
-                                        aria-label={`Générer le PDF du contrat ${contract.id}`} title="Générer le PDF"
+                                        aria-label={t('contracts.pdfAria', { id: contract.id })} title={t('contracts.pdf')}
                                         onClick={() => setPrintContractId(contract.id)} />
                                 </div>
                             ),

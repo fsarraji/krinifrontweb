@@ -7,6 +7,8 @@ import { useI18n } from './context';
 import { translate, translations } from './translations';
 import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 import Login from '../components/Login';
+import StatusBadge from '../components/ui/StatusBadge';
+import Pagination from '../components/Pagination';
 
 afterEach(() => {
     document.documentElement.removeAttribute('dir');
@@ -90,5 +92,35 @@ describe('Login in Arabic', () => {
         fireEvent.click(screen.getAllByRole('button', { name: 'ع' })[0]);
         expect(screen.getAllByText('مرحباً').length).toBeGreaterThan(0);
         expect(screen.getByRole('button', { name: 'تسجيل الدخول' })).toBeInTheDocument();
+    });
+});
+
+describe('shared components follow the language', () => {
+    const withLang = (lang, ui) => {
+        localStorage.setItem('lang', lang);
+        return render(<I18nProvider>{ui}</I18nProvider>);
+    };
+
+    it('StatusBadge translates known statuses and keeps explicit labels', () => {
+        const { unmount } = withLang('fr', <StatusBadge status="EN_COURS" />);
+        expect(screen.getByText('En cours')).toBeInTheDocument();
+        unmount();
+
+        withLang('ar', <><StatusBadge status="EN_COURS" /><StatusBadge status="Available" /><StatusBadge variant="danger" label="Texte libre" /></>);
+        expect(screen.getByText('جارٍ')).toBeInTheDocument();
+        expect(screen.getByText('متاحة')).toBeInTheDocument();
+        expect(screen.getByText('Texte libre')).toBeInTheDocument();
+    });
+
+    it('StatusBadge resolves statuses case-insensitively', () => {
+        withLang('ar', <StatusBadge status="en_cours" />);
+        expect(screen.getByText('جارٍ')).toBeInTheDocument();
+    });
+
+    it('Pagination labels are translated and chevrons flip in RTL', () => {
+        withLang('ar', <Pagination currentPage={1} totalItems={25} pageSize={10} onPageChange={() => {}} onPageSizeChange={() => {}} />);
+        expect(screen.getByLabelText('الصفحة التالية')).toBeInTheDocument();
+        expect(screen.getByText('10 / صفحة')).toBeInTheDocument();
+        expect(document.querySelectorAll('.flip-rtl').length).toBe(2);
     });
 });
