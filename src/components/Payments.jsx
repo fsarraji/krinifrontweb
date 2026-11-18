@@ -9,8 +9,15 @@ import Button from './ui/Button';
 import PageHeader from './ui/PageHeader';
 import Table from './ui/Table';
 import { formatDateTime, formatMoney } from '../utils/formatters';
+import { useI18n } from '../i18n/context';
 
 const Payments = () => {
+    const { t } = useI18n();
+    const methodLabel = (m) => {
+        const key = `method.${m}`;
+        const translated = t(key);
+        return translated === key ? m : translated;
+    };
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -63,9 +70,9 @@ const Payments = () => {
     const totalCollected = payments.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
 
     const methodOptions = [
-        { value: 'ALL', label: 'Toutes', dot: 'bg-primary' },
+        { value: 'ALL', label: t('payments.filter.all'), dot: 'bg-primary' },
         ...[...new Set(payments.map(p => p.payment_method).filter(Boolean))].map(m => ({
-            value: m, label: m, dot: 'bg-indigo-500',
+            value: m, label: methodLabel(m), dot: 'bg-indigo-500',
         })),
     ];
 
@@ -85,17 +92,17 @@ const Payments = () => {
             {/* Header */}
             <PageHeader
                 className="!mb-0"
-                eyebrow="Finances"
-                title="Paiements"
+                eyebrow={t('payments.eyebrow')}
+                title={t('payments.title')}
                 actions={(
                     <>
-                        <Button variant="outline" icon="download" onClick={handleExport} title="Exporter en CSV (Excel)">Exporter (CSV)</Button>
+                        <Button variant="outline" icon="download" onClick={handleExport} title={t('payments.exportTitle')}>{t('contracts.exportCsv')}</Button>
                         <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-token border border-stroke shadow-l1">
                             <div className="w-10 h-10 bg-success-bg text-success rounded-token flex items-center justify-center">
                                 <span className="material-symbols-outlined text-xl" aria-hidden="true">account_balance</span>
                             </div>
                             <div>
-                                <p className="text-label-sm uppercase tracking-widest text-text-muted">Total collecté</p>
+                                <p className="text-label-sm uppercase tracking-widest text-text-muted">{t('payments.totalCollected')}</p>
                                 <p className="text-2xl font-extrabold text-on-surface">{formatMoney(totalCollected)}</p>
                             </div>
                         </div>
@@ -106,7 +113,7 @@ const Payments = () => {
             {/* Search & Filter */}
             <div>
                 <SearchFilterBar
-                    placeholder="Rechercher (contrat, référence, méthode)..."
+                    placeholder={t('payments.search')}
                     search={search}
                     onSearchChange={handleSearchChange}
                     options={methodOptions}
@@ -117,14 +124,14 @@ const Payments = () => {
 
             {/* Content */}
             <Table
-                caption="Liste des paiements"
+                caption={t('payments.caption')}
                 rows={paginatedPayments}
-                emptyTitle="Aucun paiement enregistré pour le moment."
+                emptyTitle={t('payments.empty')}
                 columns={[
-                    { key: 'id', label: 'ID', className: 'whitespace-nowrap text-xs font-bold text-text-muted', render: (v) => `#${v.toString().padStart(4, '0')}` },
-                    { key: 'payment_date', label: 'Date', className: 'whitespace-nowrap font-medium', render: (_, p) => formatDateTime(p.payment_date || p.created_at) },
+                    { key: 'id', label: t('payments.col.id'), className: 'whitespace-nowrap text-xs font-bold text-text-muted', render: (v) => `#${v.toString().padStart(4, '0')}` },
+                    { key: 'payment_date', label: t('payments.col.date'), className: 'whitespace-nowrap font-medium', render: (_, p) => formatDateTime(p.payment_date || p.created_at) },
                     {
-                        key: 'contract', label: 'Contrat associé', className: 'whitespace-nowrap',
+                        key: 'contract', label: t('payments.col.contract'), className: 'whitespace-nowrap',
                         render: (v) => (
                             <Link to={`/contracts/edit/${v}`} className="inline-flex items-center gap-1 font-semibold text-primary hover:text-primary-deep hover:underline">
                                 <span>CTR-{v.toString().padStart(5, '0')}</span>
@@ -133,11 +140,11 @@ const Payments = () => {
                         ),
                     },
                     {
-                        key: 'payment_method', label: 'Méthode', className: 'whitespace-nowrap',
-                        render: (v) => <span className="px-3 py-1 inline-flex text-label-sm rounded-full bg-surface-container text-on-surface-variant ring-1 ring-stroke">{v}</span>,
+                        key: 'payment_method', label: t('payments.col.method'), className: 'whitespace-nowrap',
+                        render: (v) => <span className="px-3 py-1 inline-flex text-label-sm rounded-full bg-surface-container text-on-surface-variant ring-1 ring-stroke">{methodLabel(v)}</span>,
                     },
-                    { key: 'reference', label: 'Référence', className: 'whitespace-nowrap text-xs font-mono text-text-muted truncate max-w-[150px]', render: (v) => v || '—' },
-                    { key: 'amount', label: 'Montant', align: 'right', render: (v) => <span className="font-extrabold text-success">+{formatMoney(v)}</span> },
+                    { key: 'reference', label: t('payments.col.reference'), className: 'whitespace-nowrap text-xs font-mono text-text-muted truncate max-w-[150px]', render: (v) => v || '—' },
+                    { key: 'amount', label: t('payments.col.amount'), align: 'right', render: (v) => <span className="font-extrabold text-success">+{formatMoney(v)}</span> },
                 ]}
                 footer={visiblePayments.length > 0 && (
                     <Pagination

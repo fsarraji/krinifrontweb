@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useI18n } from '../i18n/context';
 import api, { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
 import Pagination from './Pagination';
@@ -25,6 +26,7 @@ import Table from './ui/Table';
 import { formatMoney, formatNumber } from '../utils/formatters';
 
 const Vehicles = () => {
+    const { t } = useI18n();
     const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -42,12 +44,12 @@ const Vehicles = () => {
     const isSuperAdmin = getRole() === 'SUPERADMIN';
 
     const FILTER_OPTIONS = [
-        { value: 'ALL', label: 'Tous', dot: 'bg-primary' },
-        { value: 'Available', label: 'Disponible', dot: 'bg-success' },
-        { value: 'Rented', label: 'Louée', dot: 'bg-info' },
-        { value: 'Maintenance', label: 'Maintenance', dot: 'bg-warning' },
-        { value: 'archived', label: 'Archivés', dot: 'bg-secondary' },
-        ...(isSuperAdmin ? [{ value: 'deleted', label: 'Supprimés', dot: 'bg-danger' }] : []),
+        { value: 'ALL', label: t('common.all'), dot: 'bg-primary' },
+        { value: 'Available', label: t('status.Available'), dot: 'bg-success' },
+        { value: 'Rented', label: t('status.Rented'), dot: 'bg-info' },
+        { value: 'Maintenance', label: t('status.Maintenance'), dot: 'bg-warning' },
+        { value: 'archived', label: t('veh.filter.archived'), dot: 'bg-secondary' },
+        ...(isSuperAdmin ? [{ value: 'deleted', label: t('veh.filter.deleted'), dot: 'bg-danger' }] : []),
     ];
 
     useEffect(() => {
@@ -107,17 +109,17 @@ const Vehicles = () => {
 
     const handleDelete = (v) => {
         messageBox.danger(
-            `Le véhicule ${v.matricule} sera retiré de la flotte et ne sera plus visible. Il pourra être restauré par le super admin.`,
-            'Confirmer la suppression',
+            t('veh.del.message', { plate: v.matricule }),
+            t('veh.del.title'),
             {
-                confirmText: 'Supprimer',
+                confirmText: t('clients.menu.delete'),
                 onConfirm: async () => {
                     try {
                         await api.patch(`vehicles/${v.id}/`, { is_deleted: true });
-                        toast.success('Véhicule supprimé.');
+                        toast.success(t('veh.del.ok'));
                         load();
                     } catch (err) {
-                        toast.error(err.response?.data?.detail || 'Impossible de supprimer le véhicule.');
+                        toast.error(err.response?.data?.detail || t('veh.del.error'));
                     }
                 },
             }
@@ -128,20 +130,20 @@ const Vehicles = () => {
         const isDeleted = !!v.is_deleted;
         messageBox.confirm(
             isDeleted
-                ? `Restaurer le véhicule ${v.matricule} ? Il réapparaîtra dans la flotte.`
-                : `Restaurer le véhicule ${v.matricule} dans la flotte active ?`,
-            'Restaurer le véhicule',
+                ? t('veh.restore.messageDeleted', { plate: v.matricule })
+                : t('veh.restore.messageArchived', { plate: v.matricule }),
+            t('veh.restore.title'),
             {
-                confirmText: 'Restaurer',
+                confirmText: t('clients.menu.restore'),
                 onConfirm: async () => {
                     try {
                         await api.patch(`vehicles/${v.id}/`, isDeleted
                             ? { is_deleted: false }
                             : { is_archived: false, date_fin_travail: null });
-                        toast.success('Véhicule restauré.');
+                        toast.success(t('veh.restore.ok'));
                         load();
                     } catch (err) {
-                        toast.error(err.response?.data?.detail || 'Impossible de restaurer le véhicule.');
+                        toast.error(err.response?.data?.detail || t('veh.restore.error'));
                     }
                 },
             }
@@ -151,16 +153,16 @@ const Vehicles = () => {
     const buildMenuItems = (v) => {
         const items = [];
         if (!v.is_deleted && !v.is_archived && normalizeVehicleStatut(v.statut) === 'Available') {
-            items.push({ key: 'louer', icon: 'directions_car', label: 'Louer', color: 'var(--success)', onClick: () => navigate('/contracts/new', { state: { vehicleId: v.id } }) });
-            items.push({ key: 'reserver', icon: 'event', label: 'Réserver', color: 'var(--info)', onClick: () => navigate('/reservations/new', { state: { vehicleId: v.id } }) });
+            items.push({ key: 'louer', icon: 'directions_car', label: t('veh.menu.rent'), color: 'var(--success)', onClick: () => navigate('/contracts/new', { state: { vehicleId: v.id } }) });
+            items.push({ key: 'reserver', icon: 'event', label: t('veh.menu.book'), color: 'var(--info)', onClick: () => navigate('/reservations/new', { state: { vehicleId: v.id } }) });
         }
-        items.push({ key: 'info', icon: 'info', label: 'Informations', onClick: () => setInfoVehicle(v) });
+        items.push({ key: 'info', icon: 'info', label: t('clients.menu.info'), onClick: () => setInfoVehicle(v) });
         if (v.is_deleted || v.is_archived) {
-            items.push({ key: 'restaurer', icon: 'unarchive', label: 'Restaurer', color: 'var(--success)', onClick: () => handleRestore(v) });
+            items.push({ key: 'restaurer', icon: 'unarchive', label: t('clients.menu.restore'), color: 'var(--success)', onClick: () => handleRestore(v) });
         } else {
-            items.push({ key: 'editer', icon: 'edit', label: 'Éditer', onClick: () => navigate(`/vehicles/edit/${v.id}`) });
-            items.push({ key: 'archiver', icon: 'archive', label: 'Archiver', onClick: () => setArchiveVehicle(v) });
-            items.push({ key: 'supprimer', icon: 'delete', label: 'Supprimer', color: 'var(--danger)', destructive: true, onClick: () => handleDelete(v) });
+            items.push({ key: 'editer', icon: 'edit', label: t('clients.menu.edit'), onClick: () => navigate(`/vehicles/edit/${v.id}`) });
+            items.push({ key: 'archiver', icon: 'archive', label: t('veh.menu.archive'), onClick: () => setArchiveVehicle(v) });
+            items.push({ key: 'supprimer', icon: 'delete', label: t('clients.menu.delete'), color: 'var(--danger)', destructive: true, onClick: () => handleDelete(v) });
         }
         return items;
     };
@@ -179,18 +181,18 @@ const Vehicles = () => {
         <div>
             {/* Header Section */}
             <PageHeader
-                eyebrow="Stock d'actifs"
-                title="Gestion de Flotte"
+                eyebrow={t('veh.eyebrow')}
+                title={t('veh.title')}
                 actions={(
                     <>
                         <ExportButton
                             data={filteredVehicles}
                             filename="flotte_vehicules"
                             columns={EXPORT_COLUMNS}
-                            label="Exporter (CSV)"
+                            label={t('contracts.exportCsv')}
                         />
                         <Button icon="add" variant="primary" onClick={() => navigate('/vehicles/new')}>
-                            Ajouter un Véhicule
+                            {t('veh.add')}
                         </Button>
                     </>
                 )}
@@ -198,17 +200,17 @@ const Vehicles = () => {
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-                <MetricCard icon="directions_car" iconBg="bg-info-bg" iconColor="text-info" value={totalFleet} label="Flotte Totale" />
-                <MetricCard icon="key" iconBg="bg-success-bg" iconColor="text-success" value={rentedCount} label="Actuellement Loués" />
-                <MetricCard icon="build" iconBg="bg-warning-bg" iconColor="text-warning" value={maintenanceCount} label="En Maintenance" />
-                <MetricCard icon="payments" iconBg="bg-secondary-container" iconColor="text-secondary" value={avgDailyRate} unit="MAD" label="Tarif Moyen / Jour" />
+                <MetricCard icon="directions_car" iconBg="bg-info-bg" iconColor="text-info" value={totalFleet} label={t('veh.kpi.total')} />
+                <MetricCard icon="key" iconBg="bg-success-bg" iconColor="text-success" value={rentedCount} label={t('veh.kpi.rented')} />
+                <MetricCard icon="build" iconBg="bg-warning-bg" iconColor="text-warning" value={maintenanceCount} label={t('veh.kpi.maintenance')} />
+                <MetricCard icon="payments" iconBg="bg-secondary-container" iconColor="text-secondary" value={avgDailyRate} unit="MAD" label={t('veh.kpi.avgRate')} />
             </div>
 
             {/* Search Filter Bar & View Switcher */}
             <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6">
                 <div className="flex-1">
                     <SearchFilterBar
-                        placeholder="Rechercher par matricule, marque, modèle, carburant..."
+                        placeholder={t('veh.search')}
                         search={search}
                         onSearchChange={handleSearchChange}
                         options={FILTER_OPTIONS}
@@ -229,7 +231,7 @@ const Vehicles = () => {
                         style={{ color: viewMode === 'table' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
                     >
                         <span className="material-symbols-outlined text-[18px]">table_rows</span>
-                        Tableau
+                        {t('clients.view.table')}
                     </button>
                     <button
                         onClick={() => setViewMode('grid')}
@@ -241,7 +243,7 @@ const Vehicles = () => {
                         style={{ color: viewMode === 'grid' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
                     >
                         <span className="material-symbols-outlined text-[18px]">grid_view</span>
-                        Grille
+                        {t('clients.view.grid')}
                     </button>
                 </div>
             </div>
@@ -251,12 +253,12 @@ const Vehicles = () => {
                 {viewMode === 'table' ? (
                     <Table
                         className="!border-0 !rounded-none"
-                        caption="Liste des véhicules"
+                        caption={t('veh.caption')}
                         rows={paginatedVehicles}
-                        emptyTitle="Aucun véhicule ne correspond aux critères."
+                        emptyTitle={t('veh.empty')}
                         columns={[
                             {
-                                key: 'modele_name', label: 'Véhicule',
+                                key: 'modele_name', label: t('veh.col.vehicle'),
                                 render: (_, vehicle) => (
                                     <div className="flex items-center gap-3">
                                         {vehicle.image ? (
@@ -273,27 +275,27 @@ const Vehicles = () => {
                                         )}
                                         <div>
                                             <span className="font-semibold text-on-surface">{vehicle.marque_name} {vehicle.modele_name}</span>
-                                            <span className="ml-1.5 font-normal text-label-sm text-text-muted">{vehicle.annee}</span>
+                                            <span className="ms-1.5 font-normal text-label-sm text-text-muted">{vehicle.annee}</span>
                                         </div>
                                     </div>
                                 ),
                             },
-                            { key: 'matricule', label: 'Matricule', className: 'text-on-surface-variant', render: (_, v) => v.matricule_actuel || v.matricule },
-                            { key: 'carburant', label: 'Carburant', className: 'text-on-surface-variant' },
-                            { key: 'kilometrage', label: 'Km', className: 'text-on-surface-variant', render: (v) => `${formatNumber(v ? parseInt(v, 10) : 0)} km` },
+                            { key: 'matricule', label: t('veh.col.plate'), className: 'text-on-surface-variant', render: (_, v) => v.matricule_actuel || v.matricule },
+                            { key: 'carburant', label: t('veh.col.fuel'), className: 'text-on-surface-variant' },
+                            { key: 'kilometrage', label: t('veh.col.km'), className: 'text-on-surface-variant', render: (v) => `${formatNumber(v ? parseInt(v, 10) : 0)} ${t('veh.kmUnit')}` },
                             {
-                                key: 'statut', label: 'Statut',
+                                key: 'statut', label: t('veh.col.status'),
                                 render: (_, vehicle) => (vehicle.is_deleted ? (
-                                    <StatusBadge variant="danger" label="Supprimé" />
+                                    <StatusBadge variant="danger" label={t('status.deleted')} />
                                 ) : vehicle.is_archived ? (
-                                    <StatusBadge variant="neutral" label="Archivé" />
+                                    <StatusBadge variant="neutral" label={t('status.archived')} />
                                 ) : (
                                     <StatusBadge status={vehicle.statut} />
                                 )),
                             },
-                            { key: 'prix_par_jour', label: 'Tarif / jour', align: 'right', className: 'font-semibold', render: (v) => formatMoney(v) },
+                            { key: 'prix_par_jour', label: t('veh.col.rate'), align: 'right', className: 'font-semibold', render: (v) => formatMoney(v) },
                             {
-                                key: 'actions', label: 'Actions', align: 'right',
+                                key: 'actions', label: t('veh.col.actions'), align: 'right',
                                 render: (_, vehicle) => (
                                     <div className="flex items-center justify-end gap-1">
                                         <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
@@ -307,7 +309,7 @@ const Vehicles = () => {
                     filteredVehicles.length === 0 ? (
                         <div className="p-16 text-center font-medium flex flex-col items-center gap-2" style={{ color: 'var(--on-surface-variant)' }}>
                             <span className="material-symbols-outlined text-4xl" style={{ opacity: 0.4 }}>directions_car_off</span>
-                            <p>Aucun véhicule ne correspond aux critères.</p>
+                            <p>{t('veh.empty')}</p>
                         </div>
                     ) : (
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -339,9 +341,9 @@ const Vehicles = () => {
                                                 </div>
                                             </div>
                                             {vehicle.is_deleted ? (
-                                                <StatusBadge variant="danger" label="Supprimé" />
+                                                <StatusBadge variant="danger" label={t('status.deleted')} />
                                             ) : vehicle.is_archived ? (
-                                                <StatusBadge variant="neutral" label="Archivé" />
+                                                <StatusBadge variant="neutral" label={t('status.archived')} />
                                             ) : (
                                                 <StatusBadge status={vehicle.statut} />
                                             )}
@@ -350,25 +352,25 @@ const Vehicles = () => {
                                         <div className="space-y-2 text-label-md text-on-surface-variant border-t border-stroke pt-3">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm">local_gas_station</span> Carburant:
+                                                    <span className="material-symbols-outlined text-sm">local_gas_station</span> {t('veh.card.fuel')}
                                                 </span>
                                                 <span className="font-semibold text-on-surface">{vehicle.carburant}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm">speed</span> Kilométrage:
+                                                    <span className="material-symbols-outlined text-sm">speed</span> {t('veh.card.mileage')}
                                                 </span>
-                                                <span className="font-mono font-semibold text-on-surface">{formatNumber(vehicle.kilometrage ? parseInt(vehicle.kilometrage, 10) : 0)} km</span>
+                                                <span className="font-mono font-semibold text-on-surface">{formatNumber(vehicle.kilometrage ? parseInt(vehicle.kilometrage, 10) : 0)} {t('veh.kmUnit')}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm">event</span> Année:
+                                                    <span className="material-symbols-outlined text-sm">event</span> {t('veh.card.year')}
                                                 </span>
                                                 <span className="font-semibold text-on-surface">{vehicle.annee}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-on-surface-variant/70 font-medium flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-sm">payments</span> Tarif / jour:
+                                                    <span className="material-symbols-outlined text-sm">payments</span> {t('veh.card.rate')}
                                                 </span>
                                                 <span className="font-bold text-on-surface">{formatMoney(vehicle.prix_par_jour)}</span>
                                             </div>
@@ -381,7 +383,7 @@ const Vehicles = () => {
                                                 to={`/vehicles/edit/${vehicle.id}`}
                                                 className="text-label-sm font-bold text-primary hover:underline flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
                                             >
-                                                Gérer le véhicule <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                                {t('veh.card.manage')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
                                         <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />

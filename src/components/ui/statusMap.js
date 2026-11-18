@@ -14,6 +14,8 @@ export const STATUS_MAP = {
     TERMINE: { label: 'Terminé', variant: 'neutral' },
     ANNULE: { label: 'Annulé', variant: 'danger' },
     PENDING: { label: 'En attente', variant: 'warning' },
+    CONFIRMED: { label: 'Confirmée', variant: 'success' },
+    CANCELLED: { label: 'Annulée', variant: 'danger' },
 };
 
 export default STATUS_MAP;
