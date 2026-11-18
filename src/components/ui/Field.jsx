@@ -21,7 +21,7 @@ const Field = ({ label, required = false, hint, error, className = '', children 
         <div className={`space-y-1.5 ${className}`}>
             <label className="label" htmlFor={only ? controlId : undefined}>
                 {label}
-                {required && <span className="text-danger ml-0.5" aria-hidden="true">*</span>}
+                {required && <span className="text-danger ms-0.5" aria-hidden="true">*</span>}
             </label>
             {control}
             {hint && <p id={`${controlId}-hint`} className="text-label-sm font-normal text-on-surface-variant">{hint}</p>}

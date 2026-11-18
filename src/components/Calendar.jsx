@@ -269,8 +269,8 @@ const Calendar = () => {
                                                         style={barStyle}
                                                         className={`absolute top-[18px] h-10 rounded-xl px-3 flex items-center justify-between gap-2 cursor-pointer transition-all z-20 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                                                             isActive
-                                                                ? 'bg-success text-white shadow-[0_3px_8px_rgba(5,150,105,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
-                                                                : 'bg-primary text-white shadow-[0_3px_8px_rgba(79,70,229,0.35)] hover:brightness-95 hover:-translate-y-px hover:shadow-md'
+                                                                ? 'bg-success text-white shadow-md hover:brightness-95 hover:-translate-y-px hover:shadow-md'
+                                                                : 'bg-primary text-white shadow-md hover:brightness-95 hover:-translate-y-px hover:shadow-md'
                                                         }`}
                                                     >
                                                         <span className="text-xs font-extrabold truncate">
@@ -283,7 +283,7 @@ const Calendar = () => {
 
                                             {/* Maintenance Bar */}
                                             {isMaintenance && vehicleContracts.length === 0 && (
-                                                <div className="absolute inset-x-2 top-[18px] h-10 rounded-xl bg-danger text-white shadow-[0_3px_8px_rgba(225,29,72,0.35)] flex items-center justify-center gap-2 text-xs font-bold z-10">
+                                                <div className="absolute inset-x-2 top-[18px] h-10 rounded-xl bg-danger text-white shadow-md flex items-center justify-center gap-2 text-xs font-bold z-10">
                                                     <span className="material-symbols-outlined text-base text-white/90">build</span>
                                                     <span>{t('u.vhicule_en_maintenance')}</span>
                                                 </div>

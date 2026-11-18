@@ -1,18 +1,22 @@
-import Spinner from './Spinner';
+import { Button as AstryxButton } from '@astryxdesign/core';
 
+// Adaptateur : garde l'API historique (variant/size/icon/iconOnly/loading/disabled/children) et
+// s'appuie sur le Button du design system Astryx.
 const VARIANTS = {
-    primary: 'bg-primary text-white hover:bg-primary-deep active:bg-primary-deep',
-    secondary: 'bg-secondary-container text-on-secondary-container hover:bg-surface-dim',
-    danger: 'bg-danger text-white hover:bg-danger-dark active:bg-danger-dark',
-    success: 'bg-success text-white hover:bg-success-dark active:bg-success-dark',
-    outline: 'bg-white text-on-surface border border-stroke hover:bg-surface-hover',
-    ghost: 'bg-transparent text-secondary hover:bg-surface-hover',
+    primary: 'primary',
+    success: 'primary', // pas de variante « succès » dans Astryx : action principale
+    secondary: 'secondary',
+    outline: 'secondary',
+    ghost: 'ghost',
+    danger: 'destructive',
 };
 
-const SIZES = {
-    sm: 'px-3 py-1.5 text-xs gap-1.5',
-    md: 'px-4 py-2.5 text-sm gap-2',
-    lg: 'px-6 py-3 text-base gap-2',
+const SIZES = { sm: 'sm', md: 'md', lg: 'lg' };
+
+const textOf = (node) => {
+    if (typeof node === 'string' || typeof node === 'number') return String(node);
+    if (Array.isArray(node)) return node.map(textOf).join('').trim();
+    return '';
 };
 
 const Button = ({
@@ -26,22 +30,32 @@ const Button = ({
     className = '',
     onClick,
     children,
+    title,
     ...rest
-}) => (
-    <button
-        type={type}
-        onClick={onClick}
-        disabled={disabled || loading}
-        className={`inline-flex items-center justify-center rounded-token font-semibold transition-all
-            disabled:opacity-60 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30
-            ${VARIANTS[variant]} ${SIZES[size]} ${iconOnly ? '!p-2' : ''} ${className}`}
-        {...rest}
-    >
-        {loading
-            ? <Spinner size={18} />
-            : icon && <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{icon}</span>}
-        {children}
-    </button>
-);
+}) => {
+    // Astryx exige un libellé (nom accessible) ; pour un bouton icône seul, on reprend aria-label/title.
+    const label = textOf(children) || rest['aria-label'] || title || '';
+    const hasLabel = Boolean(textOf(children)) && !iconOnly;
+    const complexChildren = !textOf(children) && children ? children : null;
+
+    return (
+        <AstryxButton
+            type={type}
+            label={label}
+            variant={VARIANTS[variant] || 'secondary'}
+            size={SIZES[size] || 'md'}
+            isLoading={loading}
+            isDisabled={disabled}
+            isIconOnly={iconOnly || (!hasLabel && !complexChildren && Boolean(icon))}
+            icon={icon ? <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>{icon}</span> : undefined}
+            tooltip={iconOnly ? title : undefined}
+            className={className}
+            onClick={onClick}
+            {...rest}
+        >
+            {complexChildren}
+        </AstryxButton>
+    );
+};
 
 export default Button;

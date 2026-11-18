@@ -46,18 +46,18 @@ const UserMenu = ({ userName = 'Utilisateur', userRole = 'Admin', agencyName = '
                 aria-expanded={open}
                 title={userName}
             >
-                <span className="avatar flex-shrink-0" style={{ background: 'var(--primary-container)', color: '#fff' }}>
+                <span className="avatar flex-shrink-0" style={{ background: 'var(--primary-container)', color: 'var(--color-on-accent)' }}>
                     {getInitials(userName)}
                 </span>
                 {!collapsed && (
-                    <span className="min-w-0 flex-1 text-left leading-tight">
+                    <span className="min-w-0 flex-1 text-start leading-tight">
                         <span className="block text-[13px] font-semibold truncate" style={{ color: 'var(--on-surface)' }}>{userName}</span>
                         <span className="block text-[11px] font-medium truncate" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{userRole || "Admin"}</span>
                     </span>
                 )}
                 {!collapsed && (
                     <span
-                        className={`material-symbols-outlined text-[18px] transition-transform duration-200 ml-auto ${open ? 'rotate-180' : ''}`}
+                        className={`material-symbols-outlined text-[18px] transition-transform duration-200 ms-auto ${open ? 'rotate-180' : ''}`}
                         style={{ color: 'var(--on-surface-variant)' }}
                     >
                         expand_more
@@ -67,12 +67,12 @@ const UserMenu = ({ userName = 'Utilisateur', userRole = 'Admin', agencyName = '
 
             {open && (
                 <div
-                    className="absolute left-0 bottom-[calc(100%+10px)] w-72 bg-white border border-stroke rounded-token shadow-l2 z-50"
+                    className="absolute start-0 bottom-[calc(100%+10px)] w-72 bg-white border border-stroke rounded-token shadow-l2 z-50"
                     role="menu"
                 >
                     <div className="p-2">
                         <div className="flex items-center gap-3 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-token">
-                            <span className="avatar !w-9 !h-9 !text-[13px] flex-shrink-0" style={{ background: 'var(--primary-container)', color: '#fff' }}>
+                            <span className="avatar !w-9 !h-9 !text-[13px] flex-shrink-0" style={{ background: 'var(--primary-container)', color: 'var(--color-on-accent)' }}>
                                 {getInitials(userName)}
                             </span>
                             <div className="min-w-0">

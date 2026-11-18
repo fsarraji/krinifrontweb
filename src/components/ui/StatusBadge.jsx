@@ -59,6 +59,7 @@ const CATEGORIES = {
 };
 
 const BASE = 'inline-flex items-center w-fit rounded-lg px-3 py-1.5 text-label-md gap-2';
+const PILL = 'inline-flex items-center w-fit rounded-full px-2.5 py-0.5 text-label-sm gap-1.5 border';
 
 export default function StatusBadge({
   status,
@@ -82,7 +83,7 @@ export default function StatusBadge({
   const iconName = icon || (cat ? cat.icon : t.icon);
   const iconFilled = t.fill;
   const iconEl = iconName && (
-    <span className={`material-symbols-outlined text-[20px] ${iconFilled ? 'fill' : ''}`}>{iconName}</span>
+    <span className={`material-symbols-outlined text-[16px] ${iconFilled ? 'fill' : ''}`}>{iconName}</span>
   );
 
   // 3. Dot badge : conteneur neutre + point coloré (compact).
@@ -133,11 +134,11 @@ export default function StatusBadge({
     );
   }
 
-  // 1. Solid (défaut) : fond teinté + bordure + icône.
+  // 1. Solid (défaut) : pastille teintée avec un point d'état ; icône seulement si demandée.
   if (appearance === 'solid') {
     return (
-      <span className={`${BASE} ${t.bg} ${t.text} border ${t.border} ${className}`}>
-        {iconEl}
+      <span className={`${PILL} ${t.bg} ${t.text} ${t.border} ${className}`}>
+        {icon ? iconEl : <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.dot}`} aria-hidden="true" />}
         {finalLabel}
       </span>
     );

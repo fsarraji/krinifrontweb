@@ -66,14 +66,14 @@ const Table = ({
     if (loading) return <SkeletonTable cols={columns.length} />;
 
     return (
-        <div className={`bg-white border border-stroke rounded-token overflow-hidden ${className}`}>
+        <div className={`bg-surface-bright border border-stroke rounded-xl overflow-hidden ${className}`}>
             {sorted.length === 0 ? (
                 <EmptyState title={emptyTitle ?? t('common.noResult')} description={emptyDescription} />
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         {caption && <caption className="sr-only">{caption}</caption>}
-                        <thead className="bg-surface text-label-sm uppercase tracking-wider text-text-muted">
+                        <thead className="bg-surface-container-low text-label-sm uppercase tracking-wider text-text-muted border-b border-stroke">
                             <tr>
                                 {columns.map((col) => {
                                     const active = sort?.key === col.key;
@@ -82,7 +82,7 @@ const Table = ({
                                             key={col.key}
                                             scope="col"
                                             aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
-                                            className={`px-4 py-3 font-semibold whitespace-nowrap ${ALIGN[col.align || 'left']} ${col.className || ''}`}
+                                            className={`px-4 py-2.5 font-semibold whitespace-nowrap ${ALIGN[col.align || 'left']} ${col.className || ''}`}
                                         >
                                             {col.sortable ? (
                                                 <button
@@ -106,10 +106,10 @@ const Table = ({
                                 <tr
                                     key={row[rowKey] ?? i}
                                     onClick={onRowClick ? () => onRowClick(row) : undefined}
-                                    className={`border-t border-stroke ${onRowClick ? 'cursor-pointer hover:bg-surface-hover' : 'hover:bg-surface/60'} transition-colors`}
+                                    className={`border-t border-stroke first:border-t-0 ${onRowClick ? 'cursor-pointer' : ''} hover:bg-surface-hover transition-colors`}
                                 >
                                     {columns.map((col) => (
-                                        <td key={col.key} className={`px-4 py-3 ${col.align === 'right' ? 'whitespace-nowrap ' : ''}${ALIGN[col.align || 'left']} ${col.className || ''}`}>
+                                        <td key={col.key} className={`px-4 py-3 tabular-nums ${col.align === 'right' ? 'whitespace-nowrap ' : ''}${ALIGN[col.align || 'left']} ${col.className || ''}`}>
                                             {col.render ? col.render(row[col.key], row) : row[col.key]}
                                         </td>
                                     ))}

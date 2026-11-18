@@ -234,11 +234,11 @@ const GpsTracking = () => {
             if (map.current && routeLayer.current) {
                 routeLayer.current.clearLayers();
                 if (points.length) {
-                    const line = L.polyline(points.map((p) => [p.latitude, p.longitude]), { color: '#1D4ED8', weight: 4, opacity: 0.75 });
+                    const line = L.polyline(points.map((p) => [p.latitude, p.longitude]), { color: '#004783', weight: 4, opacity: 0.75 });
                     routeLayer.current.addLayer(line);
                     map.current.fitBounds(line.getBounds(), { padding: [60, 60], maxZoom: 15 });
                     const last = points[points.length - 1];
-                    L.circleMarker([last.latitude, last.longitude], { radius: 6, color: '#1D4ED8', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(routeLayer.current);
+                    L.circleMarker([last.latitude, last.longitude], { radius: 6, color: '#004783', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(routeLayer.current);
                 }
             }
         } catch (error) {
@@ -379,7 +379,7 @@ const GpsTracking = () => {
 
     return (
         <div
-            className="-m-8 h-screen overflow-hidden flex flex-col"
+            className="-mx-4 sm:-mx-6 lg:-mx-8 -my-6 lg:-my-8 h-[calc(100dvh-52px)] overflow-hidden flex flex-col"
             style={{ background: 'var(--slate-bg)', color: 'var(--on-surface)' }}
             data-purpose="gps-tracking"
         >

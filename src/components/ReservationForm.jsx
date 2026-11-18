@@ -166,7 +166,7 @@ const ReservationForm = () => {
     );
 
     return (
-        <div className="min-h-screen bg-surface">
+        <div className="bg-surface">
             {/* Header Section */}
             <PageHeader
                 eyebrow={t('u.fleet_concierge')}

@@ -1,114 +1,110 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL@24,500,0&display=swap');
+/* Astryx : couches CSS (reset < composants < thème). Tailwind reste hors couches. */
+@layer reset, astryx-base, astryx-theme;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL@24,500,0&display=swap');
+@import '@astryxdesign/core/reset.css';
+@import '@astryxdesign/core/astryx.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* ===== Kricar Agency — Design System officiel ===== */
+  /* Alias historiques -> jetons Astryx (une seule source : src/theme/krini.theme.js).
+     Les ~290 styles en ligne var(--…) et les classes ci-dessous suivent donc le thème. */
+  --primary: var(--color-accent);
+  --primary-hover: color-mix(in srgb, var(--color-accent) 86%, black);
+  --primary-deep: color-mix(in srgb, var(--color-accent) 86%, black);
+  --primary-light: var(--color-accent-muted);
+  --primary-border: color-mix(in srgb, var(--color-accent) 32%, var(--color-background-surface));
+  --on-primary: var(--color-on-accent);
+  --primary-container: var(--color-accent);
+  --on-primary-container: var(--color-on-accent);
 
-  /* Brand */
-  --primary: #1D4ED8;
-  --primary-hover: #1E40AF;
-  --primary-light: #DBEAFE;
-  --primary-border: #93C5FD;
-  --primary-deep: #1E40AF;
-  --on-primary: #FFFFFF;
-  --primary-container: #1D4ED8;
-  --on-primary-container: #FFFFFF;
+  --app-bg: var(--color-background-body);
+  --slate-bg: var(--color-background-body);
+  --card-white: var(--color-background-card);
+  --surface: var(--color-background-body);
+  --surface-dim: var(--color-border);
+  --surface-bright: var(--color-background-surface);
+  --surface-container-lowest: var(--color-background-surface);
+  --surface-container-low: var(--color-background-body);
+  --surface-container: var(--color-background-muted);
+  --surface-container-high: var(--color-accent-muted);
+  --surface-container-highest: var(--primary-border);
+  --surface-hover: var(--color-tint-hover);
+  --surface-active: var(--color-accent-muted);
 
-  /* Backgrounds */
-  --app-bg: #F8FAFC;
-  --slate-bg: #F8FAFC;
-  --card-white: #FFFFFF;
-  --surface: #F8FAFC;
-  --surface-dim: #E2E8F0;
-  --surface-bright: #FFFFFF;
-  --surface-container-lowest: #FFFFFF;
-  --surface-container-low: #F8FAFC;
-  --surface-container: #F1F5F9;
-  --surface-container-high: #EFF6FF;
-  --surface-container-highest: #DBEAFE;
-  --surface-hover: #F1F5F9;
-  --surface-active: #EFF6FF;
+  --stroke: var(--color-border);
+  --stroke-strong: var(--color-border-emphasized);
+  --outline: var(--color-border-emphasized);
+  --outline-variant: var(--color-border);
 
-  /* Borders */
-  --stroke: #E2E8F0;
-  --stroke-strong: #CBD5E1;
-  --outline: #CBD5E1;
-  --outline-variant: #E2E8F0;
+  --on-surface: var(--color-text-primary);
+  --on-background: var(--color-text-primary);
+  --on-surface-variant: var(--color-text-secondary);
+  --inverse-surface: var(--color-background-inverted);
+  --inverse-on-surface: var(--color-background-body);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: color-mix(in srgb, var(--color-text-secondary) 62%, var(--color-text-disabled));
+  --text-disabled: var(--color-text-disabled);
 
-  /* Text */
-  --on-surface: #0F172A;
-  --on-background: #0F172A;
-  --on-surface-variant: #475569;
-  --inverse-surface: #0F172A;
-  --inverse-on-surface: #F8FAFC;
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #64748B;
-  --text-disabled: #94A3B8;
+  --secondary: var(--color-text-secondary);
+  --secondary-container: var(--color-background-muted);
+  --on-secondary-container: var(--color-text-secondary);
 
-  /* Secondary */
-  --secondary: #475569;
-  --secondary-container: #F1F5F9;
-  --on-secondary-container: #475569;
+  --success: var(--color-success);
+  --success-bg: var(--color-success-muted);
+  --success-dark: color-mix(in srgb, var(--color-success) 72%, black);
+  --success-border: color-mix(in srgb, var(--color-success) 30%, var(--color-background-surface));
+  --warning: var(--color-warning);
+  --warning-bg: var(--color-warning-muted);
+  --warning-dark: color-mix(in srgb, var(--color-warning) 60%, black);
+  --warning-border: color-mix(in srgb, var(--color-warning) 30%, var(--color-background-surface));
+  --danger: var(--color-error);
+  --danger-bg: var(--color-error-muted);
+  --danger-dark: color-mix(in srgb, var(--color-error) 72%, black);
+  --danger-border: color-mix(in srgb, var(--color-error) 30%, var(--color-background-surface));
+  --error-c: var(--color-error);
+  --error-bg: var(--color-error-muted);
+  --error: var(--color-error);
+  --error-container: var(--color-error-muted);
+  --on-error-container: color-mix(in srgb, var(--color-error) 72%, black);
+  --info: var(--color-text-blue);
+  --info-bg: var(--color-background-blue);
+  --info-dark: color-mix(in srgb, var(--color-text-blue) 80%, black);
+  --info-border: var(--color-border-blue);
 
-  /* Semantic */
-  --success: #10B981;
-  --success-bg: #D1FAE5;
-  --success-dark: #047857;
-  --success-border: #A7F3D0;
-  --warning: #F59E0B;
-  --warning-bg: #FEF3C7;
-  --warning-dark: #B45309;
-  --warning-border: #FDE68A;
-  --danger: #EF4444;
-  --danger-bg: #FEE2E2;
-  --danger-dark: #B91C1C;
-  --danger-border: #FECACA;
-  --error-c: #EF4444;
-  --error-bg: #FEE2E2;
-  --error: #EF4444;
-  --error-container: #FEE2E2;
-  --on-error-container: #B91C1C;
-  --info: #0EA5E9;
-  --info-bg: #E0F2FE;
-  --info-dark: #075985;
-  --info-border: #BAE6FD;
+  --badge-success-bg: var(--success-bg);
+  --badge-success-text: var(--success-dark);
+  --badge-success-border: var(--success-border);
+  --badge-warning-bg: var(--warning-bg);
+  --badge-warning-text: var(--warning-dark);
+  --badge-warning-border: var(--warning-border);
+  --badge-danger-bg: var(--danger-bg);
+  --badge-danger-text: var(--danger-dark);
+  --badge-danger-border: var(--danger-border);
+  --badge-info-bg: var(--info-bg);
+  --badge-info-text: var(--info);
+  --badge-info-border: var(--info-border);
+  --badge-neutral-bg: var(--color-background-muted);
+  --badge-neutral-text: var(--color-text-secondary);
+  --badge-neutral-border: var(--color-border);
 
-  /* Système de badges (Krincar Agency — code.html / DESIGN.md) */
-  --badge-success-bg: #e6f4ea;
-  --badge-success-text: #137333;
-  --badge-success-border: #ceead6;
-  --badge-warning-bg: #fef7e0;
-  --badge-warning-text: #b06000;
-  --badge-warning-border: #feefc3;
-  --badge-danger-bg: #fce8e6;
-  --badge-danger-text: #c5221f;
-  --badge-danger-border: #fad2cf;
-  --badge-info-bg: #e8f0fe;
-  --badge-info-text: #1967d2;
-  --badge-info-border: #d2e3fc;
-  --badge-neutral-bg: #f1f3f4;
-  --badge-neutral-text: #5f6368;
-  --badge-neutral-border: #e8eaed;
-
-  /* Catégories métier */
-  --cat-vehicule-bg: #e6f4ea;
-  --cat-vehicule-text: #1e8e3e;
-  --cat-resa-bg: #fef7e0;
-  --cat-resa-text: #f9ab00;
-  --cat-client-bg: #e8f0fe;
-  --cat-client-text: #4285f4;
-  --cat-contrat-bg: #f3e8fd;
-  --cat-contrat-text: #9334e6;
-  --cat-agence-bg: #f1f3f4;
-  --cat-agence-text: #5f6368;
+  --cat-vehicule-bg: var(--color-background-green);
+  --cat-vehicule-text: var(--color-text-green);
+  --cat-resa-bg: var(--color-background-yellow);
+  --cat-resa-text: var(--color-text-yellow);
+  --cat-client-bg: var(--color-background-blue);
+  --cat-client-text: var(--color-text-blue);
+  --cat-contrat-bg: var(--color-background-purple);
+  --cat-contrat-text: var(--color-text-purple);
+  --cat-agence-bg: var(--color-background-gray);
+  --cat-agence-text: var(--color-text-gray);
 }
 
 body {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Inter', 'Tajawal', system-ui, sans-serif;
   background-color: var(--app-bg);
   color: var(--on-background);
 }
@@ -123,13 +119,13 @@ body {
 
 /* Kricar Agency utility classes */
 .shadow-l1 {
-  box-shadow: 0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02);
+  box-shadow: var(--shadow-low);
 }
 
 .card {
   background: var(--card-white);
   border: 1px solid var(--stroke);
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .rounded-token {
@@ -214,6 +210,8 @@ tr.row:not(:last-child) td {
   font-size: 14px;
 }
 
+/* Dans @layer components : les utilitaires Tailwind (ps-10, h-12…) l'emportent sur ces valeurs de base. */
+@layer components {
 .input {
   border: 1px solid var(--stroke);
   border-radius: 8px;
@@ -244,18 +242,16 @@ tr.row:not(:last-child) td {
 .field:focus {
   outline: none;
   border-color: var(--primary);
-  background: #fff;
-  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+  background: var(--color-background-surface);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
 }
 
 .label {
   display: block;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--on-surface-variant);
-  opacity: 0.7;
   margin-bottom: 6px;
 }
 
@@ -330,4 +326,9 @@ html[lang='ar'] textarea {
 }
 html[dir='rtl'] .material-symbols-outlined.flip-rtl {
     transform: scaleX(-1);
+}
+
+/* Montants et nombres : en arabe (RTL), « 4 200,00 MAD » doit rester dans l'ordre « nombre puis devise ». */
+.tabular-nums {
+    unicode-bidi: plaintext;
 }

@@ -274,12 +274,12 @@ const ContractForm = () => {
         const selectStyles = (name) => ({
             control: (base, state) => ({
                 ...base,
-                backgroundColor: state.isDisabled ? '#f1f5f9' : '#f8fafc',
+                backgroundColor: state.isDisabled ? 'var(--surface-container)' : 'var(--surface-container-low)',
                 border: '1px solid',
                 borderRadius: '0.5rem',
                 padding: '4px',
                 borderColor: hasError(name) ? 'var(--danger)' : (state.isFocused ? 'var(--primary)' : 'var(--stroke)'),
-                boxShadow: hasError(name) ? '0 0 0 1px var(--danger)' : (state.isFocused ? '0 0 0 2px rgba(29,78,216,0.15)' : 'none'),
+                boxShadow: hasError(name) ? '0 0 0 1px var(--danger)' : (state.isFocused ? '0 0 0 2px color-mix(in srgb, var(--color-accent) 18%, transparent)' : 'none'),
             }),
             placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
         });

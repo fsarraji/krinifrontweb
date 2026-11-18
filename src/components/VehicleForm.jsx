@@ -165,13 +165,13 @@ const VehicleForm = () => {
     const selectStyles = (name) => ({
         control: (base, state) => ({
             ...base,
-            backgroundColor: state.isDisabled ? '#f1f5f9' : '#ffffff',
+            backgroundColor: state.isDisabled ? 'var(--surface-container)' : 'var(--card-white)',
             border: '1px solid',
             borderRadius: '0.75rem',
             padding: '5px 6px',
             minHeight: '46px',
             borderColor: hasError(name) ? 'var(--danger)' : (state.isFocused ? 'var(--primary)' : 'var(--stroke)'),
-            boxShadow: hasError(name) ? '0 0 0 3px rgba(239,68,68,0.12)' : (state.isFocused ? '0 0 0 3px rgba(29,78,216,0.12)' : 'none'),
+            boxShadow: hasError(name) ? '0 0 0 3px color-mix(in srgb, var(--color-error) 14%, transparent)' : (state.isFocused ? '0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent)' : 'none'),
             '&:hover': { borderColor: state.isFocused ? 'var(--primary)' : 'var(--text-disabled)' },
         }),
         placeholder: (base) => ({ ...base, color: 'var(--text-disabled)' }),
@@ -750,7 +750,7 @@ const VehicleForm = () => {
                                         <input
                                             type="checkbox"
                                             className="h-5 w-5 rounded border-slate-300 text-primary"
-                                            style={{ accentColor: '#1D4ED8' }}
+                                            style={{ accentColor: 'var(--color-accent)' }}
                                             name="chauffeur_disponible"
                                             checked={formData.chauffeur_disponible}
                                             onChange={handleChange}

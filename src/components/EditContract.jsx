@@ -189,7 +189,7 @@ const EditContract = () => {
   };
 
   if (loading) return <div className="flex items-center justify-center h-64 gap-3 text-primary font-semibold" role="status"><Spinner size={22} /> {t('u.chargement_du_contrat')}</div>;
-  if (!contract) return <div className="flex items-center justify-center h-screen text-error font-bold">{t('u.contrat_non_trouv')}</div>;
+  if (!contract) return <div className="flex items-center justify-center h-64 text-error font-bold">{t('u.contrat_non_trouv')}</div>;
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 bg-slate-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200">
@@ -233,7 +233,7 @@ const EditContract = () => {
               styles={{
                 control: (base) => ({
                   ...base,
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: 'var(--surface-container-low)',
                   border: 'none',
                   borderRadius: '0.5rem',
                   padding: '2px'
