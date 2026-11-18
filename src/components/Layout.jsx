@@ -3,32 +3,36 @@ import { Link, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import NotificationCenter from './NotificationCenter';
 import UserMenu from './ui/UserMenu';
+import LanguageSwitcher from './ui/LanguageSwitcher';
+import { useI18n } from '../i18n/context';
 import { logout } from '../api';
+
+const OPS_STAFF = ['OWNER', 'EMPLOYEE'];
 
 const NAV_SECTIONS = [
     {
-        title: 'Opérations',
+        titleKey: 'nav.section.operations',
         items: [
-            { path: '/dashboard', label: 'Tableau de bord', icon: 'dashboard', roles: ['ALL'] },
-            { path: '/vehicles', label: 'Véhicules', icon: 'directions_car', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/gps', label: 'Suivi GPS', icon: 'satellite_alt', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/reservations', label: 'Réservations', icon: 'event_note', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/calendar', label: 'Calendrier', icon: 'calendar_month', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/contracts', label: 'Contrats', icon: 'description', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/maintenance', label: 'Maintenance', icon: 'build', roles: ['OWNER', 'EMPLOYEE'] },
+            { path: '/dashboard', labelKey: 'nav.dashboard', icon: 'dashboard', roles: ['ALL'] },
+            { path: '/vehicles', labelKey: 'nav.vehicles', icon: 'directions_car', roles: OPS_STAFF },
+            { path: '/gps', labelKey: 'nav.gps', icon: 'satellite_alt', roles: OPS_STAFF },
+            { path: '/reservations', labelKey: 'nav.reservations', icon: 'event_note', roles: OPS_STAFF },
+            { path: '/calendar', labelKey: 'nav.calendar', icon: 'calendar_month', roles: OPS_STAFF },
+            { path: '/contracts', labelKey: 'nav.contracts', icon: 'description', roles: OPS_STAFF },
+            { path: '/maintenance', labelKey: 'nav.maintenance', icon: 'build', roles: OPS_STAFF },
         ],
     },
     {
-        title: 'Gestion',
+        titleKey: 'nav.section.management',
         items: [
-            { path: '/clients', label: 'Clients', icon: 'group', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/payments', label: 'Paiements', icon: 'payments', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/expenses', label: 'Dépenses', icon: 'receipt_long', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/invoices', label: 'Factures', icon: 'request_quote', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/reports', label: 'Rapports', icon: 'analytics', roles: ['OWNER', 'EMPLOYEE'] },
-            { path: '/admin/agencies', label: 'Gestion Agences', icon: 'admin_panel_settings', roles: ['SUPERADMIN'] },
-            { path: '/admin/subscriptions', label: 'Abonnements', icon: 'workspace_premium', roles: ['SUPERADMIN'] },
-            { path: '/admin/users', label: 'Gestion Utilisateurs', icon: 'manage_accounts', roles: ['SUPERADMIN'] },
+            { path: '/clients', labelKey: 'nav.clients', icon: 'group', roles: OPS_STAFF },
+            { path: '/payments', labelKey: 'nav.payments', icon: 'payments', roles: OPS_STAFF },
+            { path: '/expenses', labelKey: 'nav.expenses', icon: 'receipt_long', roles: OPS_STAFF },
+            { path: '/invoices', labelKey: 'nav.invoices', icon: 'request_quote', roles: OPS_STAFF },
+            { path: '/reports', labelKey: 'nav.reports', icon: 'analytics', roles: OPS_STAFF },
+            { path: '/admin/agencies', labelKey: 'nav.agencies', icon: 'admin_panel_settings', roles: ['SUPERADMIN'] },
+            { path: '/admin/subscriptions', labelKey: 'nav.subscriptions', icon: 'workspace_premium', roles: ['SUPERADMIN'] },
+            { path: '/admin/users', labelKey: 'nav.users', icon: 'manage_accounts', roles: ['SUPERADMIN'] },
         ],
     },
 ];
@@ -39,6 +43,7 @@ const isActivePath = (pathname, itemPath) =>
 
 const Layout = ({ children }) => {
     const location = useLocation();
+    const { t, dir } = useI18n();
     const [notificationCount, setNotificationCount] = useState(0);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     // Le tiroir mobile est lié au chemin où il a été ouvert : changer de page le referme sans effet.
@@ -78,7 +83,7 @@ const Layout = ({ children }) => {
         return () => document.removeEventListener('keydown', onKey);
     }, [mobileOpen, closeMobile]);
 
-    const agencyName = session?.agencyName || 'Votre agence';
+    const agencyName = session?.agencyName || t('layout.yourAgency');
     const userRole = session?.userRole || '';
     const userName = session?.userName || '';
 
@@ -100,8 +105,8 @@ const Layout = ({ children }) => {
                 <button
                     type="button"
                     onClick={() => setDrawerPath(location.pathname)}
-                    className="p-2 -ml-2 rounded-token text-on-surface-variant hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                    aria-label="Ouvrir le menu"
+                    className="p-2 -ms-2 rounded-token text-on-surface-variant hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label={t('layout.openMenu')}
                     aria-expanded={mobileOpen}
                     aria-controls="app-sidebar"
                 >
@@ -116,12 +121,12 @@ const Layout = ({ children }) => {
                 <button
                     type="button"
                     onClick={() => setIsNotificationOpen((prev) => !prev)}
-                    className="relative p-2 -mr-2 rounded-token text-on-surface-variant hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                    aria-label={notificationCount > 0 ? `Notifications (${notificationCount} non lues)` : 'Notifications'}
+                    className="relative p-2 -me-2 rounded-token text-on-surface-variant hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    aria-label={notificationCount > 0 ? t('layout.notificationsUnread', { count: notificationCount }) : t('layout.notifications')}
                 >
                     <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
                     {notificationCount > 0 && (
-                        <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-danger">
+                        <span className="absolute top-1 end-1 min-w-4 h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-danger">
                             {notificationCount}
                         </span>
                     )}
@@ -140,22 +145,22 @@ const Layout = ({ children }) => {
             {/* Sidebar : tiroir sous lg, collante et repliable à partir de lg */}
             <aside
                 id="app-sidebar"
-                className={`fixed lg:sticky top-0 inset-y-0 left-0 h-screen w-[280px] ${compact ? 'lg:w-[80px]' : 'lg:w-[280px]'}
-                    flex-shrink-0 flex flex-col justify-between bg-white border-r border-stroke
+                className={`fixed lg:sticky top-0 inset-y-0 start-0 h-screen w-[280px] ${compact ? 'lg:w-[80px]' : 'lg:w-[280px]'}
+                    flex-shrink-0 flex flex-col justify-between bg-white border-e border-stroke
                     transition-all duration-300 z-50 lg:z-30
-                    ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+                    ${mobileOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full lg:translate-x-0 lg:rtl:translate-x-0'}`}
                 data-purpose="sidebar"
             >
                 {/* Bouton de repli (desktop) */}
                 <button
                     type="button"
                     onClick={toggleCollapse}
-                    className="hidden lg:flex absolute -right-3.5 top-6 w-7 h-7 rounded-full bg-white border border-stroke shadow-l1 text-text-muted hover:text-primary items-center justify-center cursor-pointer transition-all duration-200 z-40 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                    title={compact ? 'Déplier le menu' : 'Réduire le menu'}
-                    aria-label={compact ? 'Déplier le menu' : 'Réduire le menu'}
+                    className="hidden lg:flex absolute -end-3.5 top-6 w-7 h-7 rounded-full bg-white border border-stroke shadow-l1 text-text-muted hover:text-primary items-center justify-center cursor-pointer transition-all duration-200 z-40 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    title={compact ? t('layout.expandMenu') : t('layout.collapseMenu')}
+                    aria-label={compact ? t('layout.expandMenu') : t('layout.collapseMenu')}
                 >
                     <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                        {compact ? 'chevron_right' : 'chevron_left'}
+                        {compact !== (dir === 'rtl') ? 'chevron_right' : 'chevron_left'}
                     </span>
                 </button>
 
@@ -174,15 +179,15 @@ const Layout = ({ children }) => {
                         <button
                             type="button"
                             onClick={closeMobile}
-                            className="lg:hidden p-2 -mr-2 rounded-token text-on-surface-variant hover:bg-surface-hover"
-                            aria-label="Fermer le menu"
+                            className="lg:hidden p-2 -me-2 rounded-token text-on-surface-variant hover:bg-surface-hover"
+                            aria-label={t('layout.closeMenu')}
                         >
                             <span className="material-symbols-outlined" aria-hidden="true">close</span>
                         </button>
                     </div>
 
                     {/* Navigation */}
-                    <nav className="px-3 py-5 space-y-1 overflow-y-auto flex-1" aria-label="Navigation principale">
+                    <nav className="px-3 py-5 space-y-1 overflow-y-auto flex-1" aria-label={t('layout.mainNav')}>
                         {NAV_SECTIONS.map((section, idx) => {
                             const items = section.items.filter((item) => {
                                 if (item.roles.includes('SUPERADMIN') && userRole !== 'SUPERADMIN') return false;
@@ -192,9 +197,9 @@ const Layout = ({ children }) => {
                             if (items.length === 0) return null;
 
                             return (
-                                <div key={section.title} className={idx > 0 ? 'mt-5' : ''}>
+                                <div key={section.titleKey} className={idx > 0 ? 'mt-5' : ''}>
                                     <p className={`text-label-sm uppercase tracking-wide px-3 mb-2 text-text-muted ${compact ? 'lg:hidden' : ''}`}>
-                                        {section.title}
+                                        {t(section.titleKey)}
                                     </p>
                                     {items.map((item) => {
                                         const active = isActivePath(location.pathname, item.path);
@@ -202,7 +207,7 @@ const Layout = ({ children }) => {
                                             <Link
                                                 key={item.path}
                                                 to={item.path}
-                                                title={compact ? item.label : undefined}
+                                                title={compact ? t(item.labelKey) : undefined}
                                                 aria-current={active ? 'page' : undefined}
                                                 className={`sidebar-link ${active ? 'active' : ''} ${compact ? 'lg:justify-center lg:px-0' : ''}`}
                                             >
@@ -212,7 +217,7 @@ const Layout = ({ children }) => {
                                                 >
                                                     {item.icon}
                                                 </span>
-                                                <span className={`truncate ${compact ? 'lg:hidden' : ''}`}>{item.label}</span>
+                                                <span className={`truncate ${compact ? 'lg:hidden' : ''}`}>{t(item.labelKey)}</span>
                                             </Link>
                                         );
                                     })}
@@ -228,20 +233,22 @@ const Layout = ({ children }) => {
                         type="button"
                         onClick={() => setIsNotificationOpen((prev) => !prev)}
                         className={`hidden lg:flex w-full items-center gap-3 px-3 py-2 rounded-token font-semibold text-label-md text-on-surface-variant hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${compact ? 'justify-center' : 'justify-between'}`}
-                        aria-label={notificationCount > 0 ? `Notifications (${notificationCount} non lues)` : 'Notifications'}
+                        aria-label={notificationCount > 0 ? t('layout.notificationsUnread', { count: notificationCount }) : t('layout.notifications')}
                     >
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <span className="material-symbols-outlined text-[20px]" aria-hidden="true">notifications</span>
                                 {notificationCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white bg-danger">
+                                    <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white bg-danger">
                                         {notificationCount}
                                     </span>
                                 )}
                             </div>
-                            {!compact && <span>Notifications</span>}
+                            {!compact && <span>{t('layout.notifications')}</span>}
                         </div>
                     </button>
+
+                    <LanguageSwitcher compact={compact} className="w-full justify-center" />
 
                     <UserMenu userName={userName} userRole={userRole} agencyName={agencyName} collapsed={compact} />
                 </div>

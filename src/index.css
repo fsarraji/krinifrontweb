@@ -316,3 +316,18 @@ tr.row:not(:last-child) td {
 .gauge-seg.on {
   background: var(--primary);
 }
+
+
+/* ── Arabe / RTL ─────────────────────────────────────────────────────────────
+   <html dir="rtl" lang="ar"> est posé par I18nProvider. Les icônes Material Symbols
+   gardent leur police ; les icônes directionnelles se retournent. */
+html[lang='ar'] body,
+html[lang='ar'] input,
+html[lang='ar'] button,
+html[lang='ar'] select,
+html[lang='ar'] textarea {
+    font-family: 'Noto Sans Arabic', system-ui, sans-serif;
+}
+html[dir='rtl'] .material-symbols-outlined.flip-rtl {
+    transform: scaleX(-1);
+}

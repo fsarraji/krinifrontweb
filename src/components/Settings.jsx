@@ -1,3 +1,4 @@
+import GeofenceManager from './GeofenceManager';
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import api from '../api';
@@ -451,6 +452,9 @@ const Settings = () => {
                             </div>
                         )}
                     </SectionCard>
+
+                    {/* Zones autorisées (géorepérage) */}
+                    <GeofenceManager canEdit={isOwner} />
 
                     {/* Section Suivi GPS / Traccar */}
                     <SectionCard icon="satellite_alt" title="Suivi GPS (Traccar)" description="Connectez le compte serveur Traccar de votre agence pour suivre vos véhicules en temps réel.">

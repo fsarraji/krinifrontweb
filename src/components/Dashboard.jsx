@@ -8,9 +8,11 @@ import Button from './ui/Button';
 import MetricCard from './ui/MetricCard';
 import Table from './ui/Table';
 import { formatMoney, formatNumber } from '../utils/formatters';
+import { useI18n } from '../i18n/context';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { t } = useI18n();
     const [data, setData] = useState({
         stats: { total_vehicles: 0, available_vehicles: 0, rented_vehicles: 0, active_contracts: 0, total_clients: 0, revenue_this_month: 0 },
         alerts: { insurance_expiring: [], visite_expiring: [] },
@@ -57,10 +59,10 @@ const Dashboard = () => {
         <div>
             {/* Header */}
             <PageHeader
-                eyebrow={`Aperçu temps réel — ${data.stats.agency_name || "Votre agence"}`}
-                title="Tableau de bord"
+                eyebrow={t('dashboard.eyebrow', { agency: data.stats.agency_name || t('layout.yourAgency') })}
+                title={t('dashboard.title')}
                 actions={(
-                    <Button icon="add" onClick={() => navigate('/contracts/new')}>Nouveau contrat</Button>
+                    <Button icon="add" onClick={() => navigate('/contracts/new')}>{t('dashboard.newContract')}</Button>
                 )}
             />
 
@@ -72,7 +74,7 @@ const Dashboard = () => {
                     iconColor="text-info"
                     value={formatNumber(data.stats.revenue_this_month ?? 0)}
                     unit="MAD"
-                    label="Revenu du mois"
+                    label={t('dashboard.revenue')}
                 />
                 <MetricCard
                     icon="check_circle"
@@ -80,7 +82,7 @@ const Dashboard = () => {
                     iconColor="text-success"
                     value={availableFleet}
                     unit={`/ ${totalFleet}`}
-                    label="Véhicules disponibles"
+                    label={t('dashboard.availableVehicles')}
                 >
                     <div className="h-1.5 rounded-full overflow-hidden bg-stroke">
                         <div className="h-full rounded-full bg-success" style={{ width: `${availPercent}%` }} />
@@ -91,15 +93,15 @@ const Dashboard = () => {
                     iconBg="bg-secondary-container"
                     iconColor="text-secondary"
                     value={activeContracts}
-                    label="Contrats actifs"
+                    label={t('dashboard.activeContracts')}
                 />
                 <MetricCard
                     icon="warning"
                     tone="danger"
                     value={totalAlerts}
-                    label="Alertes échéance"
+                    label={t('dashboard.dueAlerts')}
                 >
-                    <p className="text-[12px]" style={{ color: 'var(--error-c)', opacity: 0.7 }}>Assurance · visite technique</p>
+                    <p className="text-[12px]" style={{ color: 'var(--error-c)', opacity: 0.7 }}>{t('dashboard.insuranceInspection')}</p>
                 </MetricCard>
             </div>
 
@@ -109,7 +111,7 @@ const Dashboard = () => {
                 {/* Fleet table */}
                 <div className="xl:col-span-2 card rounded-token overflow-hidden shadow-l1">
                     <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--stroke)' }}>
-                        <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>Contrats & État Flotte Récents</h3>
+                        <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>{t('dashboard.recentTitle')}</h3>
                         <div className="flex items-center gap-2">
                             <StatusBadge status="Available" />
                             <StatusBadge status="Rented" />
@@ -118,15 +120,15 @@ const Dashboard = () => {
                     </div>
                     <Table
                         className="!border-0 !rounded-none"
-                        caption="Contrats récents"
+                        caption={t('dashboard.recentCaption')}
                         rows={data.recent_contracts}
-                        emptyTitle="Aucun contrat récent."
+                        emptyTitle={t('dashboard.noRecent')}
                         columns={[
-                            { key: 'client__nom', label: 'Client', className: 'font-semibold', render: (_, c) => `${c.client__nom} ${c.client__prenom}` },
-                            { key: 'vehicle__modele', label: 'Véhicule', className: 'text-on-surface-variant', render: (_, c) => `${c.vehicle__marque} ${c.vehicle__modele}` },
-                            { key: 'jours', label: 'Durée', className: 'text-on-surface-variant', render: (v) => `${v} Jours` },
-                            { key: 'statut', label: 'Statut', render: (v) => <StatusBadge status={v} /> },
-                            { key: 'montant_total', label: 'Montant', align: 'right', className: 'font-semibold', render: (v) => formatMoney(v) },
+                            { key: 'client__nom', label: t('dashboard.col.client'), className: 'font-semibold', render: (_, c) => `${c.client__nom} ${c.client__prenom}` },
+                            { key: 'vehicle__modele', label: t('dashboard.col.vehicle'), className: 'text-on-surface-variant', render: (_, c) => `${c.vehicle__marque} ${c.vehicle__modele}` },
+                            { key: 'jours', label: t('dashboard.col.duration'), className: 'text-on-surface-variant', render: (v) => t('dashboard.days', { n: v }) },
+                            { key: 'statut', label: t('dashboard.col.status'), render: (v) => <StatusBadge status={v} /> },
+                            { key: 'montant_total', label: t('dashboard.col.amount'), align: 'right', className: 'font-semibold', render: (v) => formatMoney(v) },
                         ]}
                     />
                 </div>
@@ -134,7 +136,7 @@ const Dashboard = () => {
                 {/* Alerts Box */}
                 <div className="card rounded-token overflow-hidden flex flex-col shadow-l1">
                     <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--stroke)' }}>
-                        <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>Échéances proches</h3>
+                        <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>{t('dashboard.upcoming')}</h3>
                         <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--on-surface-variant)' }}>event</span>
                     </div>
                     <div className="p-4 space-y-3 flex-1">
@@ -143,7 +145,7 @@ const Dashboard = () => {
                                 <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--error-c)' }}>verified_user</span>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
-                                        Assurance expire le {alert.date_assurance}
+                                        {t('dashboard.insuranceExpires', { date: alert.date_assurance })}
                                     </p>
                                     <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
                                         {alert.marque} ({alert.matricule})
@@ -156,7 +158,7 @@ const Dashboard = () => {
                                 <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--warning)' }}>build</span>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
-                                        Visite technique le {alert.date_visite_technique}
+                                        {t('dashboard.inspectionOn', { date: alert.date_visite_technique })}
                                     </p>
                                     <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
                                         {alert.marque} ({alert.matricule})
@@ -166,13 +168,13 @@ const Dashboard = () => {
                         ))}
                         {insuranceAlerts.length === 0 && visiteAlerts.length === 0 && (
                             <div className="p-4 rounded-token text-xs font-semibold" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>
-                                Tout est opérationnel : aucune alerte d'assurance ou de visite technique.
+                                {t('dashboard.allGood')}
                             </div>
                         )}
                     </div>
                     <div className="mx-4 mb-4">
                         <Button variant="secondary" className="w-full" onClick={() => navigate('/vehicles')}>
-                            Voir toutes les alertes
+                            {t('dashboard.seeAlerts')}
                         </Button>
                     </div>
                 </div>

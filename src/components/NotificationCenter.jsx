@@ -11,6 +11,7 @@ const KIND_META = {
     VIDANGE: { type: 'TECHNICAL', category: 'Vidange', icon: 'oil_barrel', color: 'bg-warning-bg text-warning-dark ring-warning-bg' },
     RETURN_DUE: { type: 'RETURN', category: 'Retour prévu', icon: 'event_available', color: 'bg-primary-light text-primary-deep ring-primary-border/30' },
     RETURN_OVERDUE: { type: 'RETURN', category: 'Retour en retard', icon: 'alarm', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
+    GEOFENCE: { type: 'TECHNICAL', category: 'Hors zone autorisée', icon: 'wrong_location', color: 'bg-danger-bg text-danger-dark ring-danger-bg' },
 };
 
 const asList = (data) => (Array.isArray(data) ? data : (data?.results || []));
