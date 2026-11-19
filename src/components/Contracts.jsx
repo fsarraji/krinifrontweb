@@ -170,11 +170,11 @@ const Contracts = () => {
                             columns={EXPORT_COLUMNS}
                             label={t('contracts.exportCsv')}
                         />
-            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setReloadKey((k) => k + 1); }} className="mb-4" />}
                         <Button icon="add" onClick={() => navigate('/contracts/new')}>{t('contracts.new')}</Button>
                     </>
                 )}
             />
+            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setReloadKey((k) => k + 1); }} className="mb-4" />}
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">

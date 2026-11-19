@@ -235,7 +235,7 @@ const EditClient = () => {
                             <Field label={t('u.numro_de_tlphone')} error={fieldErrorMsg('telephone')}>
                                 <Input invalid={hasError('telephone')} name="telephone" value={formData.telephone || ''} onChange={handleChange} onBlur={handleBlurUnique('telephone')} type="tel" />
                             </Field>
-                            <div>
+                            <Field label={t('u.sexe')}>
                                 <div className="w-fit">
                                     <SegmentedControl label={t('u.sexe')} value={formData.sexe} onChange={(value) => handleChange({ target: { name: 'sexe', value } })}>
                                         {SEXE_OPTIONS.map((opt) => (
@@ -243,7 +243,7 @@ const EditClient = () => {
                                         ))}
                                     </SegmentedControl>
                                 </div>
-                            </div>
+                            </Field>
                             <Field label={t('u.nationalit')}>
                                 <Select invalid={hasError('nationalite')} name="nationalite" value={formData.nationalite || ''} onChange={handleChange}>
                                     <option value="">{t('u.slectionner_2')}</option>

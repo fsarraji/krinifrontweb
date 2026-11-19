@@ -239,7 +239,7 @@ const AddClient = () => {
                                         type="text"
                                     />
                                 </Field>
-                                <div>
+                                <Field label={t('u.sexe')}>
                                     <div className="w-fit">
                                         <SegmentedControl label={t('u.sexe')} value={formData.sexe} onChange={(value) => handleChange({ target: { name: 'sexe', value } })}>
                                             {SEXE_OPTIONS.map((opt) => (
@@ -247,7 +247,7 @@ const AddClient = () => {
                                             ))}
                                         </SegmentedControl>
                                     </div>
-                                </div>
+                                </Field>
                                 <Field label={t('u.nationalit')}>
                                     <Select invalid={hasError('nationalite')}
                                         name="nationalite"
