@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Card from './ui/Card';
 import StatusBadge from './ui/StatusBadge';
 import PageHeader from './ui/PageHeader';
 import { Input, Select } from './ui/Input';
@@ -440,7 +441,7 @@ const GpsTracking = () => {
             <div className="flex-1 min-h-0 grid grid-cols-3 gap-6 px-8 pb-8">
                 {/* LEFT: fleet panel (list <-> detail) */}
                 {fleetOpen && (
-                    <div className="card rounded-token shadow-l1 overflow-hidden flex flex-col min-h-0">
+                    <Card padding={0} variant="default" className="overflow-hidden flex flex-col min-h-0">
                         <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: '1px solid var(--stroke)' }}>
                             <h3 className="font-bold text-[15px]" style={{ color: 'var(--on-surface)' }}>
                                 {t('u.flotte')} <span className="font-semibold text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>· {vehicles.length} véh.</span>
@@ -498,10 +499,7 @@ const GpsTracking = () => {
                                                         {v.marque_name || 'Véhicule'} {v.modele_name || ''}
                                                     </p>
                                                     <p className="text-[11px] mono" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{v.matricule}</p>
-                                                    <span className="badge mt-1" style={{ background: status.bg, color: status.text, padding: '2px 8px 2px 6px' }}>
-                                                        <span className={`badge-dot ${status.moving ? 'pulse' : ''}`} style={{ background: status.dotBg }}></span>
-                                                        {t(status.labelKey)}
-                                                    </span>
+                                                    <StatusBadge className="mt-1" variant={status.moving ? 'success' : status.labelKey === 'u.l_arrt' ? 'warning' : 'neutral'} label={t(status.labelKey)} />
                                                 </div>
                                                 {v.position?.speed_kph != null && (
                                                     <span className="text-[12px] font-bold mono flex-shrink-0" style={{ color: status.color }}>
@@ -717,7 +715,7 @@ const GpsTracking = () => {
                                 )}
                             </div>
                         )}
-                    </div>
+                    </Card>
                 )}
 
                 {/* RIGHT: map */}
@@ -745,17 +743,17 @@ const GpsTracking = () => {
 
                     {vehicles.length === 0 && !loading && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                            <div className="card rounded-token shadow-l1 px-6 py-4 text-center">
+                            <Card padding={4} variant="default" className="text-center">
                                 <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>{t('u.aucun_vhicule_dans_la_flotte')}</p>
-                            </div>
+                            </Card>
                         </div>
                     )}
 
                     {loading && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center">
-                            <div className="card rounded-token shadow-l1 px-6 py-4 text-center">
+                            <Card padding={4} variant="default" className="text-center">
                                 <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>{t('u.chargement_des_positions')}</p>
-                            </div>
+                            </Card>
                         </div>
                     )}
 
@@ -871,10 +869,7 @@ const GpsTracking = () => {
                                                             <p className="text-[13px] font-bold truncate" style={{ color: 'var(--on-surface)' }}>
                                                                 {d.name || `Dispositif #${d.id}`}
                                                             </p>
-                                                            <span className="badge" style={{ background: online ? 'var(--success-bg)' : 'var(--surface-hover)', color: online ? 'var(--success-dark)' : 'var(--text-muted)' }}>
-                                                                <span className="badge-dot" style={{ background: online ? 'var(--success)' : 'var(--text-muted)' }}></span>
-                                                                {online ? 'En ligne' : 'Hors ligne'}
-                                                            </span>
+                                                            <StatusBadge variant={online ? 'success' : 'neutral'} label={online ? 'En ligne' : 'Hors ligne'} />
                                                         </div>
                                                         <p className="text-[11px] mono mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
                                                             #{d.id} · {d.uniqueId || t('u.imei_inconnu')}

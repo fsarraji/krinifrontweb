@@ -392,7 +392,7 @@ const EditClient = () => {
                     </Card>
 
                     {/* Blacklist Toggle */}
-                    <div className="card shadow-l1 p-6" style={formData.liste_noire ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}}>
+                    <Card padding={6} variant="default"  style={formData.liste_noire ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}}>
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="text-sm font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--on-surface)' }}>{t('u.liste_noire_2')}</h3>
@@ -400,7 +400,7 @@ const EditClient = () => {
                             </div>
                             <Switch label={t('u.liste_noire_2')} isLabelHidden value={Boolean(formData.liste_noire)} onChange={(v) => handleChange({ target: { name: 'liste_noire', type: 'checkbox', checked: v } })} />
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Historique des modifications */}
                     <Card padding={6} variant="default">
