@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ErrorBanner from './ErrorBanner';
 import api from '../../api';
 import { toast } from '../Toast';
 import Button from './Button';
@@ -59,12 +60,7 @@ const ArchiveVehicleModal = ({ isOpen, vehicle, onClose, onArchived }) => {
                     </p>
                 </div>
 
-                {error && (
-                    <div role="alert" className="flex items-start gap-3 rounded-token p-4 bg-danger-bg">
-                        <span className="material-symbols-outlined text-[20px] text-danger" aria-hidden="true">error</span>
-                        <p className="text-sm font-medium text-danger-dark">{error}</p>
-                    </div>
-                )}
+                <ErrorBanner message={error} />
 
                 <Field label={t('u.date_de_fin_de_travail')} required>
                     <Input type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} />

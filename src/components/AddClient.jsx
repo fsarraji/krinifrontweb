@@ -1,4 +1,7 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import FormActions from './ui/FormActions';
+import ErrorBanner from './ui/ErrorBanner';
+import Field from './ui/Field';
 import FileField from './ui/FileField';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
@@ -199,12 +202,7 @@ const AddClient = () => {
                 </div>
             </div>
 
-            {error && (
-                <div className="mb-6 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
-                    <span className="material-symbols-outlined">error</span>
-                    <p>{error}</p>
-                </div>
-            )}
+            <ErrorBanner message={error} className="mb-5" />
 
             <form {...formProps} onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                 {/* Stepper */}
@@ -228,8 +226,7 @@ const AddClient = () => {
                     <div className="space-y-5">
                 {currentStep === 1 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <div>
-                                    <label className="label">{t('u.prnom')}</label>
+                                <Field label={t('u.prnom')} required error={fieldErrorMsg('prenom')}>
                                     <Input invalid={hasError('prenom')}
                                         name="prenom"
                                         value={formData.prenom}
@@ -239,15 +236,8 @@ const AddClient = () => {
                                         placeholder="ex. Jonathan"
                                         type="text"
                                     />
-                                    {fieldErrorMsg('prenom') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('prenom')}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="label">{t('u.nom')}</label>
+                                </Field>
+                                <Field label={t('u.nom')} required error={fieldErrorMsg('nom')}>
                                     <Input invalid={hasError('nom')}
                                         name="nom"
                                         value={formData.nom}
@@ -257,15 +247,8 @@ const AddClient = () => {
                                         placeholder="ex. Wick"
                                         type="text"
                                     />
-                                    {fieldErrorMsg('nom') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('nom')}
-                                        </p>
-                                    )}
-                                </div>
+                                </Field>
                                 <div>
-                                    <label className="label">{t('u.sexe')}</label>
                                     <div className="w-fit">
                                         <SegmentedControl label={t('u.sexe')} value={formData.sexe} onChange={(value) => handleChange({ target: { name: 'sexe', value } })}>
                                             {SEXE_OPTIONS.map((opt) => (
@@ -274,8 +257,7 @@ const AddClient = () => {
                                         </SegmentedControl>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="label">{t('u.nationalit')}</label>
+                                <Field label={t('u.nationalit')}>
                                     <Select invalid={hasError('nationalite')}
                                         name="nationalite"
                                         value={formData.nationalite}
@@ -287,9 +269,8 @@ const AddClient = () => {
                                             <option key={n} value={n}>{translateOr(t, `nat.${n}`, n)}</option>
                                         ))}
                                     </Select>
-                                </div>
-                                <div>
-                                    <label className="label">{t('u.tlphone')}</label>
+                                </Field>
+                                <Field label={t('u.tlphone')} required error={fieldErrorMsg('telephone')}>
                                     <Input invalid={hasError('telephone')}
                                         name="telephone"
                                         value={formData.telephone}
@@ -300,15 +281,8 @@ const AddClient = () => {
                                         placeholder="ex. +212 6 12 34 56 78"
                                         type="tel"
                                     />
-                                    {fieldErrorMsg('telephone') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('telephone')}
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="sm:col-span-2">
-                                    <label className="label">{t('u.adresse_email')}</label>
+                                </Field>
+                                <Field label={t('u.adresse_email')} error={fieldErrorMsg('email')} className="sm:col-span-2">
                                     <Input invalid={hasError('email')}
                                         name="email"
                                         value={formData.email}
@@ -318,38 +292,24 @@ const AddClient = () => {
                                         placeholder={t('u.ex_jonathan_wick_example_com')}
                                         type="email"
                                     />
-                                    {fieldErrorMsg('email') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('email')}
-                                        </p>
-                                    )}
-                                </div>
+                                </Field>
                             </div>
                     )}
 
                     {currentStep === 2 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div className="sm:col-span-2">
-                                    <label className="label">{t('u.adresse_rsidentielle')}</label>
-                                    <Textarea invalid={hasError('adresse')}
-                                        name="adresse"
-                                        value={formData.adresse}
-                                        onChange={handleChange}
-                                        required
+                            <Field label={t('u.adresse_rsidentielle')} required error={fieldErrorMsg('adresse')} className="sm:col-span-2">
+                                <Textarea invalid={hasError('adresse')}
+                                    name="adresse"
+                                    value={formData.adresse}
+                                    onChange={handleChange}
+                                    required
                                        
-                                        placeholder={t('u.rue_numro_ville_code_postal')}
-                                        rows="3"
-                                    ></Textarea>
-                                    {fieldErrorMsg('adresse') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('adresse')}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="label">{t('u.ville')}</label>
+                                    placeholder={t('u.rue_numro_ville_code_postal')}
+                                    rows="3"
+                                ></Textarea>
+                            </Field>
+                                <Field label={t('u.ville')}>
                                     <Input invalid={hasError('ville')}
                                         name="ville"
                                         value={formData.ville}
@@ -358,9 +318,8 @@ const AddClient = () => {
                                         placeholder="ex. Casablanca"
                                         type="text"
                                     />
-                                </div>
-                                <div>
-                                    <label className="label">{t('u.pays')}</label>
+                                </Field>
+                                <Field label={t('u.pays')}>
                                     <Input invalid={hasError('pays')}
                                         name="pays"
                                         value={formData.pays}
@@ -369,14 +328,13 @@ const AddClient = () => {
                                         placeholder="ex. Maroc"
                                         type="text"
                                     />
-                                </div>
+                                </Field>
                             </div>
                     )}
 
                     {currentStep === 3 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <div>
-                                    <label className="label">{cinLabelFor(formData.nationalite)}</label>
+                                <Field label={cinLabelFor(formData.nationalite)} required error={fieldErrorMsg('cin_passport')}>
                                     <Input invalid={hasError('cin_passport')}
                                         name="cin_passport"
                                         value={formData.cin_passport}
@@ -387,15 +345,8 @@ const AddClient = () => {
                                         placeholder="ex. AB123456"
                                         type="text"
                                     />
-                                    {fieldErrorMsg('cin_passport') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('cin_passport')}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="label">Expiration {cinLabelFor(formData.nationalite)}</label>
+                                </Field>
+                                <Field label="Expiration {cinLabelFor(formData.nationalite)}">
                                     <Input invalid={hasError('date_expiration_cin')}
                                         name="date_expiration_cin"
                                         value={formData.date_expiration_cin}
@@ -403,9 +354,8 @@ const AddClient = () => {
                                        
                                         type="date"
                                     />
-                                </div>
-                                <div>
-                                    <label className="label">{t('u.n_de_permis')}</label>
+                                </Field>
+                                <Field label={t('u.n_de_permis')} required error={fieldErrorMsg('permis_conduite')}>
                                     <Input invalid={hasError('permis_conduite')}
                                         name="permis_conduite"
                                         value={formData.permis_conduite}
@@ -416,15 +366,8 @@ const AddClient = () => {
                                         placeholder="ex. AB12345678"
                                         type="text"
                                     />
-                                    {fieldErrorMsg('permis_conduite') && (
-                                        <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                            <span className="material-symbols-outlined text-[13px]">error</span>
-                                            {fieldErrorMsg('permis_conduite')}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="label">{t('u.date_de_dlivrance')}</label>
+                                </Field>
+                                <Field label={t('u.date_de_dlivrance')}>
                                     <Input invalid={hasError('date_delivrance_permis')}
                                         name="date_delivrance_permis"
                                         value={formData.date_delivrance_permis}
@@ -432,9 +375,8 @@ const AddClient = () => {
                                        
                                         type="date"
                                     />
-                                </div>
-                                <div className="sm:col-span-2">
-                                    <label className="label">{t('u.remarques')}</label>
+                                </Field>
+                                <Field label={t('u.remarques')} className="sm:col-span-2">
                                     <Textarea invalid={hasError('remarques')}
                                         name="remarques"
                                         value={formData.remarques}
@@ -443,7 +385,7 @@ const AddClient = () => {
                                         rows="3"
                                         placeholder={t('u.notes_internes_sur_ce_client_opt')}
                                     ></Textarea>
-                                </div>
+                                </Field>
                             </div>
                     )}
 
@@ -451,12 +393,10 @@ const AddClient = () => {
                         <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div>
-                                        <label className="label">Scan {cinLabelFor(formData.nationalite)}</label>
-                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_cin} onChange={(file) => setFile('scan_cin', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
+                                        <FileField label={`Scan ${cinLabelFor(formData.nationalite)}`} value={files.scan_cin} onChange={(file) => setFile('scan_cin', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
                                     </div>
                                     <div>
-                                        <label className="label">{t('u.scan_permis_de_conduire')}</label>
-                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
+                                        <FileField label={t('u.scan_permis_de_conduire')} value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
                                     </div>
                                 </div>
 
@@ -485,22 +425,14 @@ const AddClient = () => {
                         <p className="text-xs text-slate-400">{t('u.nous_protgeons_vos_informations_')}</p>
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="ghost" onClick={() => navigate('/clients')}>{t('u.annuler')}</Button>
-                    {currentStep > 1 && (
-                        <Button variant="outline" icon="chevron_left" onClick={handlePrev}>{t('u.prcdent')}</Button>
-                    )}
-                    {currentStep < 4 ? (
-                        <Button onClick={handleNext}>
-                            {t('u.suivant')}
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">chevron_right</span>
-                        </Button>
-                    ) : (
-                        <Button icon="check" loading={loading} onClick={handleSubmit}>
-                            {loading ? t('u.enregistrement') : t('u.enregistrer_le_client')}
-                        </Button>
-                    )}
-                </div>
+                <FormActions
+                    onCancel={() => navigate('/clients')}
+                    onBack={currentStep > 1 ? handlePrev : undefined}
+                    onSubmit={currentStep < 4 ? handleNext : handleSubmit}
+                    submitLabel={currentStep < 4 ? t('u.suivant') : t('u.enregistrer')}
+                    submitIcon={currentStep < 4 ? undefined : 'check'}
+                    loading={loading}
+                />
             </Card>
         </div>
     );

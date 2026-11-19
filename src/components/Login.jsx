@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ErrorBanner from './ui/ErrorBanner';
 import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../api';
 import Button from './ui/Button';
@@ -125,12 +126,7 @@ const Login = () => {
                         <p className="text-sm font-medium text-text-muted mt-2">{t('login.welcomeSub')}</p>
                     </div>
 
-                    {error && (
-                        <div role="alert" className="mb-5 flex items-start gap-2 rounded-token border-s-4 border-danger bg-danger-bg px-4 py-3 text-sm font-semibold text-danger-dark">
-                            <span className="material-symbols-outlined text-[18px] mt-px" aria-hidden="true">error</span>
-                            <span>{error}</span>
-                        </div>
-                    )}
+                    <ErrorBanner message={error} className="mb-5" />
 
                     <form onSubmit={handleLogin} className="flex flex-col gap-5" noValidate={false}>
                         <Field label={t('login.username')} required>

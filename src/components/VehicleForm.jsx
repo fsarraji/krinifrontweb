@@ -1,4 +1,6 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import FormActions from './ui/FormActions';
+import ErrorBanner from './ui/ErrorBanner';
 import FileField from './ui/FileField';
 import { CheckboxInput, SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import Card from './ui/Card';
@@ -446,12 +448,7 @@ const VehicleForm = () => {
                 </div>
             </header>
 
-            {error && (
-                <div className="mb-6 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
-                    <span className="material-symbols-outlined">error</span>
-                    <p>{error}</p>
-                </div>
-            )}
+            <ErrorBanner message={error} className="mb-5" />
 
             <form {...formProps} onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                 {/* Stepper */}
@@ -947,27 +944,17 @@ const VehicleForm = () => {
                         <p className="text-xs text-slate-400">{t('u.nous_protgeons_vos_informations_')}</p>
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="ghost" onClick={() => navigate('/vehicles')}>{t('u.annuler')}</Button>
-                    {currentStep > 1 && (
-                        <Button variant="outline" icon="chevron_left" onClick={handlePrev}>{t('u.prcdent')}</Button>
-                    )}
-                    {isEditMode && (
-                        <Button variant={currentStep < 4 ? 'outline' : 'primary'} icon="check" loading={loading} onClick={handleSubmit}>
-                            {loading ? t('u.enregistrement') : t('u.enregistrer')}
-                        </Button>
-                    )}
-                    {currentStep < 4 ? (
-                        <Button onClick={handleNext}>
-                            {t('u.suivant')}
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">chevron_right</span>
-                        </Button>
-                    ) : !isEditMode && (
-                        <Button icon="check" loading={loading} onClick={handleSubmit}>
-                            {loading ? t('u.enregistrement') : t('u.enregistrer')}
-                        </Button>
-                    )}
-                </div>
+                <FormActions
+                    onCancel={() => navigate('/vehicles')}
+                    onBack={currentStep > 1 ? handlePrev : undefined}
+                    extra={isEditMode && currentStep < 4 ? (
+                        <Button variant="outline" icon="check" loading={loading} onClick={handleSubmit}>{t('u.enregistrer')}</Button>
+                    ) : null}
+                    onSubmit={currentStep < 4 ? handleNext : handleSubmit}
+                    submitLabel={currentStep < 4 ? t('u.suivant') : t('u.enregistrer')}
+                    submitIcon={currentStep < 4 ? undefined : 'check'}
+                    loading={loading && currentStep === 4}
+                />
             </Card>
         </div>
     );

@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import ErrorBanner from './ui/ErrorBanner';
 import React, { useState } from 'react';
 import api from '../api';
 import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
@@ -90,9 +91,7 @@ const AddClientModal = ({ isOpen, onClose, onClientCreated }) => {
             )}
         >
             <form id="quick-client-form" onSubmit={handleSubmit} className="space-y-5">
-                {error && (
-                    <div role="alert" className="p-3 text-xs rounded-token bg-danger-bg text-danger-dark">{error}</div>
-                )}
+                <ErrorBanner message={error} />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Field label={t('u.prnom')} required>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ErrorBanner from './ui/ErrorBanner';
 import { CheckboxInput } from '@astryxdesign/core';
 import Card from './ui/Card';
 import { translateOr } from '../i18n/helpers';
@@ -79,12 +80,7 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
                 </>
             )}
         >
-            {error && (
-                <div role="alert" className="mb-6 bg-danger-bg text-danger-dark p-4 rounded-token border border-danger-border flex gap-3 items-center">
-                    <span className="material-symbols-outlined" aria-hidden="true">error</span>
-                    <p className="text-sm font-medium">{error}</p>
-                </div>
-            )}
+            <ErrorBanner message={error} className="mb-5" />
 
             <form id="activate-form" onSubmit={handleSubmit} className="space-y-6">
                 <Card padding={6} variant="default">

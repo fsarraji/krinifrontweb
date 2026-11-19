@@ -109,10 +109,9 @@ const ContractFees = ({ contractId, locked = false, onChanged }) => {
 
             {!locked && (
                 <form onSubmit={handleAdd} className="p-4 grid grid-cols-1 sm:grid-cols-12 gap-3 items-start border-b border-slate-100">
-                    <div className="sm:col-span-4">
-                        <p className="label mb-1.5">{t('u.type')}</p>
+                    <Field label={t('u.type')} className="sm:col-span-4">
                         <Dropdown options={feeOptions} value={kind} onChange={(v) => setKind(v || 'AUTRE')} />
-                    </div>
+                    </Field>
                     <Field label={t('u.montant_mad')} error={errors.amount} className="sm:col-span-3">
                         <Input
                             type="number" min="0.01" step="0.01" placeholder={t('u.ex_150')}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import FormActions from './ui/FormActions';
 import Card from './ui/Card';
 import { translateOr } from '../i18n/helpers';
 import Table from './ui/Table';
@@ -201,10 +202,7 @@ const EditContract = () => {
           <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-1">{t('u.rsum_du_contrat_2')}</p>
           <h2 className="text-4xl font-extrabold text-primary">CTR-{String(id).padStart(5, '0')}</h2>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleDiscard}>{t('u.abandonner')}</Button>
-          <Button onClick={handleSave}>{t('u.enregistrer')}</Button>
-        </div>
+        <FormActions onCancel={handleDiscard} onSubmit={handleSave} />
       </div>
 
       {/* Main Grid */}
@@ -343,19 +341,18 @@ const EditContract = () => {
               }}
             />
           </Field>
-          <div>
-            <p className="label mb-1.5">{t('u.mthode')} <span className="text-danger" aria-hidden="true">*</span></p>
-            <Dropdown
-              options={[
-                { value: 'Espèce', label: t('u.espce_cash') },
-                { value: 'TPE', label: t('u.carte_bancaire_tpe') },
-                { value: 'Virement', label: t('u.virement_bancaire') },
-                { value: 'Chèque', label: t('method.Chèque') },
-              ]}
-              value={paymentFormData.payment_method}
-              onChange={(value) => setPaymentFormData({ ...paymentFormData, payment_method: value || 'Espèce' })}
-            />
-          </div>
+          <Field label={t('u.mthode')} required>
+              <Dropdown
+                options={[
+                  { value: 'Espèce', label: t('u.espce_cash') },
+                  { value: 'TPE', label: t('u.carte_bancaire_tpe') },
+                  { value: 'Virement', label: t('u.virement_bancaire') },
+                  { value: 'Chèque', label: t('method.Chèque') },
+                ]}
+                value={paymentFormData.payment_method}
+                onChange={(value) => setPaymentFormData({ ...paymentFormData, payment_method: value || 'Espèce' })}
+              />
+          </Field>
           <Field label={t('u.rfrence_optionnel')}>
             <Input
               type="text" placeholder={t('u.n_chque_ou_rf_virement')}

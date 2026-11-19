@@ -5,6 +5,7 @@ import { useI18n } from '../../i18n/context';
  * Pied de formulaire unique : [action destructive] … [Annuler] [Retour] [Enregistrer / Suivant].
  * - Annuler : toujours `outline`. Retour : `outline` avec chevron. Valider : primaire.
  * - Soumission : `type="submit"` (+ `form` pour un formulaire distant), sinon `onSubmit`.
+ * - `extra` : bouton additionnel avant l'action principale (ex. « Enregistrer » à chaque étape en édition).
  * - `loading` désactive et affiche le chargement ; le libellé ne change pas.
  */
 const FormActions = ({
@@ -19,6 +20,7 @@ const FormActions = ({
     disabled = false,
     submitIcon,
     destructive = null,
+    extra = null,
     className = '',
 }) => {
     const { t } = useI18n();
@@ -36,6 +38,7 @@ const FormActions = ({
                         {backLabel || t('u.prcdent')}
                     </Button>
                 )}
+                {extra}
                 {(onSubmit || formId || submitLabel) && (
                     <Button
                         type={onSubmit ? 'button' : 'submit'}

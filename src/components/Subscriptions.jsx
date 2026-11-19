@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiErrorText } from '../utils/apiErrorText';
 import Table from './ui/Table';
 import { Input } from './ui/Input';
 import api from '../api';
@@ -80,6 +81,7 @@ const Subscriptions = () => {
     const statusOptions = tOpts(STATUS_OPTIONS);
     const planLabel = (plan) => planOptions.find((p) => p.value === plan)?.label || plan;
     const [showModal, setShowModal] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState(buildEmptyForm());
 
@@ -98,6 +100,7 @@ const Subscriptions = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        setSaving(true);
         if (!form.agency) {
             toast.error(t('u.veuillez_slectionner_une_agence'));
             return;
@@ -113,7 +116,9 @@ const Subscriptions = () => {
             toast.success(isEditing ? t('u.abonnement_mis_jour_avec_succs') : t('u.abonnement_cr_avec_succs'));
         } catch (error) {
             console.error("Erreur lors de l'enregistrement", error);
-            toast.error(t('u.erreur_lors_de_l_enregistrement__2'));
+            toast.error(apiErrorText(error, t('u.erreur_lors_de_l_enregistrement__2')));
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -212,8 +217,8 @@ const Subscriptions = () => {
                 labelId="subscription-modal-title"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={closeModal}>{t('u.annuler')}</Button>
-                        <Button type="submit" form="subscription-form" icon="save">{t('u.enregistrer')}</Button>
+                        <Button variant="outline" onClick={closeModal}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="subscription-form" loading={saving} icon="save">{t('u.enregistrer')}</Button>
                     </>
                 }
             >
