@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import PageHeader from './ui/PageHeader';
+import FormActions from './ui/FormActions';
 import Card from './ui/Card';
 import { translateOr } from '../i18n/helpers';
 import Table from './ui/Table';
@@ -20,6 +23,7 @@ import { useI18n } from '../i18n/context';
 
 const EditContract = () => {
   const { t } = useI18n();
+  const { formProps, markClean } = useUnsavedChanges();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -65,6 +69,7 @@ const EditContract = () => {
   const handleSave = async () => {
     try {
       await api.patch(`contracts/${id}/`, formData);
+      markClean();
       navigate('/contracts');
     } catch (e) {
       console.error('Save error', e);
@@ -194,18 +199,14 @@ const EditContract = () => {
   if (!contract) return <div className="flex items-center justify-center h-64 text-error font-bold">{t('u.contrat_non_trouv')}</div>;
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 bg-slate-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-1">{t('u.rsum_du_contrat_2')}</p>
-          <h2 className="text-4xl font-extrabold text-primary">CTR-{String(id).padStart(5, '0')}</h2>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleDiscard}>{t('u.abandonner')}</Button>
-          <Button onClick={handleSave}>{t('u.enregistrer')}</Button>
-        </div>
-      </div>
+    <div className="w-full" {...formProps}>
+      <PageHeader
+        as="h1"
+        back="/contracts"
+        eyebrow={t('u.rsum_du_contrat_2')}
+        title={`CTR-${String(id).padStart(5, '0')}`}
+        actions={<FormActions onCancel={handleDiscard} onSubmit={handleSave} />}
+      />
 
       {/* Main Grid */}
       <div className="space-y-6">
@@ -343,19 +344,18 @@ const EditContract = () => {
               }}
             />
           </Field>
-          <div>
-            <p className="label mb-1.5">{t('u.mthode')} <span className="text-danger" aria-hidden="true">*</span></p>
-            <Dropdown
-              options={[
-                { value: 'Espèce', label: t('u.espce_cash') },
-                { value: 'TPE', label: t('u.carte_bancaire_tpe') },
-                { value: 'Virement', label: t('u.virement_bancaire') },
-                { value: 'Chèque', label: t('method.Chèque') },
-              ]}
-              value={paymentFormData.payment_method}
-              onChange={(value) => setPaymentFormData({ ...paymentFormData, payment_method: value || 'Espèce' })}
-            />
-          </div>
+          <Field label={t('u.mthode')} required>
+              <Dropdown
+                options={[
+                  { value: 'Espèce', label: t('u.espce_cash') },
+                  { value: 'TPE', label: t('u.carte_bancaire_tpe') },
+                  { value: 'Virement', label: t('u.virement_bancaire') },
+                  { value: 'Chèque', label: t('method.Chèque') },
+                ]}
+                value={paymentFormData.payment_method}
+                onChange={(value) => setPaymentFormData({ ...paymentFormData, payment_method: value || 'Espèce' })}
+              />
+          </Field>
           <Field label={t('u.rfrence_optionnel')}>
             <Input
               type="text" placeholder={t('u.n_chque_ou_rf_virement')}

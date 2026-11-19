@@ -1,4 +1,11 @@
 import { tNow } from '../i18n/runtime';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import PageLoading from './ui/PageLoading';
+import PageHeader from './ui/PageHeader';
+import { toast } from './Toast';
+import MoneyInput from './ui/MoneyInput';
+import ErrorBanner from './ui/ErrorBanner';
+import Field from './ui/Field';
 import FileField from './ui/FileField';
 import Card from './ui/Card';
 import { Switch, CheckboxInput } from '@astryxdesign/core';
@@ -25,10 +32,33 @@ const ToggleSwitch = ({ checked, onChange, disabled, label }) => (
     />
 );
 
-const fieldLabel = "block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2";
+// Carte de section et message d'erreur : définis hors du composant (sinon recréés à chaque rendu,
+// ce qui fait perdre le focus des champs).
+const SectionCard = ({ icon, title, description, isOwner, children }) => {
+    const { t } = useI18n();
+    return (
+        <Card padding={0} variant="default">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
+                <h2 className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">{icon}</span>
+                    {title}
+                </h2>
+                <p className="text-slate-500 text-sm mt-1">
+                    {description}
+                    {!isOwner && <span className="font-bold text-danger ms-1">{t('u.seul_le_propritaire_peut_modifie')}</span>}
+                </p>
+            </div>
+            <div className="p-6 space-y-6">{children}</div>
+        </Card>
+    );
+};
+
+const Message = ({ msg }) => (msg.type === 'error' ? <ErrorBanner message={msg.text} /> : null);
+
 
 const Settings = () => {
     const { t } = useI18n();
+    const { formProps, markClean } = useUnsavedChanges();
     const [settings, setSettings] = useState({
         nom_agence: '',
         adresse: '',
@@ -172,8 +202,8 @@ const Settings = () => {
             setTraccarPassword('');
             setClearTraccarPassword(false);
 
-            setMessage({ text: t('u.paramtres_sauvegards_avec_succs'), type: 'success' });
-            setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+            markClean();
+            toast.success(t('u.paramtres_sauvegards_avec_succs'));
         } catch (error) {
             console.error("Error saving settings:", error);
             setMessage({ text: t('u.erreur_lors_de_la_sauvegarde_non'), type: 'error' });
@@ -200,8 +230,7 @@ const Settings = () => {
             }
             await api.put('users/me/', payload);
             setPasswordForm({ current_password: '', new_password: '' });
-            setAccountMessage({ text: t('u.compte_mis_jour_avec_succs'), type: 'success' });
-            setTimeout(() => setAccountMessage({ text: '', type: '' }), 3000);
+            toast.success(t('u.compte_mis_jour_avec_succs'));
         } catch (error) {
             console.error("Error saving account:", error);
             const data = error.response?.data;
@@ -224,48 +253,14 @@ const Settings = () => {
     };
 
     if (loading || accountLoading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <p className="text-slate-500 font-semibold animate-pulse">{t('u.chargement_des_paramtres')}</p>
-            </div>
-        );
+        return <PageLoading />;
     }
 
     const isOwner = userRole === 'OWNER' || userRole === 'SUPERADMIN';
 
-    const SectionCard = ({ icon, title, description, children }) => (
-        <Card padding={0} variant="default">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
-                <h2 className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">{icon}</span>
-                    {title}
-                </h2>
-                <p className="text-slate-500 text-sm mt-1">
-                    {description}
-                    {!isOwner && <span className="font-bold text-danger ms-1">{t('u.seul_le_propritaire_peut_modifie')}</span>}
-                </p>
-            </div>
-            <div className="p-6 space-y-6">{children}</div>
-        </Card>
-    );
-
-    const Message = ({ msg }) =>
-        msg.text ? (
-            <div className={`p-4 rounded-xl border font-semibold flex items-center gap-3 ${msg.type === 'success' ? 'bg-success-bg border-success-border text-success-dark' : 'bg-danger-bg border-danger-border text-danger-dark'}`}>
-                <span className="material-symbols-outlined">{msg.type === 'success' ? 'check_circle' : 'error'}</span>
-                {msg.text}
-            </div>
-        ) : null;
-
     return (
-        <div className="flex flex-col gap-6">
-            {/* Editorial Header Section */}
-            <div className="flex justify-between items-end">
-                <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">{t('u.configuration')}</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('u.paramtres')}</h2>
-                </div>
-            </div>
+        <div className="flex flex-col gap-6" {...formProps}>
+            <PageHeader eyebrow={t('u.configuration')} title={t('u.paramtres')} className="!mb-0" />
 
             {/* Tabs */}
             <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
@@ -280,14 +275,12 @@ const Settings = () => {
                     <Message msg={message} />
 
                     {/* Section Informations de l'agence */}
-                    <SectionCard icon="storefront" title={t('u.informations_de_l_agence')} description={t('u.coordonnes_affiches_sur_vos_cont')}>
+                    <SectionCard isOwner={isOwner} icon="storefront" title={t('u.informations_de_l_agence')} description={t('u.coordonnes_affiches_sur_vos_cont')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className={fieldLabel}>{t('u.nom_de_l_agence')}</label>
+                            <Field label={t('u.nom_de_l_agence')}>
                                 <Input type="text" value={settings.nom_agence} disabled />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.email')}</label>
+                            </Field>
+                            <Field label={t('u.email')}>
                                 <Input
                                     type="email"
                                     value={settings.email}
@@ -296,9 +289,8 @@ const Settings = () => {
                                     placeholder="contact@agence.com"
                                    
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.tlphone')}</label>
+                            </Field>
+                            <Field label={t('u.tlphone')}>
                                 <Input
                                     type="tel"
                                     value={settings.telephone}
@@ -307,9 +299,8 @@ const Settings = () => {
                                     placeholder="06 00 00 00 00"
                                    
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.ville')}</label>
+                            </Field>
+                            <Field label={t('u.ville')}>
                                 <Input
                                     type="text"
                                     value={settings.ville}
@@ -318,9 +309,8 @@ const Settings = () => {
                                     placeholder="Casablanca"
                                    
                                 />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className={fieldLabel}>{t('u.adresse')}</label>
+                            </Field>
+                            <Field label={t('u.adresse')} className="md:col-span-2">
                                 <Textarea
                                     rows={2}
                                     value={settings.adresse}
@@ -329,12 +319,12 @@ const Settings = () => {
                                     placeholder={t('u.adresse_complte_de_l_agence')}
                                    
                                 />
-                            </div>
+                            </Field>
                         </div>
                     </SectionCard>
 
                     {/* Section Caution */}
-                    <SectionCard icon="security" title={t('u.gestion_de_la_caution')} description={t('u.dfinissez_si_les_locations_ncess')}>
+                    <SectionCard isOwner={isOwner} icon="security" title={t('u.gestion_de_la_caution')} description={t('u.dfinissez_si_les_locations_ncess')}>
                         <Card padding={4} variant="muted" className="flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-slate-800">{t('u.activer_la_caution')}</h3>
@@ -347,41 +337,30 @@ const Settings = () => {
                             />
                         </Card>
 
-                        <div className={`transition-all duration-300 ${!settings.caution_active ? 'opacity-40 pointer-events-none' : ''}`}>
-                            <label className={fieldLabel}>{t('u.montant_de_la_caution_mad')}</label>
-                            <div className="relative">
-                                <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">MAD</span>
-                                <Input
-                                    type="number" min="0" step="100"
-                                    value={settings.caution_montant}
-                                    onChange={(e) => setSettings({ ...settings, caution_montant: e.target.value })}
-                                    disabled={!isOwner || saving || !settings.caution_active}
-                                   
-                                />
-                            </div>
-                        </div>
+                        <Field label={t('u.montant_de_la_caution_mad')} className={`transition-all duration-300 ${!settings.caution_active ? 'opacity-40 pointer-events-none' : ''}`}>
+                            <MoneyInput
+                                min="0" step="100"
+                                value={settings.caution_montant}
+                                onChange={(e) => setSettings({ ...settings, caution_montant: e.target.value })}
+                                disabled={!isOwner || saving || !settings.caution_active}
+                            />
+                        </Field>
                     </SectionCard>
 
                     {/* Section TVA / Facturation */}
-                    <SectionCard icon="receipt_long" title={t('u.facturation_tva')} description={t('u.taux_de_tva_appliqu_aux_factures')}>
-                        <div>
-                            <label className={fieldLabel}>{t('u.taux_de_tva')}</label>
-                            <div className="relative">
-                                <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
-                                <Input
-                                    type="number" min="0" max="100" step="0.01"
-                                    value={settings.tva_rate}
-                                    onChange={(e) => setSettings({ ...settings, tva_rate: e.target.value })}
-                                    disabled={!isOwner || saving}
-                                   
-                                />
-                            </div>
-                            <p className="text-xs text-slate-500 mt-2">{t('u.n_affecte_que_les_nouvelles_fact')}</p>
-                        </div>
+                    <SectionCard isOwner={isOwner} icon="receipt_long" title={t('u.facturation_tva')} description={t('u.taux_de_tva_appliqu_aux_factures')}>
+                        <Field label={t('u.taux_de_tva')}>
+                            <Input
+                                type="number" min="0" max="100" step="0.01" suffix="%"
+                                value={settings.tva_rate}
+                                onChange={(e) => setSettings({ ...settings, tva_rate: e.target.value })}
+                                disabled={!isOwner || saving}
+                            />
+                        </Field>
                     </SectionCard>
 
                     {/* Section Kilométrage */}
-                    <SectionCard icon="speed" title={t('u.kilomtrage_inclus_supplment')} description={t('u.dfinissez_le_nombre_de_km_inclus')}>
+                    <SectionCard isOwner={isOwner} icon="speed" title={t('u.kilomtrage_inclus_supplment')} description={t('u.dfinissez_le_nombre_de_km_inclus')}>
                         <Card padding={4} variant="muted" className="flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-slate-800">{t('u.activer_la_facturation_des_km_su')}</h3>
@@ -395,34 +374,22 @@ const Settings = () => {
                         </Card>
 
                         <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 ${!settings.km_extra_active ? 'opacity-40 pointer-events-none' : ''}`}>
-                            <div>
-                                <label className={fieldLabel}>{t('u.km_inclus_par_jour')}</label>
-                                <div className="relative">
-                                    <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">KM</span>
-                                    <Input
-                                        type="number" min="0" step="10"
-                                        value={settings.km_par_jour}
-                                        onChange={(e) => setSettings({ ...settings, km_par_jour: e.target.value })}
-                                        disabled={!isOwner || saving || !settings.km_extra_active}
-                                       
-                                    />
-                                </div>
-                                <p className="text-xs text-slate-400 mt-1.5 ms-1">{t('u.dfaut_recommand_250_km_jour')}</p>
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.tarif_par_km_supplmentaire_mad')}</label>
-                                <div className="relative">
-                                    <span className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">MAD</span>
-                                    <Input
-                                        type="number" min="0" step="0.5"
-                                        value={settings.km_tarif_extra_defaut}
-                                        onChange={(e) => setSettings({ ...settings, km_tarif_extra_defaut: e.target.value })}
-                                        disabled={!isOwner || saving || !settings.km_extra_active}
-                                       
-                                    />
-                                </div>
-                                <p className="text-xs text-slate-400 mt-1.5 ms-1">{t('u.tarif_par_dfaut_pour_tous_les_vh')}</p>
-                            </div>
+                            <Field label={t('u.km_inclus_par_jour')} hint={t('u.dfaut_recommand_250_km_jour')}>
+                                <Input
+                                    type="number" min="0" step="10" suffix="km"
+                                    value={settings.km_par_jour}
+                                    onChange={(e) => setSettings({ ...settings, km_par_jour: e.target.value })}
+                                    disabled={!isOwner || saving || !settings.km_extra_active}
+                                />
+                            </Field>
+                            <Field label={t('u.tarif_par_km_supplmentaire_mad')} hint={t('u.tarif_par_dfaut_pour_tous_les_vh')}>
+                                <MoneyInput
+                                    step="0.5"
+                                    value={settings.km_tarif_extra_defaut}
+                                    onChange={(e) => setSettings({ ...settings, km_tarif_extra_defaut: e.target.value })}
+                                    disabled={!isOwner || saving || !settings.km_extra_active}
+                                />
+                            </Field>
                         </div>
 
                         {/* Preview calculation */}
@@ -449,14 +416,13 @@ const Settings = () => {
                     <GeofenceManager canEdit={isOwner} />
 
                     {/* Section Suivi GPS / Traccar */}
-                    <SectionCard icon="satellite_alt" title={t('u.suivi_gps_traccar')} description={t('u.connectez_le_compte_serveur_trac')}>
+                    <SectionCard isOwner={isOwner} icon="satellite_alt" title={t('u.suivi_gps_traccar')} description={t('u.connectez_le_compte_serveur_trac')}>
                         <div className={`flex items-center gap-2 mb-4 text-sm font-bold ${traccarConfigured ? 'text-success' : 'text-danger'}`}>
                             <span className="material-symbols-outlined text-base">{traccarConfigured ? 'check_circle' : 'cancel'}</span>
                             {traccarConfigured ? t('u.compte_traccar_connect') : t('u.compte_traccar_non_configur')}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-                            <div>
-                                <label className={fieldLabel}>{t('u.url_du_serveur')}</label>
+                            <Field label={t('u.url_du_serveur')}>
                                 <Input
                                     type="url"
                                     value={settings.traccar_url}
@@ -465,9 +431,8 @@ const Settings = () => {
                                     disabled={!isOwner || saving}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.utilisateur')}</label>
+                            </Field>
+                            <Field label={t('u.utilisateur')}>
                                 <Input
                                     type="text"
                                     value={settings.traccar_username}
@@ -476,9 +441,8 @@ const Settings = () => {
                                     disabled={!isOwner || saving}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.mot_de_passe')}</label>
+                            </Field>
+                            <Field label={t('u.mot_de_passe')}>
                                 <Input
                                     type="password"
                                     value={traccarPassword}
@@ -487,7 +451,7 @@ const Settings = () => {
                                     disabled={!isOwner || saving}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                                 />
-                            </div>
+                            </Field>
                             {traccarPasswordSet && (
                                 <div className="flex items-end pb-1">
                                     <CheckboxInput label={t('u.effacer_le_mot_de_passe_enregist')} value={clearTraccarPassword} onChange={(c) => setClearTraccarPassword(c)} isDisabled={!isOwner || saving} />
@@ -497,7 +461,7 @@ const Settings = () => {
                     </SectionCard>
 
                     {/* Section Marques affichées */}
-                    <SectionCard icon="directions_car" title={t('u.marques_affiches')} description={t('u.slectionnez_les_marques_afficher')}>
+                    <SectionCard isOwner={isOwner} icon="directions_car" title={t('u.marques_affiches')} description={t('u.slectionnez_les_marques_afficher')}>
                         {allBrands.length === 0 ? (
                             <p className="text-sm text-slate-400">{t('u.aucune_marque_disponible')}</p>
                         ) : (
@@ -521,11 +485,10 @@ const Settings = () => {
                     </SectionCard>
 
                     {/* Section Branding / Cachet */}
-                    <SectionCard icon="verified" title={t('u.branding_et_documents')} description={t('u.configurez_les_lments_visuels_de')}>
+                    <SectionCard isOwner={isOwner} icon="verified" title={t('u.branding_et_documents')} description={t('u.configurez_les_lments_visuels_de')}>
                         <div className="grid grid-cols-1 gap-8">
                             {/* Logo */}
                             <div>
-                                <label className={fieldLabel}>{t('u.logo_de_l_agence')}</label>
                                 <p className="text-xs text-slate-500 mb-4">{t('u.ce_logo_sera_utilis_sur_vos_cont')}</p>
 
                                 <div className="flex items-center gap-6">
@@ -546,8 +509,7 @@ const Settings = () => {
                                     {/* Upload button */}
                                     <div className="flex-1">
                                         <FileField
-                                            label={logoFile ? t('u.changer_le_logo') : t('u.importer_un_logo_png_jpg')}
-                                            isLabelHidden
+                                            label={t('u.logo_de_l_agence')}
                                             value={logoFile}
                                             onChange={async (file) => setLogoFile(file ? await optimizeImageFile(file) : null) }
                                             accept=".png,.jpg,.jpeg"
@@ -566,7 +528,6 @@ const Settings = () => {
 
                             {/* Cachet & Signature */}
                             <div>
-                                <label className={fieldLabel}>{t('u.cachet_signature_de_l_agence')}</label>
                                 <p className="text-xs text-slate-500 mb-4">{t('u.cette_image_idalement_au_format_')}</p>
 
                                 <div className="flex items-center gap-6">
@@ -587,8 +548,7 @@ const Settings = () => {
                                     {/* Upload button */}
                                     <div className="flex-1">
                                         <FileField
-                                            label={cachetFile ? t('u.changer_l_image') : t('u.importer_un_cachet_png_jpg')}
-                                            isLabelHidden
+                                            label={t('u.cachet_signature_de_l_agence')}
                                             value={cachetFile}
                                             onChange={async (file) => setCachetFile(file ? await optimizeImageFile(file) : null) }
                                             accept=".png,.jpg,.jpeg"
@@ -619,10 +579,9 @@ const Settings = () => {
                     <Message msg={accountMessage} />
 
                     {/* Section Informations du compte */}
-                    <SectionCard icon="person" title={t('u.informations_du_compte')} description={t('u.modifiez_les_informations_de_vot')}>
+                    <SectionCard isOwner={isOwner} icon="person" title={t('u.informations_du_compte')} description={t('u.modifiez_les_informations_de_vot')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className={fieldLabel}>{t('u.nom_d_utilisateur')}</label>
+                            <Field label={t('u.nom_d_utilisateur')}>
                                 <Input
                                     type="text"
                                     value={account.username}
@@ -630,9 +589,8 @@ const Settings = () => {
                                     placeholder={t('u.nom_d_utilisateur')}
                                    
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.email')}</label>
+                            </Field>
+                            <Field label={t('u.email')}>
                                 <Input
                                     type="email"
                                     value={account.email}
@@ -640,9 +598,8 @@ const Settings = () => {
                                     placeholder="email@exemple.com"
                                    
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.prnom')}</label>
+                            </Field>
+                            <Field label={t('u.prnom')}>
                                 <Input
                                     type="text"
                                     value={account.first_name}
@@ -650,9 +607,8 @@ const Settings = () => {
                                     placeholder={t('u.prnom')}
                                    
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.nom')}</label>
+                            </Field>
+                            <Field label={t('u.nom')}>
                                 <Input
                                     type="text"
                                     value={account.last_name}
@@ -660,15 +616,14 @@ const Settings = () => {
                                     placeholder={t('u.nom')}
                                    
                                 />
-                            </div>
+                            </Field>
                         </div>
                     </SectionCard>
 
                     {/* Section Mot de passe */}
-                    <SectionCard icon="lock" title={t('u.changer_le_mot_de_passe')} description={t('u.laissez_ces_champs_vides_pour_co')}>
+                    <SectionCard isOwner={isOwner} icon="lock" title={t('u.changer_le_mot_de_passe')} description={t('u.laissez_ces_champs_vides_pour_co')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className={fieldLabel}>{t('u.mot_de_passe_actuel')}</label>
+                            <Field label={t('u.mot_de_passe_actuel')}>
                                 <Input
                                     type="password"
                                     value={passwordForm.current_password}
@@ -676,9 +631,8 @@ const Settings = () => {
                                     placeholder={t('u.mot_de_passe_actuel')}
                                    
                                 />
-                            </div>
-                            <div>
-                                <label className={fieldLabel}>{t('u.nouveau_mot_de_passe')}</label>
+                            </Field>
+                            <Field label={t('u.nouveau_mot_de_passe')}>
                                 <Input
                                     type="password"
                                     value={passwordForm.new_password}
@@ -686,7 +640,7 @@ const Settings = () => {
                                     placeholder={t('u.nouveau_mot_de_passe')}
                                    
                                 />
-                            </div>
+                            </Field>
                         </div>
                     </SectionCard>
 

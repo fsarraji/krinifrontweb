@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import StatusBadge from './ui/StatusBadge';
 import Card from './ui/Card';
 import api, { fetchAllPages } from '../api';
 import { toast } from './Toast';
@@ -12,11 +13,6 @@ import Modal from './ui/Modal';
 import PageHeader from './ui/PageHeader';
 import Table from './ui/Table';
 import { useI18n } from '../i18n/context';
-
-const STATUS = {
-    EMISE: { labelKey: 'u.mise', cls: 'bg-badge-info-bg text-badge-info-text border-badge-info-border' },
-    ANNULEE: { labelKey: 'u.annule', cls: 'bg-badge-neutral-bg text-badge-neutral-text border-badge-neutral-border' },
-};
 
 const errText = (err, fallback) => {
     const d = err?.response?.data;
@@ -154,11 +150,7 @@ const Invoices = () => {
         { key: 'montant_ttc', label: t('u.ttc'), align: 'right', sortable: true, render: (v) => <strong>{formatMoney(v)}</strong> },
         {
             key: 'statut', label: t('u.statut'),
-            render: (v) => (
-                <span className={`inline-flex px-2 py-0.5 rounded-token border text-label-sm ${STATUS[v]?.cls || ''}`}>
-                    {STATUS[v] ? t(STATUS[v].labelKey) : v}
-                </span>
-            ),
+            render: (v) => <StatusBadge status={v} />,
         },
         {
             key: 'actions', label: t('u.actions'), align: 'right',

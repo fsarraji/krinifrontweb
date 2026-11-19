@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Card from './ui/Card';
+import StatusBadge from './ui/StatusBadge';
+import PageHeader from './ui/PageHeader';
 import { Input, Select } from './ui/Input';
 import Button from './ui/Button';
 import { tNow } from '../i18n/runtime';
@@ -417,32 +420,28 @@ const GpsTracking = () => {
             `}</style>
 
             {/* Header */}
-            <div className="px-8 pt-8 pb-6 flex items-end justify-between flex-shrink-0">
-                <div>
-                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{subtitle}</p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>{t('u.suivi_gps')}</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                    {!fleetOpen && (
-                        <Button variant="secondary" iconOnly icon="format_list_bulleted" onClick={() => setFleetOpen(true)}  title={t('u.afficher_la_flotte')} aria-label={t('u.afficher_la_flotte')} />
+            <div className="px-8 pt-8 flex-shrink-0">
+                <PageHeader
+                    eyebrow={subtitle}
+                    title={t('u.suivi_gps')}
+                    actions={(
+                        <>
+                            {!fleetOpen && (
+                                <Button variant="secondary" iconOnly icon="format_list_bulleted" onClick={() => setFleetOpen(true)} title={t('u.afficher_la_flotte')} aria-label={t('u.afficher_la_flotte')} />
+                            )}
+                            <Button variant="secondary" icon="sensors" title={t('u.grer_les_dispositifs_gps_ajouter')} aria-label={t('u.grer_les_dispositifs_gps_ajouter')} onClick={openDevices}>{t('u.dispositifs')}</Button>
+                            <StatusBadge variant="success" label={`${movingCount} en mouvement`} />
+                            <StatusBadge variant="neutral" label={`${offlineCount} hors ligne`} />
+                        </>
                     )}
-                    <Button variant="secondary" icon="sensors" title={t('u.grer_les_dispositifs_gps_ajouter')} aria-label={t('u.grer_les_dispositifs_gps_ajouter')} onClick={openDevices}>{t('u.dispositifs')}</Button>
-                    <span className="badge" style={{ background: 'var(--success-bg)', color: 'var(--success-dark)' }}>
-                        <span className="badge-dot pulse" style={{ background: 'var(--success)' }}></span>
-                        {movingCount} en mouvement
-                    </span>
-                    <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-muted)' }}>
-                        <span className="badge-dot" style={{ background: 'var(--text-muted)' }}></span>
-                        {offlineCount} hors ligne
-                    </span>
-                </div>
+                />
             </div>
 
             {/* Content grid */}
             <div className="flex-1 min-h-0 grid grid-cols-3 gap-6 px-8 pb-8">
                 {/* LEFT: fleet panel (list <-> detail) */}
                 {fleetOpen && (
-                    <div className="card rounded-token shadow-l1 overflow-hidden flex flex-col min-h-0">
+                    <Card padding={0} variant="default" className="overflow-hidden flex flex-col min-h-0">
                         <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: '1px solid var(--stroke)' }}>
                             <h3 className="font-bold text-[15px]" style={{ color: 'var(--on-surface)' }}>
                                 {t('u.flotte')} <span className="font-semibold text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>· {vehicles.length} véh.</span>
@@ -500,10 +499,7 @@ const GpsTracking = () => {
                                                         {v.marque_name || 'Véhicule'} {v.modele_name || ''}
                                                     </p>
                                                     <p className="text-[11px] mono" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{v.matricule}</p>
-                                                    <span className="badge mt-1" style={{ background: status.bg, color: status.text, padding: '2px 8px 2px 6px' }}>
-                                                        <span className={`badge-dot ${status.moving ? 'pulse' : ''}`} style={{ background: status.dotBg }}></span>
-                                                        {t(status.labelKey)}
-                                                    </span>
+                                                    <StatusBadge className="mt-1" variant={status.moving ? 'success' : status.labelKey === 'u.l_arrt' ? 'warning' : 'neutral'} label={t(status.labelKey)} />
                                                 </div>
                                                 {v.position?.speed_kph != null && (
                                                     <span className="text-[12px] font-bold mono flex-shrink-0" style={{ color: status.color }}>
@@ -719,7 +715,7 @@ const GpsTracking = () => {
                                 )}
                             </div>
                         )}
-                    </div>
+                    </Card>
                 )}
 
                 {/* RIGHT: map */}
@@ -747,17 +743,17 @@ const GpsTracking = () => {
 
                     {vehicles.length === 0 && !loading && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                            <div className="card rounded-token shadow-l1 px-6 py-4 text-center">
+                            <Card padding={4} variant="default" className="text-center">
                                 <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>{t('u.aucun_vhicule_dans_la_flotte')}</p>
-                            </div>
+                            </Card>
                         </div>
                     )}
 
                     {loading && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center">
-                            <div className="card rounded-token shadow-l1 px-6 py-4 text-center">
+                            <Card padding={4} variant="default" className="text-center">
                                 <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>{t('u.chargement_des_positions')}</p>
-                            </div>
+                            </Card>
                         </div>
                     )}
 
@@ -873,10 +869,7 @@ const GpsTracking = () => {
                                                             <p className="text-[13px] font-bold truncate" style={{ color: 'var(--on-surface)' }}>
                                                                 {d.name || `Dispositif #${d.id}`}
                                                             </p>
-                                                            <span className="badge" style={{ background: online ? 'var(--success-bg)' : 'var(--surface-hover)', color: online ? 'var(--success-dark)' : 'var(--text-muted)' }}>
-                                                                <span className="badge-dot" style={{ background: online ? 'var(--success)' : 'var(--text-muted)' }}></span>
-                                                                {online ? 'En ligne' : 'Hors ligne'}
-                                                            </span>
+                                                            <StatusBadge variant={online ? 'success' : 'neutral'} label={online ? 'En ligne' : 'Hors ligne'} />
                                                         </div>
                                                         <p className="text-[11px] mono mt-0.5" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
                                                             #{d.id} · {d.uniqueId || t('u.imei_inconnu')}

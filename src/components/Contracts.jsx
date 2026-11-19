@@ -1,4 +1,6 @@
 import { useI18n } from '../i18n/context';
+import { apiErrorText } from '../utils/apiErrorText';
+import ErrorBanner from './ui/ErrorBanner';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
@@ -23,6 +25,7 @@ const Contracts = () => {
     const navigate = useNavigate();
     const [contracts, setContracts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [closeContract, setCloseContract] = useState(null);
     const [printContractId, setPrintContractId] = useState(null);
     const [activeFilter, setActiveFilter] = useState('ALL');
@@ -74,6 +77,7 @@ const Contracts = () => {
             link.remove();
         } catch (error) {
             console.error("Erreur lors du téléchargement du PDF", error);
+            setLoadError(apiErrorText(error, t('common.loadError')));
             toast.error(t('u.erreur_lors_de_la_gnration_du_pd'));
         }
     };
@@ -170,6 +174,7 @@ const Contracts = () => {
                     </>
                 )}
             />
+            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setReloadKey((k) => k + 1); }} className="mb-4" />}
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">

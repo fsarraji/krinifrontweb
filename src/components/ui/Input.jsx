@@ -68,6 +68,8 @@ const InputControl = forwardRef(function InputControl({ type = 'text', value, on
                 min={min != null ? Number(min) : undefined}
                 max={max != null ? Number(max) : undefined}
                 step={step != null ? Number(step) : undefined}
+                units={props.suffix}
+                autoComplete={props.autoComplete}
                 onChange={(v) => onChange?.(synth(name, v == null || Number.isNaN(v) ? '' : String(v), 'number'))}
                 {...edges}
             />
@@ -107,6 +109,8 @@ const InputControl = forwardRef(function InputControl({ type = 'text', value, on
             onChange={(_v, e) => onChange?.(e)}
             hasClear={type === 'search'}
             hasAutoFocus={props.autoFocus}
+            inputMode={props.inputMode}
+            autoComplete={props.autoComplete}
             {...edges}
         />
     );

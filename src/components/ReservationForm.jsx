@@ -1,4 +1,10 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import { formatMoney } from '../utils/formatters';
+import { CHAUFFEUR_DAILY_RATE } from '../utils/pricing';
+import FormActions from './ui/FormActions';
+import MoneyInput from './ui/MoneyInput';
+import Field from './ui/Field';
 import Card from './ui/Card';
 import { Input, Textarea } from './ui/Input';
 import React, { useState, useEffect } from 'react';
@@ -16,6 +22,7 @@ import { useI18n } from '../i18n/context';
 
 const ReservationForm = () => {
     const { t } = useI18n();
+    const { formProps, markClean } = useUnsavedChanges();
     const navigate = useNavigate();
     const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
@@ -112,7 +119,7 @@ const ReservationForm = () => {
     const totalEstimate = () => {
         const days = diffDays();
         const base = quote && quote.total != null ? parseFloat(quote.total) : days * formData.prix_par_jour;
-        const chauffeur = formData.chauffeur_service ? 50 * days : 0;
+        const chauffeur = formData.chauffeur_service ? CHAUFFEUR_DAILY_RATE * days : 0;
         return base + chauffeur;
     };
 
@@ -153,6 +160,7 @@ const ReservationForm = () => {
             };
             await api.post('contracts/', dataToSubmit);
             toast.success(t('u.rservation_cre_avec_succs'));
+            markClean();
             navigate('/reservations');
         } catch (error) {
             console.error("Erreur lors de la création", error);
@@ -167,19 +175,19 @@ const ReservationForm = () => {
     );
 
     return (
-        <div className="bg-surface">
+        <div className="bg-surface" {...formProps}>
             {/* Header Section */}
             <PageHeader
                 eyebrow={t('u.fleet_concierge')}
                 title={t('u.nouvelle_rservation')}
                 description={t('u.rservez_un_vhicule_en_3_tapes_da')}
                 actions={(
-                    <>
-                        <Button variant="secondary" onClick={() => navigate('/reservations')}>{t('u.annuler')}</Button>
-                        {step === 3 && (
-                            <Button icon="event_available" onClick={handleSubmit}>{t('u.confirmer_la_rservation')}</Button>
-                        )}
-                    </>
+                    <FormActions
+                        onCancel={() => navigate('/reservations')}
+                        onSubmit={step === 3 ? handleSubmit : undefined}
+                        submitLabel={step === 3 ? t('u.confirmer_la_rservation') : undefined}
+                        submitIcon="event_available"
+                    />
                 )}
             />
 
@@ -216,17 +224,15 @@ const ReservationForm = () => {
                             <p className="text-slate-500 mb-8 text-sm">{t('u.veuillez_slectionner_la_date_de_')}</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.date_et_heure_de_dpart')}</label>
+                                <Field label={t('u.date_et_heure_de_dpart')}>
                                     <DatePicker
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200"
                                         value={formData.date_sortie}
                                         onChange={(v) => setFormData({...formData, date_sortie: v})}
                                         placeholder={t('u.choisir_la_date_de_dpart')}
                                     />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.retour_prvu_2')}</label>
+                                </Field>
+                                <Field label={t('u.retour_prvu_2')}>
                                     <DatePicker
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200"
                                         value={formData.date_retour_prevue}
@@ -234,7 +240,7 @@ const ReservationForm = () => {
                                         min={formData.date_sortie ? formData.date_sortie.slice(0, 10) : null}
                                         placeholder={t('u.choisir_la_date_de_retour')}
                                     />
-                                </div>
+                                </Field>
                             </div>
                             <Button
                                 size="lg"
@@ -284,7 +290,7 @@ const ReservationForm = () => {
                                             </h4>
                                             <div className="flex flex-wrap items-center gap-2 mt-1">
                                                 <span className="text-[10px] px-2 py-1 rounded-md bg-slate-200 text-slate-700 font-mono font-bold uppercase tracking-wider">{vehicle.matricule_actuel || vehicle.matricule}</span>
-                                                <span className="text-sm text-primary font-bold">{vehicle.prix_par_jour} DH/j</span>
+                                                <span className="text-sm text-primary font-bold">{formatMoney(vehicle.prix_par_jour, { decimals: 0 })}/j</span>
                                             </div>
                                         </div>
                                         {formData.vehicle === vehicle.id && (
@@ -321,8 +327,7 @@ const ReservationForm = () => {
                             </div>
 
                             <div className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.slectionner_le_client_principal')}</label>
+                                <Field label={t('u.slectionner_le_client_principal')}>
                                     <Dropdown
                                         options={clients.map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
                                         value={formData.client}
@@ -331,10 +336,9 @@ const ReservationForm = () => {
                                         isSearchable
                                         isClearable
                                     />
-                                </div>
+                                </Field>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.deuxime_conducteur_optionnel')}</label>
+                                <Field label={t('u.deuxime_conducteur_optionnel')}>
                                     <Dropdown
                                         options={clients.filter(c => c.id != formData.client).map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
                                         value={formData.deuxieme_chauffeur}
@@ -343,7 +347,7 @@ const ReservationForm = () => {
                                         isSearchable
                                         isClearable
                                     />
-                                </div>
+                                </Field>
                             </div>
                             
                             <hr className="border-slate-100" />
@@ -358,7 +362,7 @@ const ReservationForm = () => {
                                     <Card padding={3} variant="muted" className="flex items-center justify-between transition-colors">
                                         <div>
                                             <p className="text-sm font-bold text-slate-900">{t('u.service_chauffeur')}</p>
-                                            <p className="text-[10px] text-slate-500 font-medium">+50 DH/jour</p>
+                                            <p className="text-[10px] text-slate-500 font-medium">+{formatMoney(CHAUFFEUR_DAILY_RATE, { decimals: 0 })}/jour</p>
                                         </div>
                                         <div 
                                             onClick={() => setFormData({...formData, chauffeur_service: !formData.chauffeur_service})}
@@ -372,35 +376,22 @@ const ReservationForm = () => {
                                 </div>
 
                                 {agencySettings.caution_active && (
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.caution')}</label>
-                                        <div className="relative">
-                                            <span className="absolute start-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
-                                            <Input 
-                                                className={`w-full px-4 py-3 rounded-xl border text-sm font-bold ps-12 outline-none transition-all duration-200 ${userRole !== 'OWNER' && userRole !== 'SUPERADMIN' ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'border-slate-200 text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary'}`} 
-                                                type="number" 
-                                                value={formData.caution}
-                                                onChange={(e) => setFormData({...formData, caution: e.target.value})}
-                                                disabled={userRole !== 'OWNER' && userRole !== 'SUPERADMIN'}
-                                            />
-                                        </div>
-                                    </div>
+                                    <Field label={t('u.caution')}>
+                                        <MoneyInput
+                                            value={formData.caution}
+                                            onChange={(e) => setFormData({...formData, caution: e.target.value})}
+                                            disabled={userRole !== 'OWNER' && userRole !== 'SUPERADMIN'}
+                                        />
+                                    </Field>
                                 )}
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.avance_verse')}</label>
-                                    <div className="relative">
-                                        <span className="absolute start-4 top-3.5 text-slate-400 font-bold text-sm">DH</span>
-                                        <Input 
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-success-dark bg-success-bg/20 ps-12 text-sm font-extrabold focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200" 
-                                            type="number" 
-                                            value={formData.montant_paye}
-                                            onChange={(e) => setFormData({...formData, montant_paye: e.target.value})}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.mode_de_paiement_avance')}</label>
+                                <Field label={t('u.avance_verse')}>
+                                    <MoneyInput
+                                        value={formData.montant_paye}
+                                        onChange={(e) => setFormData({...formData, montant_paye: e.target.value})}
+                                    />
+                                </Field>
+                                <Field label={t('u.mode_de_paiement_avance')} className="col-span-1 md:col-span-2 lg:col-span-3">
                                     <Dropdown
                                         options={[
                                             { value: 'Espèce', label: t('method.Espèce') },
@@ -411,13 +402,12 @@ const ReservationForm = () => {
                                         value={formData.methode_paiement}
                                         onChange={(v) => setFormData({...formData, methode_paiement: v})}
                                     />
-                                </div>
+                                </Field>
                             </div>
                             
                             <hr className="border-slate-100" />
                             
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.notes_ou_demandes_spciales')}</label>
+                            <Field label={t('u.notes_ou_demandes_spciales')}>
                                 <Textarea 
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none transition-all duration-200 resize-none" 
                                     placeholder={t('u.entrez_toute_condition_supplment_2')} 
@@ -425,7 +415,7 @@ const ReservationForm = () => {
                                     value={formData.notes}
                                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
                                 ></Textarea>
-                            </div>
+                            </Field>
                             
                             <div className="flex gap-4 pt-6 border-t border-slate-100">
                                 <Button variant="secondary" onClick={() => setStep(2)}>{t('u.retour')}</Button>

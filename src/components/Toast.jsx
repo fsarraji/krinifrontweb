@@ -17,17 +17,29 @@ function notify(type, title, message) {
     LISTENERS.forEach((fn) => fn({ type, title, message }));
 }
 
+const TYPE_META = {
+    success: { icon: 'check_circle', color: 'text-success' },
+    error: { icon: 'error', color: 'text-danger' },
+    warning: { icon: 'warning', color: 'text-warning' },
+    info: { icon: 'info', color: 'text-primary' },
+};
+
 export const ToastContainer = () => {
     const showToast = useToast();
 
     useEffect(() => {
         const handle = ({ type, title, message }) => {
-            // Astryx ne distingue que « info » et « error » : succès et avertissement passent en « info ».
+            // Astryx ne distingue que « info » et « error » : succès et avertissement gardent le type « info »
+            // mais reçoivent une icône et une couleur propres pour rester reconnaissables.
+            const meta = TYPE_META[type] || TYPE_META.info;
             showToast({
                 type: type === 'error' ? 'error' : 'info',
-                body: title ? (
-                    <span><strong>{title}</strong>{message ? ` — ${message}` : ''}</span>
-                ) : message,
+                body: (
+                    <span className="inline-flex items-start gap-2">
+                        <span className={`material-symbols-outlined text-[18px] ${meta.color}`} aria-hidden="true">{meta.icon}</span>
+                        <span>{title ? <><strong>{title}</strong>{message ? ` — ${message}` : ''}</> : message}</span>
+                    </span>
+                ),
             });
         };
         LISTENERS.add(handle);

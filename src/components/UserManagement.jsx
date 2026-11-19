@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import PageLoading from './ui/PageLoading';
+import { apiErrorText } from '../utils/apiErrorText';
 import Table from './ui/Table';
 import { Input } from './ui/Input';
 import api from '../api';
@@ -10,7 +12,6 @@ import Button from './ui/Button';
 import Modal from './ui/Modal';
 import Field from './ui/Field';
 import StatusBadge from './ui/StatusBadge';
-import Spinner from './ui/Spinner';
 import EmptyState from './ui/EmptyState';
 import PageHeader from './ui/PageHeader';
 import { useI18n } from '../i18n/context';
@@ -59,6 +60,7 @@ const UserManagement = () => {
     const roleOptions = tOpts(ROLE_OPTIONS);
     const activeOptions = tOpts(ACTIVE_OPTIONS);
     const [showModal, setShowModal] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM);
 
@@ -77,6 +79,7 @@ const UserManagement = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        setSaving(true);
         try {
             if (isEditing) {
                 await api.put(`users/${form.id}/`, toPayload(form));
@@ -88,7 +91,9 @@ const UserManagement = () => {
             toast.success(isEditing ? t('u.utilisateur_mis_jour_avec_succs') : t('u.utilisateur_cr_avec_succs'));
         } catch (error) {
             console.error("Erreur lors de l'enregistrement", error);
-            toast.error(t('u.erreur_lors_de_l_enregistrement__3'));
+            toast.error(apiErrorText(error, t('u.erreur_lors_de_l_enregistrement__3')));
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -108,7 +113,7 @@ const UserManagement = () => {
     };
 
     if (loading) {
-        return <div className="flex justify-center py-20"><Spinner size={28} /></div>;
+        return <PageLoading />;
     }
 
     return (
@@ -168,8 +173,8 @@ const UserManagement = () => {
                 labelId="user-modal-title"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={closeModal}>{t('u.annuler')}</Button>
-                        <Button type="submit" form="user-form" icon="save">{t('u.enregistrer')}</Button>
+                        <Button variant="outline" onClick={closeModal}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="user-form" loading={saving} icon="save">{t('u.enregistrer')}</Button>
                     </>
                 }
             >

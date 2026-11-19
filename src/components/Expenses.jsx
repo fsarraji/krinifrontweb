@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import StatusBadge from './ui/StatusBadge';
+import { apiErrorText } from '../utils/apiErrorText';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import api, { fetchAllPages } from '../api';
@@ -22,6 +24,7 @@ const Expenses = () => {
     const [expenses, setExpenses] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [expenseType, setExpenseType] = useState('AGENCY');
     const [search, setSearch] = useState('');
@@ -81,6 +84,7 @@ const Expenses = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSaving(true);
         try {
             const payload = {
                 title: formData.title,
@@ -103,7 +107,9 @@ const Expenses = () => {
             });
         } catch (error) {
             console.error("Erreur ajout dépense", error);
-            toast.error(t('u.erreur_lors_de_l_ajout_de_la_dpe'));
+            toast.error(apiErrorText(error, t('u.erreur_lors_de_l_ajout_de_la_dpe')));
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -233,15 +239,9 @@ const Expenses = () => {
                         render: (_, e) => (
                             <div className="flex flex-col gap-1 items-start">
                                 {e.vehicle ? (
-                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-primary-light text-primary-deep ring-1 ring-primary-border">
-                                        <span className="material-symbols-outlined text-xs" aria-hidden="true">directions_car</span>
-                                        {t('u.vhicule_2', { id: e.vehicle })}
-                                    </span>
+                                    <StatusBadge variant="info" icon="directions_car" label={t('u.vhicule_2', { id: e.vehicle })} />
                                 ) : (
-                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-danger-bg text-danger-dark ring-1 ring-danger-border">
-                                        <span className="material-symbols-outlined text-xs" aria-hidden="true">storefront</span>
-                                        {t('u.agence')}
-                                    </span>
+                                    <StatusBadge variant="neutral" icon="storefront" label={t('u.agence')} />
                                 )}
                                 <span className="text-xs text-text-muted font-medium">
                                     {CATEGORIES.find((c) => c.value === e.category)?.label || e.category}
@@ -271,7 +271,7 @@ const Expenses = () => {
                 footer={(
                     <>
                         <Button variant="outline" onClick={() => setShowModal(false)}>{t('u.annuler')}</Button>
-                        <Button type="submit" form="expenseForm" variant="danger" icon="check_circle">{t('u.valider')}</Button>
+                        <Button type="submit" form="expenseForm" loading={saving} icon="check_circle">{t('u.valider')}</Button>
                     </>
                 )}
             >
@@ -312,10 +312,9 @@ const Expenses = () => {
                             />
                         </div>
 
-                        <div className="sm:col-span-2">
-                            <p className="label mb-1.5">{t('u.catgorie')} <span className="text-danger" aria-hidden="true">*</span></p>
+                        <Field label={t('u.catgorie')} required className="sm:col-span-2">
                             <Dropdown options={CATEGORIES} value={formData.category} onChange={(v) => setFormData({ ...formData, category: v })} />
-                        </div>
+                        </Field>
 
                         <Field label={t('u.notes')} className="sm:col-span-2">
                             <Textarea rows={2} placeholder={t('u.dtails_facultatif')} value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />

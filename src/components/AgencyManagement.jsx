@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import PageLoading from './ui/PageLoading';
+import { apiErrorText } from '../utils/apiErrorText';
 import Table from './ui/Table';
 import { Input, Textarea } from './ui/Input';
 import api from '../api';
@@ -10,7 +12,6 @@ import Button from './ui/Button';
 import Modal from './ui/Modal';
 import Field from './ui/Field';
 import StatusBadge from './ui/StatusBadge';
-import Spinner from './ui/Spinner';
 import EmptyState from './ui/EmptyState';
 import PageHeader from './ui/PageHeader';
 import { useI18n } from '../i18n/context';
@@ -43,6 +44,7 @@ const toPayload = (form) => ({
 const AgencyManagement = () => {
     const { t } = useI18n();
     const [showModal, setShowModal] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM);
 
@@ -60,6 +62,7 @@ const AgencyManagement = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
+        setSaving(true);
         try {
             if (isEditing) {
                 await api.put(`agencies/${form.id}/`, toPayload(form));
@@ -71,7 +74,9 @@ const AgencyManagement = () => {
             toast.success(isEditing ? t('u.agence_mise_jour_avec_succs') : t('u.agence_cre_avec_succs'));
         } catch (error) {
             console.error("Erreur lors de l'enregistrement de l'agence", error);
-            toast.error(t('u.erreur_lors_de_l_enregistrement__2'));
+            toast.error(apiErrorText(error, t('u.erreur_lors_de_l_enregistrement__2')));
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -91,7 +96,7 @@ const AgencyManagement = () => {
     };
 
     if (loading) {
-        return <div className="flex justify-center py-20"><Spinner size={28} /></div>;
+        return <PageLoading />;
     }
 
     return (
@@ -160,8 +165,8 @@ const AgencyManagement = () => {
                 labelId="agency-modal-title"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={closeModal}>{t('u.annuler')}</Button>
-                        <Button type="submit" form="agency-form" icon="save">{t('u.enregistrer')}</Button>
+                        <Button variant="outline" onClick={closeModal}>{t('u.annuler')}</Button>
+                        <Button type="submit" form="agency-form" loading={saving} icon="save">{t('u.enregistrer')}</Button>
                     </>
                 }
             >

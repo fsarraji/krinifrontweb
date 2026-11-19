@@ -1,4 +1,8 @@
 import { tNow } from '../i18n/runtime';
+import PageHeader from './ui/PageHeader';
+import FormActions from './ui/FormActions';
+import ErrorBanner from './ui/ErrorBanner';
+import Field from './ui/Field';
 import FileField from './ui/FileField';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem, Switch } from '@astryxdesign/core';
@@ -191,93 +195,47 @@ const EditClient = () => {
     const rentalCount = contracts.length;
 
     return (
-        <div className="w-full px-4 py-6">
-            {/* Breadcrumb + header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                        <Link to="/clients" className="hover:underline">{t('u.clients')}</Link> / Modifier
-                    </p>
-                    <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                        {t('u.modifier_le_client')}
-                    </h1>
-                    <p className="text-[13px] font-medium mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
-                        {formData.prenom} {formData.nom} — {formData.cin_passport || t('u.non_renseign', { label: cinLabelFor(formData.nationalite) })}
-                    </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                    <Button variant="ghost" icon="delete" className="!text-danger-dark hover:!bg-danger-bg" onClick={handleDelete}>{t('u.supprimer')}</Button>
-                    <Button variant="outline" onClick={() => navigate('/clients')}>{t('u.annuler')}</Button>
-                    <Button type="submit" form="client-form" icon="save" loading={saving}>
-                        {saving ? t('u.enregistrement') : t('u.sauvegarder')}
-                    </Button>
-                </div>
-            </div>
+        <div className="w-full">
+            <PageHeader
+                as="h1"
+                back="/clients"
+                eyebrow={t('u.clients')}
+                title={t('u.modifier_le_client')}
+                description={`${formData.prenom} ${formData.nom} — ${formData.cin_passport || t('u.non_renseign', { label: cinLabelFor(formData.nationalite) })}`}
+                actions={(
+                    <FormActions
+                        destructive={<Button variant="danger" icon="delete" onClick={handleDelete}>{t('u.supprimer')}</Button>}
+                        onCancel={() => navigate('/clients')}
+                        formId="client-form"
+                        submitIcon="save"
+                        loading={saving}
+                    />
+                )}
+            />
 
-            {error && (
-                <div className="mb-6 p-4 rounded-lg flex items-center gap-3 font-semibold text-sm" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
-                    <span className="material-symbols-outlined">error</span>
-                    <p>{error}</p>
-                </div>
-            )}
+            <ErrorBanner message={error} className="mb-6" />
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
                 {/* Left Column: Form Sections */}
                 <form id="client-form" {...formProps} onSubmit={handleSubmit} className="xl:col-span-2 space-y-6">
                     {/* Section 1: Personal Information */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div>
-                                <label className="label">{t('u.prnom')}</label>
+                            <Field label={t('u.prnom')} error={fieldErrorMsg('prenom')}>
                                 <Input invalid={hasError('prenom')} name="prenom" value={formData.prenom || ''} onChange={handleChange} type="text" />
-                                {fieldErrorMsg('prenom') && (
-                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                        <span className="material-symbols-outlined text-[13px]">error</span>
-                                        {fieldErrorMsg('prenom')}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="label">{t('u.nom')}</label>
+                            </Field>
+                            <Field label={t('u.nom')} error={fieldErrorMsg('nom')}>
                                 <Input invalid={hasError('nom')} name="nom" value={formData.nom || ''} onChange={handleChange} type="text" />
-                                {fieldErrorMsg('nom') && (
-                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                        <span className="material-symbols-outlined text-[13px]">error</span>
-                                        {fieldErrorMsg('nom')}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="label">{cinLabelFor(formData.nationalite)}</label>
+                            </Field>
+                            <Field label={cinLabelFor(formData.nationalite)} error={fieldErrorMsg('cin_passport')}>
                                 <Input invalid={hasError('cin_passport')} name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} onBlur={handleBlurUnique('cin_passport')} type="text" />
-                                {fieldErrorMsg('cin_passport') && (
-                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                        <span className="material-symbols-outlined text-[13px]">error</span>
-                                        {fieldErrorMsg('cin_passport')}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="label">{t('u.adresse_email')}</label>
+                            </Field>
+                            <Field label={t('u.adresse_email')} error={fieldErrorMsg('email')}>
                                 <Input invalid={hasError('email')} name="email" value={formData.email || ''} onChange={handleChange} onBlur={handleBlurUnique('email')} type="email" />
-                                {fieldErrorMsg('email') && (
-                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                        <span className="material-symbols-outlined text-[13px]">error</span>
-                                        {fieldErrorMsg('email')}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="label">{t('u.numro_de_tlphone')}</label>
+                            </Field>
+                            <Field label={t('u.numro_de_tlphone')} error={fieldErrorMsg('telephone')}>
                                 <Input invalid={hasError('telephone')} name="telephone" value={formData.telephone || ''} onChange={handleChange} onBlur={handleBlurUnique('telephone')} type="tel" />
-                                {fieldErrorMsg('telephone') && (
-                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                        <span className="material-symbols-outlined text-[13px]">error</span>
-                                        {fieldErrorMsg('telephone')}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="label">{t('u.sexe')}</label>
+                            </Field>
+                            <Field label={t('u.sexe')}>
                                 <div className="w-fit">
                                     <SegmentedControl label={t('u.sexe')} value={formData.sexe} onChange={(value) => handleChange({ target: { name: 'sexe', value } })}>
                                         {SEXE_OPTIONS.map((opt) => (
@@ -285,34 +243,24 @@ const EditClient = () => {
                                         ))}
                                     </SegmentedControl>
                                 </div>
-                            </div>
-                            <div>
-                                <label className="label">{t('u.nationalit')}</label>
+                            </Field>
+                            <Field label={t('u.nationalit')}>
                                 <Select invalid={hasError('nationalite')} name="nationalite" value={formData.nationalite || ''} onChange={handleChange}>
                                     <option value="">{t('u.slectionner_2')}</option>
                                     {NATIONALITES.map(n => (
                                         <option key={n} value={n}>{translateOr(t, `nat.${n}`, n)}</option>
                                     ))}
                                 </Select>
-                            </div>
-                            <div>
-                                <label className="label">{t('u.ville')}</label>
+                            </Field>
+                            <Field label={t('u.ville')}>
                                 <Input invalid={hasError('ville')} name="ville" value={formData.ville || ''} onChange={handleChange} type="text" />
-                            </div>
-                            <div>
-                                <label className="label">{t('u.pays')}</label>
+                            </Field>
+                            <Field label={t('u.pays')}>
                                 <Input invalid={hasError('pays')} name="pays" value={formData.pays || ''} onChange={handleChange} type="text" />
-                            </div>
-                            <div className="sm:col-span-2">
-                                <label className="label">{t('u.adresse')}</label>
+                            </Field>
+                            <Field label={t('u.adresse')} error={fieldErrorMsg('adresse')} className="sm:col-span-2">
                                 <Input invalid={hasError('adresse')} name="adresse" value={formData.adresse || ''} onChange={handleChange} type="text" />
-                                {fieldErrorMsg('adresse') && (
-                                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                        <span className="material-symbols-outlined text-[13px]">error</span>
-                                        {fieldErrorMsg('adresse')}
-                                    </p>
-                                )}
-                            </div>
+                            </Field>
                         </div>
 
                     {/* Section 2: Identity Documents */}
@@ -324,29 +272,20 @@ const EditClient = () => {
                                     <p className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>{t('u.permis_de_conduire_3')}</p>
                                 </div>
                                 <div className="space-y-4">
-                                    <div>
-                                        <label className="label">{t('u.n_de_permis')}</label>
+                                    <Field label={t('u.n_de_permis')} error={fieldErrorMsg('permis_conduite')}>
                                         <Input invalid={hasError('permis_conduite')} name="permis_conduite" value={formData.permis_conduite || ''} onChange={handleChange} onBlur={handleBlurUnique('permis_conduite')} type="text" />
-                                        {fieldErrorMsg('permis_conduite') && (
-                                            <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-                                                <span className="material-symbols-outlined text-[13px]">error</span>
-                                                {fieldErrorMsg('permis_conduite')}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <label className="label">{t('u.date_de_dlivrance')}</label>
+                                    </Field>
+                                    <Field label={t('u.date_de_dlivrance')}>
                                         <Input invalid={hasError('date_delivrance_permis')} name="date_delivrance_permis" value={formData.date_delivrance_permis || ''} onChange={handleChange} type="date" />
-                                    </div>
+                                    </Field>
                                     <div>
-                                        <label className="label">{t('u.scan_du_permis')}</label>
+                                        <FileField label={t('u.scan_du_permis')} value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.tlcharger_un_nouveau_document')} />
                                         {formData.scan_permis && !files.scan_permis && (
                                             <a href={formData.scan_permis} target="_blank" rel="noreferrer" className="text-xs font-bold mb-2 inline-flex items-center gap-1" style={{ color: 'var(--primary-container)' }}>
                                                 <span className="material-symbols-outlined text-[14px]">visibility</span>
                                                 {t('u.voir_le_scan_actuel')}
                                             </a>
                                         )}
-                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.tlcharger_un_nouveau_document')} />
                                     </div>
                                 </div>
                             </div>
@@ -357,19 +296,17 @@ const EditClient = () => {
                                     <p className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>{cinLabelFor(formData.nationalite)}</p>
                                 </div>
                                 <div className="space-y-4">
-                                    <div>
-                                        <label className="label">{t('u.n_de_document')}</label>
+                                    <Field label={t('u.n_de_document')}>
                                         <Input invalid={hasError('cin_passport')} name="cin_passport" value={formData.cin_passport || ''} onChange={handleChange} type="text" />
-                                    </div>
+                                    </Field>
                                     <div>
-                                        <label className="label">{t('u.scan_d_identit')}</label>
+                                        <FileField label={t('u.scan_d_identit')} value={files.scan_cin} onChange={(file) => setFile('scan_cin', file)} accept="image/*,.pdf" placeholder={t('u.tlcharger_un_nouveau_document')} />
                                         {formData.scan_cin && !files.scan_cin && (
                                             <a href={formData.scan_cin} target="_blank" rel="noreferrer" className="text-xs font-bold mb-2 inline-flex items-center gap-1" style={{ color: 'var(--primary-container)' }}>
                                                 <span className="material-symbols-outlined text-[14px]">visibility</span>
                                                 {t('u.voir_le_scan_actuel')}
                                             </a>
                                         )}
-                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_cin} onChange={(file) => setFile('scan_cin', file)} accept="image/*,.pdf" placeholder={t('u.tlcharger_un_nouveau_document')} />
                                     </div>
                                 </div>
                             </div>
@@ -422,7 +359,7 @@ const EditClient = () => {
                         <div className="w-full grid grid-cols-2 gap-4 text-start border-t pt-6" style={{ borderColor: 'var(--stroke)' }}>
                             <div>
                                 <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.total_dpens')}</p>
-                                <p className="text-lg font-extrabold" style={{ color: 'var(--primary-container)' }}>{totalSpent.toLocaleString()} MAD</p>
+                                <p className="text-lg font-extrabold" style={{ color: 'var(--primary-container)' }}>{formatMoney(totalSpent)}</p>
                             </div>
                             <div>
                                 <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.locations')}</p>
@@ -455,7 +392,7 @@ const EditClient = () => {
                     </Card>
 
                     {/* Blacklist Toggle */}
-                    <div className="card shadow-l1 p-6" style={formData.liste_noire ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}}>
+                    <Card padding={6} variant="default"  style={formData.liste_noire ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}}>
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="text-sm font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--on-surface)' }}>{t('u.liste_noire_2')}</h3>
@@ -463,7 +400,7 @@ const EditClient = () => {
                             </div>
                             <Switch label={t('u.liste_noire_2')} isLabelHidden value={Boolean(formData.liste_noire)} onChange={(v) => handleChange({ target: { name: 'liste_noire', type: 'checkbox', checked: v } })} />
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Historique des modifications */}
                     <Card padding={6} variant="default">

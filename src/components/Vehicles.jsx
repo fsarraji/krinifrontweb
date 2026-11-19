@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import EmptyState from './ui/EmptyState';
+import { apiErrorText } from '../utils/apiErrorText';
+import ErrorBanner from './ui/ErrorBanner';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,13 +34,13 @@ const Vehicles = () => {
     const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
 
-    const [menuId, setMenuId] = useState(null);
     const [infoVehicle, setInfoVehicle] = useState(null);
     const [archiveVehicle, setArchiveVehicle] = useState(null);
     const [reloadKey, setReloadKey] = useState(0);
@@ -64,6 +67,7 @@ const Vehicles = () => {
                 if (!cancelled) setVehicles(data);
             } catch (error) {
                 console.error("Erreur lors de la récupération des véhicules", error);
+                setLoadError(apiErrorText(error, t('common.loadError')));
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -198,6 +202,7 @@ const Vehicles = () => {
                     </>
                 )}
             />
+            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setReloadKey((k) => k + 1); }} className="mb-4" />}
 
             {/* KPI Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
@@ -279,7 +284,7 @@ const Vehicles = () => {
                                 key: 'actions', label: t('veh.col.actions'), align: 'right',
                                 render: (_, vehicle) => (
                                     <div className="flex items-center justify-end gap-1">
-                                        <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton items={buildMenuItems(vehicle)} label={vehicle.matricule} />
                                     </div>
                                 ),
                             },
@@ -288,10 +293,7 @@ const Vehicles = () => {
                 ) : (
                     /* Grid View */
                     filteredVehicles.length === 0 ? (
-                        <div className="p-16 text-center font-medium flex flex-col items-center gap-2" style={{ color: 'var(--on-surface-variant)' }}>
-                            <span className="material-symbols-outlined text-4xl" style={{ opacity: 0.4 }}>directions_car_off</span>
-                            <p>{t('veh.empty')}</p>
-                        </div>
+                        <EmptyState icon="directions_car_off" title={t('veh.empty')} />
                     ) : (
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {paginatedVehicles.map((vehicle) => (
@@ -367,7 +369,7 @@ const Vehicles = () => {
                                                 {t('veh.card.manage')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
-                                        <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton items={buildMenuItems(vehicle)} label={vehicle.matricule} />
                                     </div>
                                 </div>
                             ))}

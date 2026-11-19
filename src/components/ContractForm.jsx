@@ -1,5 +1,10 @@
 import { apiErrorText } from '../utils/apiErrorText';
-import { CheckboxInput } from '@astryxdesign/core';
+import { CHAUFFEUR_DAILY_RATE } from '../utils/pricing';
+import PageHeader from './ui/PageHeader';
+import FormActions from './ui/FormActions';
+import MoneyInput from './ui/MoneyInput';
+import Field from './ui/Field';
+import { CheckboxInput, Switch } from '@astryxdesign/core';
 import Card from './ui/Card';
 import { Input, Textarea } from './ui/Input';
 import React, { useState, useEffect } from 'react';
@@ -211,7 +216,7 @@ const ContractForm = () => {
         const totalEstimate = () => {
             const days = diffDays();
             const base = quote && quote.total != null ? parseFloat(quote.total) : days * formData.prix_par_jour;
-            const chauffeur = formData.chauffeur_service ? 50 * days : 0; // Exemple: 50 DH/jour pour le chauffeur
+            const chauffeur = formData.chauffeur_service ? CHAUFFEUR_DAILY_RATE * days : 0;
             return base + chauffeur;
         };
     
@@ -278,32 +283,22 @@ const ContractForm = () => {
         const selectedClient = clients.find(c => c.id == formData.client);
 
         return (
-            <div className="max-w-6xl mx-auto px-4 py-6" {...formProps}>
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                    <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                            {t('u.contrats_nouveau')}
-                        </p>
-                        <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                            {t('u.nouveau_contrat_de_location')}
-                        </h1>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <Button variant="ghost" onClick={() => navigate('/contracts')}>{t('u.annuler')}</Button>
-                        {currentStep > 1 && (
-                            <Button variant="outline" icon="arrow_back" onClick={handlePrev}>{t('u.tape_prcdente')}</Button>
-                        )}
-                        {currentStep < 4 ? (
-                            <Button onClick={handleNext}>
-                                {t('u.continuer')}
-                                <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">arrow_forward</span>
-                            </Button>
-                        ) : (
-                            <Button variant="success" icon="fact_check" onClick={handleSubmit}>{t('u.valider_le_contrat')}</Button>
-                        )}
-                    </div>
-                </div>
+            <div className="w-full" {...formProps}>
+                <PageHeader
+                    as="h1"
+                    back="/contracts"
+                    eyebrow={t('u.contrats_nouveau')}
+                    title={t('u.nouveau_contrat_de_location')}
+                    actions={(
+                        <FormActions
+                            onCancel={() => navigate('/contracts')}
+                            onBack={currentStep > 1 ? handlePrev : undefined}
+                            onSubmit={currentStep < 4 ? handleNext : handleSubmit}
+                            submitLabel={currentStep < 4 ? t('u.suivant') : t('u.valider_le_contrat')}
+                            submitIcon={currentStep < 4 ? undefined : 'fact_check'}
+                        />
+                    )}
+                />
 
                 {/* Stepper */}
                 <Stepper steps={steps} currentStep={currentStep} />
@@ -371,8 +366,7 @@ const ContractForm = () => {
                                         {t('u.nouveau_client')}
                                     </Button>
                                 </div>
-                                <div>
-                                    <label className="label mb-2">{t('u.slectionner_un_client_existant')}</label>
+                                <Field label={t('u.slectionner_un_client_existant')}>
                                     <Dropdown
                                         options={clients.map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
                                         value={formData.client}
@@ -385,7 +379,7 @@ const ContractForm = () => {
                                         isClearable
                                         status={hasError('client') ? { type: 'error' } : undefined}
                                     />
-                                </div>
+                                </Field>
 
                                 {formData.client && (
                                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -401,7 +395,7 @@ const ContractForm = () => {
                                 )}
 
                                 <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--stroke)' }}>
-                                    <label className="label mb-2">{t('u.deuxime_conducteur_optionnel')}</label>
+                                    <Field label={t('u.deuxime_conducteur_optionnel')}>
                                     <Dropdown
                                         options={clients.filter(c => c.id != formData.client).map(c => ({ value: c.id, label: `${c.nom} ${c.prenom} (${c.cin_passport})` }))}
                                         value={formData.deuxieme_chauffeur}
@@ -410,6 +404,7 @@ const ContractForm = () => {
                                         isSearchable
                                         isClearable
                                     />
+                                    </Field>
                                 </div>
                             </div>
                         )}
@@ -417,8 +412,7 @@ const ContractForm = () => {
                         {currentStep === 3 && (
                             <>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                    <div>
-                                        <label className="label">{t('u.date_et_heure_de_dpart')}</label>
+                                    <Field label={t('u.date_et_heure_de_dpart')}>
                                         <DatePicker
                                             className={fieldClass('date_sortie')}
                                             value={formData.date_sortie}
@@ -427,9 +421,8 @@ const ContractForm = () => {
                                             disabledRanges={unavailableRanges}
                                             placeholder={t('u.choisir_la_date_de_dpart')}
                                         />
-                                    </div>
-                                    <div>
-                                        <label className="label">{t('u.date_et_heure_de_retour_prvu')}</label>
+                                    </Field>
+                                    <Field label={t('u.date_et_heure_de_retour_prvu')}>
                                         <DatePicker
                                             className={fieldClass('date_retour_prevue')}
                                             value={formData.date_retour_prevue}
@@ -438,7 +431,7 @@ const ContractForm = () => {
                                             disabledRanges={unavailableRanges}
                                             placeholder={t('u.choisir_la_date_de_retour')}
                                         />
-                                    </div>
+                                    </Field>
                                 </div>
 
                                 <div className="space-y-5">
@@ -456,51 +449,32 @@ const ContractForm = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label className="label mb-0">{t('u.garantie_caution')}</label>
-                                                <div
-                                                    onClick={() => {
-                                                        const newState = !isCautionActive;
-                                                        setIsCautionActive(newState);
-                                                        setFormData({...formData, caution: newState ? agencySettings.caution_montant : 0});
-                                                    }}
-                                                    className="relative inline-flex items-center cursor-pointer"
-                                                >
-                                                    <div className={`w-9 h-5 transition-colors rounded-full relative ${isCautionActive ? 'bg-primary-container' : 'bg-slate-300'}`}>
-                                                        <div className={`absolute top-[2px] left-[2px] bg-white w-4 h-4 rounded-full transition-transform ${isCautionActive ? 'translate-x-4' : 'translate-x-0'}`}></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="relative">
-                                                <span className="absolute start-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
-                                                <Input
-                                                   
-                                                    type="number"
-                                                    value={formData.caution}
-                                                    onChange={(e) => setFormData({...formData, caution: e.target.value})}
-                                                    disabled={!isCautionActive}
-                                                />
-                                            </div>
+                                        <div className="space-y-3">
+                                            <Switch
+                                                label={t('u.garantie_caution')}
+                                                value={isCautionActive}
+                                                onChange={(newState) => {
+                                                    setIsCautionActive(newState);
+                                                    setFormData({...formData, caution: newState ? agencySettings.caution_montant : 0});
+                                                }}
+                                            />
+                                            <MoneyInput
+                                                aria-label={t('u.garantie_caution')}
+                                                value={formData.caution}
+                                                onChange={(e) => setFormData({...formData, caution: e.target.value})}
+                                                disabled={!isCautionActive}
+                                            />
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="label mb-2">{t('u.montant_vers')}</label>
-                                                <div className="relative">
-                                                    <span className="absolute start-4 top-3 text-slate-400 font-bold text-sm">MAD</span>
-                                                    <Input
-                                                       
-                                                        type="number"
-                                                        min="0"
-                                                        max={totalEstimate() || undefined}
-                                                        value={formData.montant_paye}
-                                                        onChange={(e) => setFormData({...formData, montant_paye: e.target.value})}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="label mb-2">{t('u.mode_de_paiement')}</label>
+                                            <Field label={t('u.montant_vers')}>
+                                                <MoneyInput
+                                                    max={totalEstimate() || undefined}
+                                                    value={formData.montant_paye}
+                                                    onChange={(e) => setFormData({...formData, montant_paye: e.target.value})}
+                                                />
+                                            </Field>
+                                            <Field label={t('u.mode_de_paiement')}>
                                                 <Dropdown
                                                     options={[
                                                         { value: 'Espèce', label: t('method.Espèce') },
@@ -511,7 +485,7 @@ const ContractForm = () => {
                                                     value={formData.methode_paiement || 'Espèce'}
                                                     onChange={(v) => setFormData({...formData, methode_paiement: v})}
                                                 />
-                                            </div>
+                                            </Field>
                                         </div>
                                     </div>
                             </>
@@ -520,15 +494,13 @@ const ContractForm = () => {
                         {currentStep === 4 && (
                             <>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                    <div>
-                                        <label className="label mb-3">{t('u.niveau_de_carburant_au_dpart')}</label>
+                                    <Field label={t('u.niveau_de_carburant_au_dpart')}>
                                         <FuelGaugeSelector
                                             value={formData.carburant_sortie}
                                             onChange={(val) => setFormData({...formData, carburant_sortie: val})}
                                         />
-                                    </div>
-                                    <div>
-                                        <label className="label mb-3">{t('u.kilomtrage_de_sortie')}</label>
+                                    </Field>
+                                    <Field label={t('u.kilomtrage_de_sortie')}>
                                         <div className="flex gap-2">
                                             <Input
                                                
@@ -548,18 +520,18 @@ const ContractForm = () => {
                                                 GPS
                                             </Button>
                                         </div>
-                                    </div>
+                                    </Field>
                                 </div>
 
-                                <label className="label mt-7 mb-3">{t('u.dgts_constats_au_dpart_cliquer_s')}</label>
-                                <DamageSelector
-                                    damages={formData.damages}
-                                    onChange={(newDamages) => setFormData({...formData, damages: newDamages})}
-                                    type="DEPART"
-                                />
+                                <Field label={t('u.dgts_constats_au_dpart_cliquer_s')} className="mt-7">
+                                    <DamageSelector
+                                        damages={formData.damages}
+                                        onChange={(newDamages) => setFormData({...formData, damages: newDamages})}
+                                        type="DEPART"
+                                    />
+                                </Field>
 
-                                <div className="mt-4">
-                                    <label className="label mb-2">{t('u.observation_gnrale_optionnel')}</label>
+                                <Field label={t('u.observation_gnrale_optionnel')} className="mt-4">
                                     <Textarea
                                        
                                         placeholder={t('u.note_supplmentaire_sur_l_tat_gnr')}
@@ -567,7 +539,7 @@ const ContractForm = () => {
                                         value={formData.degats_depart}
                                         onChange={(e) => setFormData({...formData, degats_depart: e.target.value})}
                                     ></Textarea>
-                                </div>
+                                </Field>
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {[

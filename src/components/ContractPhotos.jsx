@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import Field from './ui/Field';
 import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
@@ -97,10 +98,9 @@ const ContractPhotos = ({ contractId, locked = false }) => {
 
             {!locked && (
                 <div className="p-4 flex flex-wrap items-end gap-3 border-b border-slate-100">
-                    <div className="w-44">
-                        <p className="label mb-1.5">{t('u.type_de_photo')}</p>
+                    <Field label={t('u.type_de_photo')} className="w-44">
                         <Dropdown options={kindOptions} value={kind} onChange={(v) => setKind(v || 'DEPART')} />
-                    </div>
+                    </Field>
                     <div className="min-w-[260px] flex-1">
                         <FileField
                             mode="input"

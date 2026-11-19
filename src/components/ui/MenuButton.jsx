@@ -8,14 +8,14 @@ const MoreIcon = materialIcon('more_vert');
 /**
  * Bouton "⋮" avec menu contextuel (Astryx DropdownMenu).
  * items : [{ key, icon, label, destructive, onClick }]
- * `item`, `menuId`, `setMenuId` sont conservés pour compatibilité : l'ouverture est gérée par Astryx.
+ * label : nom de la ligne (ex. immatriculation) pour distinguer les boutons identiques au lecteur d'écran.
  */
-const MenuButton = ({ items }) => {
+const MenuButton = ({ items, label }) => {
     const { t } = useI18n();
     return (
         <DropdownMenu
             button={{
-                label: t('u.options'),
+                label: label ? `${t('u.options')} — ${label}` : t('u.options'),
                 icon: <MoreIcon />,
                 variant: 'ghost',
                 isIconOnly: true,

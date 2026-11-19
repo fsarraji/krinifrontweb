@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { apiErrorText } from '../utils/apiErrorText';
+import ErrorBanner from './ui/ErrorBanner';
+import StatusBadge from './ui/StatusBadge';
 import { Link } from 'react-router-dom';
 import { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
@@ -20,6 +23,8 @@ const Payments = () => {
     };
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
+    const [reloadKey, setReloadKey] = useState(0);
     const [search, setSearch] = useState('');
     const [methodFilter, setMethodFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
@@ -33,11 +38,12 @@ const Payments = () => {
                 setLoading(false);
             } catch (error) {
                 console.error("Erreur lors de la récupération des paiements", error);
+                setLoadError(apiErrorText(error, t('common.loadError')));
                 setLoading(false);
             }
         };
         fetchPayments();
-    }, []);
+    }, [reloadKey]);
 
     // Reset to page 1 on filter/search change
     const handleSearchChange = (value) => { setSearch(value); setCurrentPage(1); };
@@ -109,6 +115,7 @@ const Payments = () => {
                     </>
                 )}
             />
+            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setLoading(true); setReloadKey((k) => k + 1); }} className="mb-4" />}
 
             {/* Search & Filter */}
             <div>
@@ -141,7 +148,7 @@ const Payments = () => {
                     },
                     {
                         key: 'payment_method', label: t('payments.col.method'), className: 'whitespace-nowrap',
-                        render: (v) => <span className="px-3 py-1 inline-flex text-label-sm rounded-full bg-surface-container text-on-surface-variant ring-1 ring-stroke">{methodLabel(v)}</span>,
+                        render: (v) => <StatusBadge variant="neutral" label={methodLabel(v)} />,
                     },
                     { key: 'reference', label: t('payments.col.reference'), className: 'whitespace-nowrap text-xs font-mono text-text-muted truncate max-w-[150px]', render: (v) => v || '—' },
                     { key: 'amount', label: t('payments.col.amount'), align: 'right', render: (v) => <span className="font-extrabold text-success">+{formatMoney(v)}</span> },

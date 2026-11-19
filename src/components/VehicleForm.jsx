@@ -1,4 +1,7 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import PageHeader from './ui/PageHeader';
+import FormActions from './ui/FormActions';
+import ErrorBanner from './ui/ErrorBanner';
 import FileField from './ui/FileField';
 import { CheckboxInput, SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import Card from './ui/Card';
@@ -425,33 +428,17 @@ const VehicleForm = () => {
     };
 
     return (
-        <div className="mx-auto max-w-[1500px] px-4 py-6 lg:px-8">
-            {/* Breadcrumb + header */}
-            <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        <Link to="/vehicles" className="hover:text-slate-600">{t('u.vhicules')}</Link>
-                        <span className="mx-1">›</span>
-                        {isEditMode ? t('u.modifier') : t('u.nouveau')}
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-                        {isEditMode ? t('u.modifier_un_vhicule') : t('u.ajouter_un_vhicule')}
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-500">{t('u.compltez_les_informations_pour_e')}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {isEditMode && (
-                        <Button variant="danger" icon="delete" onClick={handleDelete}>{t('u.supprimer')}</Button>
-                    )}
-                </div>
-            </header>
+        <div className="w-full">
+            <PageHeader
+                as="h1"
+                back="/vehicles"
+                eyebrow={t('u.vhicules')}
+                title={isEditMode ? t('u.modifier_un_vhicule') : t('u.ajouter_un_vhicule')}
+                description={t('u.compltez_les_informations_pour_e')}
+                actions={isEditMode ? <Button variant="danger" icon="delete" onClick={handleDelete}>{t('u.supprimer')}</Button> : undefined}
+            />
 
-            {error && (
-                <div className="mb-6 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
-                    <span className="material-symbols-outlined">error</span>
-                    <p>{error}</p>
-                </div>
-            )}
+            <ErrorBanner message={error} className="mb-5" />
 
             <form {...formProps} onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
                 {/* Stepper */}
@@ -947,27 +934,17 @@ const VehicleForm = () => {
                         <p className="text-xs text-slate-400">{t('u.nous_protgeons_vos_informations_')}</p>
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="ghost" onClick={() => navigate('/vehicles')}>{t('u.annuler')}</Button>
-                    {currentStep > 1 && (
-                        <Button variant="outline" icon="chevron_left" onClick={handlePrev}>{t('u.prcdent')}</Button>
-                    )}
-                    {isEditMode && (
-                        <Button variant={currentStep < 4 ? 'outline' : 'primary'} icon="check" loading={loading} onClick={handleSubmit}>
-                            {loading ? t('u.enregistrement') : t('u.enregistrer')}
-                        </Button>
-                    )}
-                    {currentStep < 4 ? (
-                        <Button onClick={handleNext}>
-                            {t('u.suivant')}
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">chevron_right</span>
-                        </Button>
-                    ) : !isEditMode && (
-                        <Button icon="check" loading={loading} onClick={handleSubmit}>
-                            {loading ? t('u.enregistrement') : t('u.enregistrer')}
-                        </Button>
-                    )}
-                </div>
+                <FormActions
+                    onCancel={() => navigate('/vehicles')}
+                    onBack={currentStep > 1 ? handlePrev : undefined}
+                    extra={isEditMode && currentStep < 4 ? (
+                        <Button variant="outline" icon="check" loading={loading} onClick={handleSubmit}>{t('u.enregistrer')}</Button>
+                    ) : null}
+                    onSubmit={currentStep < 4 ? handleNext : handleSubmit}
+                    submitLabel={currentStep < 4 ? t('u.suivant') : t('u.enregistrer')}
+                    submitIcon={currentStep < 4 ? undefined : 'check'}
+                    loading={loading && currentStep === 4}
+                />
             </Card>
         </div>
     );

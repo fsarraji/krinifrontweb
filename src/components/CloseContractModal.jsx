@@ -1,4 +1,6 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import MoneyInput from './ui/MoneyInput';
+import Field from './ui/Field';
 import Stepper from './ui/Stepper';
 import { CheckboxInput, Banner, Token } from '@astryxdesign/core';
 import Card from './ui/Card';
@@ -213,15 +215,6 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
     </div>
   );
 
-  const FieldError = ({ message }) => {
-    if (!message) return null;
-    return (
-      <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
-        <span className="material-symbols-outlined text-[14px]">error</span>
-        {message}
-      </p>
-    );
-  };
 
   const footerNode = (
     <div className="flex items-center justify-between gap-4 w-full">
@@ -287,37 +280,26 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="label mb-1">
-                    {t('u.date_et_heure_de_retour_relle')}
-                    <span style={{ color: 'var(--danger)' }}>*</span>
-                  </label>
+                <Field
+                  label={t('u.date_et_heure_de_retour_relle')}
+                  required
+                  error={fieldErrors.dateRetour}
+                  hint={isEarlyReturn ? `Retour avant la date prévue (${formatDate(contract.date_retour_prevue, { day: 'numeric', month: 'short' })})` : undefined}
+                >
                   <Input
                     type="datetime-local"
                     value={dateRetour}
                     onChange={e => { setDateRetour(e.target.value); clearFieldError('dateRetour'); }}
-                   
-                   
                   />
-                  <FieldError message={fieldErrors.dateRetour} />
-                  {isEarlyReturn && (
-                    <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1.5" style={{ color: 'var(--warning)' }}>
-                      <span className="material-symbols-outlined text-[14px]">info</span>
-                      Retour avant la date prévue ({formatDate(contract.date_retour_prevue, { day: 'numeric', month: 'short' })})
-                    </p>
-                  )}
-                </div>
+                </Field>
 
-                <div>
-                  <label className="label mb-1">
-                    {t('u.kilomtrage_au_retour')}
-                    <span style={{ color: 'var(--danger)' }}>*</span>
-                  </label>
+                <Field label={t('u.kilomtrage_au_retour')} required error={fieldErrors.kmRetour}>
                   <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <span className="absolute end-4 top-3 text-slate-400 text-xs font-bold uppercase tracking-widest">KM</span>
+                    <div className="flex-1">
                       <Input
                         type="number"
+                        suffix="km"
+                        aria-label={t('u.kilomtrage_au_retour')}
                         value={kmRetour}
                         min={contract.km_sortie + 1}
                         onChange={e => { setKmRetour(e.target.value); clearFieldError('kmRetour'); }}
@@ -337,8 +319,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                         GPS
                     </Button>
                   </div>
-                  <FieldError message={fieldErrors.kmRetour} />
-                </div>
+                </Field>
               </div>
             </Card>
           )}
@@ -486,33 +467,30 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
               </div>
 
               <div className="mt-3 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ borderTop: '1px solid var(--stroke)' }}>
-                <div>
-                  <label className="label mb-1">{t('u.montant_vers_mad')}</label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={paymentAmount}
-                      onChange={e => { setPaymentAmount(e.target.value); clearFieldError('paymentAmount'); }}
-                     
-                     
-                    />
+                <Field label={t('u.montant_vers_mad')} error={fieldErrors.paymentAmount}>
+                  <div className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <MoneyInput
+                        aria-label={t('u.montant_vers_mad')}
+                        value={paymentAmount}
+                        onChange={e => { setPaymentAmount(e.target.value); clearFieldError('paymentAmount'); }}
+                      />
+                    </div>
                     <Button size="sm" variant="secondary" onClick={() => setPaymentAmount(Math.max(0, newBalance).toString())}>{t('u.solde')}</Button>
                   </div>
-                  <FieldError message={fieldErrors.paymentAmount} />
-                </div>
-                <div>
-                  <label className="label mb-1">{t('u.mode_de_paiement')}</label>
-                  <Dropdown
-                    options={[
-                        { value: 'Espèce', label: t('method.Espèce') },
-                        { value: 'Chèque', label: t('method.Chèque') },
-                        { value: 'Virement', label: t('method.Virement') },
-                        { value: 'TPE', label: t('method.TPE') }
-                    ]}
-                    value={paymentMethod}
-                    onChange={(v) => setPaymentMethod(v)}
-                  />
-                </div>
+                </Field>
+                <Field label={t('u.mode_de_paiement')}>
+                    <Dropdown
+                      options={[
+                          { value: 'Espèce', label: t('method.Espèce') },
+                          { value: 'Chèque', label: t('method.Chèque') },
+                          { value: 'Virement', label: t('method.Virement') },
+                          { value: 'TPE', label: t('method.TPE') }
+                      ]}
+                      value={paymentMethod}
+                      onChange={(v) => setPaymentMethod(v)}
+                    />
+                </Field>
               </div>
             </Card>
           )}
