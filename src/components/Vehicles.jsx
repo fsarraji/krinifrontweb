@@ -37,7 +37,6 @@ const Vehicles = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
 
-    const [menuId, setMenuId] = useState(null);
     const [infoVehicle, setInfoVehicle] = useState(null);
     const [archiveVehicle, setArchiveVehicle] = useState(null);
     const [reloadKey, setReloadKey] = useState(0);
@@ -279,7 +278,7 @@ const Vehicles = () => {
                                 key: 'actions', label: t('veh.col.actions'), align: 'right',
                                 render: (_, vehicle) => (
                                     <div className="flex items-center justify-end gap-1">
-                                        <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton items={buildMenuItems(vehicle)} label={vehicle.matricule} />
                                     </div>
                                 ),
                             },
@@ -367,7 +366,7 @@ const Vehicles = () => {
                                                 {t('veh.card.manage')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
-                                        <MenuButton item={vehicle} items={buildMenuItems(vehicle)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton items={buildMenuItems(vehicle)} label={vehicle.matricule} />
                                     </div>
                                 </div>
                             ))}

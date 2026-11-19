@@ -45,7 +45,6 @@ const Clients = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
     const [count, setCount] = useState(0);
 
-    const [menuId, setMenuId] = useState(null);
     const [infoClient, setInfoClient] = useState(null);
     const requestSeq = useRef(0);
 
@@ -315,7 +314,7 @@ const Clients = () => {
                                 key: 'actions', label: tr('clients.col.actions'), align: 'right',
                                 render: (_, client) => (
                                     <div className="flex items-center justify-end gap-1">
-                                        <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton items={buildMenuItems(client)} label={`${client.prenom} ${client.nom}`} />
                                     </div>
                                 ),
                             },
@@ -380,7 +379,7 @@ const Clients = () => {
                                                 {tr('clients.card.manage')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                             </Link>
                                         ) : <span />}
-                                        <MenuButton item={client} items={buildMenuItems(client)} menuId={menuId} setMenuId={setMenuId} />
+                                        <MenuButton items={buildMenuItems(client)} label={`${client.prenom} ${client.nom}`} />
                                     </div>
                                 </div>
                             );
