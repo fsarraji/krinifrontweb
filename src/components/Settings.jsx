@@ -1,4 +1,5 @@
 import { tNow } from '../i18n/runtime';
+import FileField from './ui/FileField';
 import Card from './ui/Card';
 import { Switch, CheckboxInput } from '@astryxdesign/core';
 import Button from './ui/Button';
@@ -544,21 +545,15 @@ const Settings = () => {
 
                                     {/* Upload button */}
                                     <div className="flex-1">
-                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-primary hover:border-indigo-300'}`}>
-                                            <span className="material-symbols-outlined text-[20px]">upload_file</span>
-                                            {logoFile ? t('u.changer_le_logo') : t('u.importer_un_logo_png_jpg')}
-                                            <input
-                                                type="file"
-                                                accept=".png,.jpg,.jpeg"
-                                                className="hidden"
-                                                disabled={!isOwner || saving}
-                                                onChange={async (e) => {
-                                                    if (e.target.files && e.target.files[0]) {
-                                                        setLogoFile(await optimizeImageFile(e.target.files[0]));
-                                                    }
-                                                }}
-                                            />
-                                        </label>
+                                        <FileField
+                                            label={logoFile ? t('u.changer_le_logo') : t('u.importer_un_logo_png_jpg')}
+                                            isLabelHidden
+                                            value={logoFile}
+                                            onChange={async (file) => setLogoFile(file ? await optimizeImageFile(file) : null) }
+                                            accept=".png,.jpg,.jpeg"
+                                            placeholder={logoFile ? t('u.changer_le_logo') : t('u.importer_un_logo_png_jpg')}
+                                            disabled={!isOwner || saving}
+                                        />
                                         {logoFile && (
                                             <p className="text-xs text-primary font-bold mt-2 ms-1 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
@@ -591,21 +586,15 @@ const Settings = () => {
 
                                     {/* Upload button */}
                                     <div className="flex-1">
-                                        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border font-semibold text-sm cursor-pointer transition-all w-max ${!isOwner || saving ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'bg-white hover:bg-slate-50 border-slate-200 text-primary hover:border-indigo-300'}`}>
-                                            <span className="material-symbols-outlined text-[20px]">upload_file</span>
-                                            {cachetFile ? t('u.changer_l_image') : t('u.importer_un_cachet_png_jpg')}
-                                            <input
-                                                type="file"
-                                                accept=".png,.jpg,.jpeg"
-                                                className="hidden"
-                                                disabled={!isOwner || saving}
-                                                onChange={async (e) => {
-                                                    if (e.target.files && e.target.files[0]) {
-                                                        setCachetFile(await optimizeImageFile(e.target.files[0]));
-                                                    }
-                                                }}
-                                            />
-                                        </label>
+                                        <FileField
+                                            label={cachetFile ? t('u.changer_l_image') : t('u.importer_un_cachet_png_jpg')}
+                                            isLabelHidden
+                                            value={cachetFile}
+                                            onChange={async (file) => setCachetFile(file ? await optimizeImageFile(file) : null) }
+                                            accept=".png,.jpg,.jpeg"
+                                            placeholder={cachetFile ? t('u.changer_l_image') : t('u.importer_un_cachet_png_jpg')}
+                                            disabled={!isOwner || saving}
+                                        />
                                         {cachetFile && (
                                             <p className="text-xs text-primary font-bold mt-2 ms-1 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[14px]">check_circle</span>

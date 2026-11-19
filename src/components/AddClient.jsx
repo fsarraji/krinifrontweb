@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import FileField from './ui/FileField';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { Input, Select, Textarea } from './ui/Input';
@@ -122,12 +123,9 @@ const AddClient = () => {
         }
     };
 
-    const handleFileChange = async (e) => {
-        const { name, files: selectedFiles } = e.target;
-        if (selectedFiles.length > 0) {
-            const optimized = await optimizeImageFile(selectedFiles[0]);
-            setFiles(prev => ({ ...prev, [name]: optimized }));
-        }
+    const setFile = async (name, file) => {
+        const next = file ? await optimizeImageFile(file) : null;
+        setFiles(prev => ({ ...prev, [name]: next }));
     };
 
     const handleSubmit = async (e) => {
@@ -454,23 +452,11 @@ const AddClient = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div>
                                         <label className="label">Scan {cinLabelFor(formData.nationalite)}</label>
-                                        <label className="dropzone p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
-                                            <span className="material-symbols-outlined text-[24px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>badge</span>
-                                            <p className="text-[12px] font-medium text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_cin ? files.scan_cin.name : t('u.glisser_un_fichier_ou_parcourir')}
-                                            </p>
-                                            <input type="file" name="scan_cin" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
-                                        </label>
+                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_cin} onChange={(file) => setFile('scan_cin', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
                                     </div>
                                     <div>
                                         <label className="label">{t('u.scan_permis_de_conduire')}</label>
-                                        <label className="dropzone p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
-                                            <span className="material-symbols-outlined text-[24px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>contract</span>
-                                            <p className="text-[12px] font-medium text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_permis ? files.scan_permis.name : t('u.glisser_un_fichier_ou_parcourir')}
-                                            </p>
-                                            <input type="file" name="scan_permis" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
-                                        </label>
+                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
                                     </div>
                                 </div>
 

@@ -13,7 +13,7 @@ vi.mock('../utils/imageUtils', () => ({ optimizeImageFile: vi.fn(async (file) =>
 const PHOTO = { id: 3, kind: 'DEPART', image: 'https://cdn.example.com/p.jpg', caption: '' };
 
 const pickFile = (file) => {
-    const input = screen.getByLabelText('Choisir une photo');
+    const input = document.querySelector('input[type="file"]');
     fireEvent.change(input, { target: { files: [file] } });
 };
 

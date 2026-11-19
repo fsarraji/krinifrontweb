@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import FileField from './ui/FileField';
 import { CheckboxInput, SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import Card from './ui/Card';
 import { Input, Select } from './ui/Input';
@@ -229,8 +230,7 @@ const VehicleForm = () => {
         }
     };
 
-    const handleImageChange = async (e) => {
-        const file = e.target.files[0];
+    const handleImageChange = async (file) => {
         if (file) {
             const optimized = await optimizeImageFile(file);
             setImage(optimized);
@@ -903,27 +903,24 @@ const VehicleForm = () => {
                                     </span>
                                     <h2 className="font-semibold text-slate-900">{t('u.photo_du_vhicule')}</h2>
                                 </div>
-                                {imagePreview ? (
-                                    <div className="group relative aspect-video overflow-hidden rounded-xl border border-slate-200">
+                                {imagePreview && (
+                                    <div className="relative mb-4 aspect-video overflow-hidden rounded-xl border border-slate-200">
                                         <img
                                             src={imagePreview}
                                             className="absolute inset-0 h-full w-full object-cover"
                                             alt={t('u.aperu')}
                                         />
-                                        <label className="absolute end-3 top-3 cursor-pointer rounded-full bg-white/80 p-2 shadow-sm backdrop-blur transition-colors hover:bg-white">
-                                            <span className="material-symbols-outlined text-[18px] text-blue-600">photo_camera</span>
-                                            <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                                        </label>
                                     </div>
-                                ) : (
-                                    <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-6 text-center transition hover:border-blue-300 hover:bg-blue-50/30">
-                                        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-2xl text-blue-600">📷</div>
-                                        <p className="text-sm font-semibold text-slate-700">{t('u.glisser_une_image_ici')}</p>
-                                        <p className="mt-1 text-sm text-blue-600">{t('u.ou_cliquer_pour_parcourir')}</p>
-                                        <p className="mt-3 text-xs text-slate-400">{t('u.formats_accepts_jpg_png_max_5_mo')}</p>
-                                        <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-                                    </label>
                                 )}
+                                <FileField
+                                    label={t('u.photo_du_vhicule')}
+                                    isLabelHidden
+                                    value={image}
+                                    onChange={handleImageChange}
+                                    accept="image/*"
+                                    placeholder={t('u.glisser_une_image_ici')}
+                                    description={t('u.formats_accepts_jpg_png_max_5_mo')}
+                                />
                             </Card>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 import { tNow } from '../i18n/runtime';
+import FileField from './ui/FileField';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem, Switch } from '@astryxdesign/core';
 import { formatDate, formatMoney } from '../utils/formatters';
@@ -110,12 +111,9 @@ const EditClient = () => {
         }
     };
 
-    const handleFileChange = async (e) => {
-        const { name, files: selectedFiles } = e.target;
-        if (selectedFiles.length > 0) {
-            const optimized = await optimizeImageFile(selectedFiles[0]);
-            setFiles(prev => ({ ...prev, [name]: optimized }));
-        }
+    const setFile = async (name, file) => {
+        const next = file ? await optimizeImageFile(file) : null;
+        setFiles(prev => ({ ...prev, [name]: next }));
     };
 
     const handleSubmit = async (e) => {
@@ -348,13 +346,7 @@ const EditClient = () => {
                                                 {t('u.voir_le_scan_actuel')}
                                             </a>
                                         )}
-                                        <label className="dropzone p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
-                                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>upload_file</span>
-                                            <p className="text-[11px] font-semibold text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_permis ? files.scan_permis.name : t('u.tlcharger_un_nouveau_document')}
-                                            </p>
-                                            <input type="file" name="scan_permis" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
-                                        </label>
+                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.tlcharger_un_nouveau_document')} />
                                     </div>
                                 </div>
                             </div>
@@ -377,13 +369,7 @@ const EditClient = () => {
                                                 {t('u.voir_le_scan_actuel')}
                                             </a>
                                         )}
-                                        <label className="dropzone p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
-                                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>upload_file</span>
-                                            <p className="text-[11px] font-semibold text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_cin ? files.scan_cin.name : t('u.tlcharger_un_nouveau_document')}
-                                            </p>
-                                            <input type="file" name="scan_cin" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
-                                        </label>
+                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_cin} onChange={(file) => setFile('scan_cin', file)} accept="image/*,.pdf" placeholder={t('u.tlcharger_un_nouveau_document')} />
                                     </div>
                                 </div>
                             </div>
