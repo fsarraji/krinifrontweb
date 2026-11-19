@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Card from './ui/Card';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import api, { fetchAllPages } from '../api';
 import Dropdown from './Dropdown';
 import SearchFilterBar from './SearchFilterBar';
@@ -173,7 +175,7 @@ const Expenses = () => {
                     </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
+                <Card padding={4} variant="default" className="flex items-center justify-between h-20">
                     <div className="flex items-center gap-3.5 min-w-0">
                         <div className="w-11 h-11 bg-danger-bg text-danger rounded-xl flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">storefront</span>
@@ -183,9 +185,9 @@ const Expenses = () => {
                             <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalAgency)}</p>
                         </div>
                     </div>
-                </div>
+                </Card>
 
-                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
+                <Card padding={4} variant="default" className="flex items-center justify-between h-20">
                     <div className="flex items-center gap-3.5 min-w-0">
                         <div className="w-11 h-11 bg-surface-container-high text-primary rounded-xl flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">directions_car</span>
@@ -195,7 +197,7 @@ const Expenses = () => {
                             <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalVehicles)}</p>
                         </div>
                     </div>
-                </div>
+                </Card>
             </div>
 
             {/* Search & Filter */}
@@ -274,22 +276,19 @@ const Expenses = () => {
                 )}
             >
                 <div className="space-y-4">
-                    <div role="group" aria-label={t('u.type_de_dpense')} className="flex bg-surface-container p-1 rounded-token">
-                        {[
-                            ['AGENCY', 'storefront', t('u.dpense_agence'), 'Salaries', { vehicle: '' }],
-                            ['VEHICLE', 'directions_car', t('u.dpense_vhicule'), 'Maintenance', {}],
-                        ].map(([type, icon, label, cat, extra]) => (
-                            <button
-                                key={type}
-                                type="button"
-                                aria-pressed={expenseType === type}
-                                onClick={() => { setExpenseType(type); setFormData((f) => ({ ...f, category: cat, ...extra })); }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-token transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${expenseType === type ? 'bg-white text-on-surface shadow-l1' : 'text-text-muted hover:text-on-surface'}`}
-                            >
-                                <span className="material-symbols-outlined text-base" aria-hidden="true">{icon}</span> {label}
-                            </button>
-                        ))}
-                    </div>
+                    <SegmentedControl
+                        label={t('u.type_de_dpense')}
+                        value={expenseType}
+                        layout="fill"
+                        onChange={(type) => {
+                            const [cat, extra] = type === 'AGENCY' ? ['Salaries', { vehicle: '' }] : ['Maintenance', {}];
+                            setExpenseType(type);
+                            setFormData((f) => ({ ...f, category: cat, ...extra }));
+                        }}
+                    >
+                        <SegmentedControlItem value="AGENCY" label={t('u.dpense_agence')} icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>storefront</span>} />
+                        <SegmentedControlItem value="VEHICLE" label={t('u.dpense_vhicule')} icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>directions_car</span>} />
+                    </SegmentedControl>
 
                     <form id="expenseForm" onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field label={t('u.titre_de_la_dpense')} required className="sm:col-span-2">

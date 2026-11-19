@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Input, Select } from './ui/Input';
+import Button from './ui/Button';
 import { tNow } from '../i18n/runtime';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -234,11 +236,11 @@ const GpsTracking = () => {
             if (map.current && routeLayer.current) {
                 routeLayer.current.clearLayers();
                 if (points.length) {
-                    const line = L.polyline(points.map((p) => [p.latitude, p.longitude]), { color: '#1D4ED8', weight: 4, opacity: 0.75 });
+                    const line = L.polyline(points.map((p) => [p.latitude, p.longitude]), { color: '#004783', weight: 4, opacity: 0.75 });
                     routeLayer.current.addLayer(line);
                     map.current.fitBounds(line.getBounds(), { padding: [60, 60], maxZoom: 15 });
                     const last = points[points.length - 1];
-                    L.circleMarker([last.latitude, last.longitude], { radius: 6, color: '#1D4ED8', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(routeLayer.current);
+                    L.circleMarker([last.latitude, last.longitude], { radius: 6, color: '#004783', weight: 3, fillColor: '#fff', fillOpacity: 1 }).addTo(routeLayer.current);
                 }
             }
         } catch (error) {
@@ -379,7 +381,7 @@ const GpsTracking = () => {
 
     return (
         <div
-            className="-m-8 h-screen overflow-hidden flex flex-col"
+            className="-mx-4 sm:-mx-6 lg:-mx-8 -my-6 lg:-my-8 h-[calc(100dvh-52px)] overflow-hidden flex flex-col"
             style={{ background: 'var(--slate-bg)', color: 'var(--on-surface)' }}
             data-purpose="gps-tracking"
         >
@@ -422,22 +424,9 @@ const GpsTracking = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     {!fleetOpen && (
-                        <button
-                            onClick={() => setFleetOpen(true)}
-                            className="card rounded-token shadow-l1 w-10 h-10 flex items-center justify-center hover:opacity-80"
-                            title={t('u.afficher_la_flotte')} aria-label={t('u.afficher_la_flotte')}
-                        >
-                            <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--on-surface-variant)' }}>format_list_bulleted</span>
-                        </button>
+                        <Button variant="secondary" iconOnly icon="format_list_bulleted" onClick={() => setFleetOpen(true)}  title={t('u.afficher_la_flotte')} aria-label={t('u.afficher_la_flotte')} />
                     )}
-                    <button
-                        onClick={openDevices}
-                        className="card rounded-token shadow-l1 h-10 px-4 flex items-center gap-2 hover:opacity-80"
-                        title={t('u.grer_les_dispositifs_gps_ajouter')} aria-label={t('u.grer_les_dispositifs_gps_ajouter')}
-                    >
-                        <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--primary-container)' }}>sensors</span>
-                        <span className="text-[12.5px] font-bold" style={{ color: 'var(--on-surface)' }}>{t('u.dispositifs')}</span>
-                    </button>
+                    <Button variant="secondary" icon="sensors" title={t('u.grer_les_dispositifs_gps_ajouter')} aria-label={t('u.grer_les_dispositifs_gps_ajouter')} onClick={openDevices}>{t('u.dispositifs')}</Button>
                     <span className="badge" style={{ background: 'var(--success-bg)', color: 'var(--success-dark)' }}>
                         <span className="badge-dot pulse" style={{ background: 'var(--success)' }}></span>
                         {movingCount} en mouvement
@@ -463,14 +452,7 @@ const GpsTracking = () => {
                                     <div className={`toggle-tab ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>{t('u.liste')}</div>
                                     <div className={`toggle-tab ${view === 'detail' ? 'active' : ''}`} onClick={() => setView('detail')}>{t('u.dtail')}</div>
                                 </div>
-                                <button
-                                    onClick={() => setFleetOpen(false)}
-                                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
-                                    style={{ color: 'var(--on-surface-variant)' }}
-                                    title={t('u.rduire_la_liste')} aria-label={t('u.rduire_la_liste')}
-                                >
-                                    <span className="material-symbols-outlined text-base">chevron_left</span>
-                                </button>
+                                <Button variant="ghost" iconOnly icon="chevron_left" onClick={() => setFleetOpen(false)}  title={t('u.rduire_la_liste')} aria-label={t('u.rduire_la_liste')} />
                             </div>
                         </div>
 
@@ -478,13 +460,12 @@ const GpsTracking = () => {
                         {view === 'list' && (
                             <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                                 <div className="px-4 pt-4 pb-2 relative flex-shrink-0">
-                                    <span className="material-symbols-outlined absolute start-7 top-[26px] text-[18px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>search</span>
-                                    <input
-                                        className="input"
+                                    
+                                    <Input
+                                        type="search"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder={t('u.rechercher_un_vhicule')}
-                                        style={{ paddingLeft: 36, fontSize: 13 }}
                                     />
                                 </div>
                                 <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1" ref={scrollRef}>
@@ -548,9 +529,7 @@ const GpsTracking = () => {
                                 ) : (
                                     <>
                                         <div className="px-5 pt-4">
-                                            <button className="flex items-center gap-1 text-[12px] font-semibold hover:opacity-70" style={{ color: 'var(--on-surface-variant)' }} onClick={() => setView('list')}>
-                                                <span className="material-symbols-outlined text-[16px]">arrow_back</span> Retour à la liste
-                                            </button>
+                                            <Button variant="ghost" size="sm" icon="arrow_back" onClick={() => setView('list')}>Retour à la liste</Button>
                                         </div>
 
                                         <div className="mx-5 mt-3 rounded-token overflow-hidden relative" style={{ border: '1px solid var(--stroke)' }}>
@@ -658,17 +637,15 @@ const GpsTracking = () => {
                                             </div>
 
                                             {selected.traccar_device_id != null && (
-                                                <button
+                                                <Button
+                                                    variant="secondary"
+                                                    icon="link_off"
+                                                    loading={dissociatingVehicle}
                                                     onClick={dissociateSelectedVehicle}
-                                                    disabled={dissociatingVehicle}
-                                                    className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-                            style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
+                                                    className="mt-3 w-full"
                                                 >
-                                                    <span className={`material-symbols-outlined text-[16px] ${dissociatingVehicle ? 'animate-spin' : ''}`}>
-                                                        {dissociatingVehicle ? 'progress_activity' : 'link_off'}
-                                                    </span>
                                                     {dissociatingVehicle ? t('u.dissociation_en_cours') : t('u.dissocier_le_botier_du_vhicule')}
-                                                </button>
+                                                </Button>
                                             )}
 
                                             {routeLoading && <p className="text-[12px] mt-4 text-text-muted" role="status">{t('u.chargement_de_l_historique')}</p>}
@@ -678,37 +655,20 @@ const GpsTracking = () => {
                                                 </p>
                                             )}
                                             <div className="flex gap-2 mt-4">
-                                                <button
-                                                    onClick={showHistory}
-                                                    disabled={!selected.traccar_device_id}
-                                                    className="flex-1 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-                                                    style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
-                                                >
+                                                <Button variant="secondary" onClick={showHistory} disabled={!selected.traccar_device_id} className="flex-1">
                                                     {t('u.historique_du_trajet')}
-                                                </button>
-                                                <button
-                                                    onClick={() => selected?.position && map.current?.flyTo([selected.position.latitude, selected.position.longitude], 16, { duration: 0.8 })}
-                                                    className="flex-1 py-2.5 rounded-token text-[12px] font-bold text-white"
-                                                    style={{ background: 'var(--primary-container)' }}
-                                                >
+                                                </Button>
+                                                <Button onClick={() => selected?.position && map.current?.flyTo([selected.position.latitude, selected.position.longitude], 16, { duration: 0.8 })} className="flex-1">
                                                     {t('u.centrer_sur_la_carte')}
-                                                </button>
+                                                </Button>
                                             </div>
                                             <div className="flex gap-2 mt-2">
-                                                <button
-                                                    onClick={() => selected?.position && map.current?.flyTo([selected.position.latitude, selected.position.longitude], 16, { duration: 0.8 })}
-                                                    className="flex-1 py-2 rounded-token text-[11.5px] font-bold"
-                                                    style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
-                                                >
+                                                <Button variant="secondary" size="sm" onClick={() => selected?.position && map.current?.flyTo([selected.position.latitude, selected.position.longitude], 16, { duration: 0.8 })} className="flex-1">
                                                     {t('u.suivi_en_direct')}
-                                                </button>
-                                                <button
-                                                    onClick={() => map.current?.setView(MOROCCO, 6)}
-                                                    className="flex-1 py-2 rounded-token text-[11.5px] font-bold"
-                                                    style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }}
-                                                >
+                                                </Button>
+                                                <Button variant="secondary" size="sm" onClick={() => map.current?.setView(MOROCCO, 6)} className="flex-1">
                                                     {t('u.recentrer_la_carte')}
-                                                </button>
+                                                </Button>
                                             </div>
 
                                             {commands.length > 0 && (
@@ -718,26 +678,20 @@ const GpsTracking = () => {
                                                         {commands.filter((cmd) => cmd !== 'custom').map((cmd) => {
                                                             const meta = COMMAND_LABELS[cmd] || { label: cmd, icon: 'terminal' };
                                                             return (
-                                                                <button
+                                                                <Button
                                                                     key={cmd}
+                                                                    variant={meta.danger ? 'danger' : 'secondary'}
+                                                                    icon={meta.icon}
                                                                     disabled={commandLoading}
                                                                     onClick={() => sendCommand(cmd)}
-                                                                    className="flex items-center justify-center gap-2 py-2.5 rounded-token text-[12px] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-                                                                    style={
-                                                                        meta.danger
-                                                                            ? { background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-dark)' }
-                                                                            : { background: 'var(--slate-bg)', border: '1px solid var(--stroke)', color: 'var(--secondary)' }
-                                                                    }
                                                                 >
-                                                                    <span className="material-symbols-outlined text-[16px]">{meta.icon}</span>
                                                                     {meta.labelKey ? t(meta.labelKey) : meta.label}
-                                                                </button>
+                                                                </Button>
                                                             );
                                                         })}
                                                         {commands.includes('custom') && (
                                                             <div className="flex gap-2 mt-1">
-                                                                <input
-                                                                    className="input"
+                                                                <Input
                                                                     placeholder={t('u.donnes_custom_ex_hex')}
                                                                     value={customCommand}
                                                                     onChange={(e) => setCustomCommand(e.target.value)}
@@ -746,16 +700,10 @@ const GpsTracking = () => {
                                                                             sendCommand('custom', { data: customCommand.trim() });
                                                                         }
                                                                     }}
-                                                                    style={{ fontSize: 12 }}
                                                                 />
-                                                                <button
-                                                                    disabled={commandLoading || !customCommand.trim()}
-                                                                    onClick={() => sendCommand('custom', { data: customCommand.trim() })}
-                                                                    className="px-4 py-2 rounded-token text-[12px] font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                                                                    style={{ background: 'var(--primary-container)' }}
-                                                                >
+                                                                <Button size="sm" disabled={commandLoading || !customCommand.trim()} onClick={() => sendCommand('custom', { data: customCommand.trim() })}>
                                                                     {t('u.envoyer')}
-                                                                </button>
+                                                                </Button>
                                                             </div>
                                                         )}
                                                     </div>
@@ -785,13 +733,7 @@ const GpsTracking = () => {
                             <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: 'var(--warning)' }}></span>À l'arrêt</span>
                             <span className="flex items-center gap-1.5"><span className="badge-dot" style={{ background: 'var(--text-muted)' }}></span>Hors ligne</span>
                         </div>
-                        <button
-                            onClick={() => map.current?.setView(MOROCCO, 6)}
-                            className="card rounded-token shadow-l1 w-9 h-9 flex items-center justify-center hover:opacity-80"
-                            title={t('u.recentrer_sur_le_maroc')} aria-label={t('u.recentrer_sur_le_maroc')}
-                        >
-                            <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--on-surface-variant)' }}>my_location</span>
-                        </button>
+                        <Button variant="secondary" iconOnly icon="my_location" onClick={() => map.current?.setView(MOROCCO, 6)}  title={t('u.recentrer_sur_le_maroc')} aria-label={t('u.recentrer_sur_le_maroc')} />
                     </div>
 
                     {!tracking && !loading && (
@@ -848,14 +790,7 @@ const GpsTracking = () => {
                                 {t('u.dispositifs_gps')}
                                 <span className="font-semibold text-[12px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>· {devices.length}</span>
                             </h3>
-                            <button
-                                onClick={() => setDevicesOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
-                                style={{ color: 'var(--on-surface-variant)' }}
-                                title={t('u.fermer')} aria-label={t('u.fermer')}
-                            >
-                                <span className="material-symbols-outlined text-[18px]">close</span>
-                            </button>
+                            <Button variant="ghost" iconOnly icon="close" onClick={() => setDevicesOpen(false)}  title={t('u.fermer')} aria-label={t('u.fermer')} />
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -866,39 +801,27 @@ const GpsTracking = () => {
                                         <label className="block text-[10.5px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
                                             ID / IMEI <span style={{ color: 'var(--danger)' }}>*</span>
                                         </label>
-                                        <input
-                                            className="input"
+                                        <Input
                                             value={newDeviceImei}
                                             onChange={(e) => setNewDeviceImei(e.target.value)}
                                             onKeyDown={(e) => { if (e.key === 'Enter') addDevice(); }}
                                             placeholder="Ex: 862345048765432"
-                                            style={{ fontSize: 12.5 }}
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-[10.5px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
                                             Nom (optionnel)
                                         </label>
-                                        <input
-                                            className="input"
+                                        <Input
                                             value={newDeviceName}
                                             onChange={(e) => setNewDeviceName(e.target.value)}
                                             onKeyDown={(e) => { if (e.key === 'Enter') addDevice(); }}
                                             placeholder="Ex: STEPWAY"
-                                            style={{ fontSize: 12.5 }}
                                         />
                                     </div>
-                                    <button
-                                        onClick={addDevice}
-                                        disabled={addingDevice}
-                                        className="col-span-2 inline-flex items-center justify-center gap-2 py-2.5 rounded-token text-[12.5px] font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed"
-                                        style={{ background: 'var(--primary-container)' }}
-                                    >
-                                        <span className={`material-symbols-outlined text-[16px] ${addingDevice ? 'animate-spin' : ''}`}>
-                                            {addingDevice ? 'progress_activity' : 'add'}
-                                        </span>
+                                    <Button icon="add" loading={addingDevice} onClick={addDevice} className="col-span-2">
                                         {addingDevice ? t('u.ajout_en_cours') : t('u.ajouter_au_serveur_traccar')}
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
 
@@ -907,25 +830,19 @@ const GpsTracking = () => {
                                     <p className="text-[12px] font-bold" style={{ color: 'var(--on-surface)' }}>{t('u.dispositifs_du_serveur_traccar')}</p>
                                     <div className="flex items-center gap-1.5">
                                         {devices.some((d) => d.vehicle_id != null) && (
-                                            <button
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                icon="link_off"
                                                 onClick={dissociateAllDevices}
                                                 disabled={associatingDeviceId != null || dissociatingVehicle}
-                                                className="text-[11px] font-bold px-3 py-1.5 rounded-token flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
-                                                style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
-                                                title={t('u.dissocier_tous_les_dispositifs_d')} aria-label={t('u.dissocier_tous_les_dispositifs_d')}
+                                                title={t('u.dissocier_tous_les_dispositifs_d')}
+                                                aria-label={t('u.dissocier_tous_les_dispositifs_d')}
                                             >
-                                                <span className="material-symbols-outlined text-[13px]">link_off</span>
                                                 {t('u.tout_dissocier')}
-                                            </button>
+                                            </Button>
                                         )}
-                                        <button
-                                            onClick={loadDevices}
-                                            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors"
-                                            style={{ color: 'var(--on-surface-variant)' }}
-                                            title={t('u.actualiser')} aria-label={t('u.actualiser')}
-                                        >
-                                            <span className={`material-symbols-outlined text-[15px] ${devicesLoading ? 'animate-spin' : ''}`}>refresh</span>
-                                        </button>
+                                        <Button variant="ghost" iconOnly icon="refresh" onClick={loadDevices} loading={devicesLoading} title={t('u.actualiser')} aria-label={t('u.actualiser')} />
                                     </div>
                                 </div>
 
@@ -965,17 +882,15 @@ const GpsTracking = () => {
                                                             #{d.id} · {d.uniqueId || t('u.imei_inconnu')}
                                                         </p>
                                                     </div>
-                                                    <button
+                                                    <Button
+                                                        variant="danger"
+                                                        iconOnly
+                                                        icon="delete"
+                                                        loading={deletingDeviceId === d.id}
                                                         onClick={() => deleteDevice(d)}
-                                                        disabled={deletingDeviceId === d.id}
-                                                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-danger-bg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                                                        style={{ color: 'var(--danger)' }}
-                                                        title={t('u.supprimer_le_dispositif')} aria-label={t('u.supprimer_le_dispositif')}
-                                                    >
-                                                        <span className={`material-symbols-outlined text-[17px] ${deletingDeviceId === d.id ? 'animate-spin' : ''}`}>
-                                                            {deletingDeviceId === d.id ? 'progress_activity' : 'delete'}
-                                                        </span>
-                                                    </button>
+                                                        title={t('u.supprimer_le_dispositif')}
+                                                        aria-label={t('u.supprimer_le_dispositif')}
+                                                    />
                                                 </div>
 
                                                 <div className="flex items-center gap-2 mt-2.5">
@@ -985,14 +900,9 @@ const GpsTracking = () => {
                                                                 <span className="material-symbols-outlined text-[13px]">link</span>
                                                                 Associé à {d.vehicle_matricule || t('u.vhicule_2', { id: d.vehicle_id })}
                                                             </span>
-                                                            <button
-                                                                onClick={() => dissociateDevice(d)}
-                                                                disabled={associatingDeviceId === d.id}
-                                                                className="ms-auto text-[11px] font-bold px-3 py-1.5 rounded-token disabled:opacity-40 disabled:cursor-not-allowed"
-                                                    style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-dark)' }}
-                                                            >
+                                                            <Button variant="secondary" size="sm" onClick={() => dissociateDevice(d)} disabled={associatingDeviceId === d.id} className="ms-auto">
                                                                 {t('u.dissocier')}
-                                                            </button>
+                                                            </Button>
                                                         </>
                                                     ) : (
                                                         <>
@@ -1000,11 +910,11 @@ const GpsTracking = () => {
                                                                 <span className="material-symbols-outlined text-[13px]">link_off</span>
                                                                 {t('u.non_associ')}
                                                             </span>
-                                                            <select
+                                                            <Select
                                                                 value={chosen}
                                                                 onChange={(e) => setAssocMap((prev) => ({ ...prev, [d.id]: e.target.value }))}
-                                                                className="flex-1 min-w-0 input"
-                                                                style={{ height: 30, fontSize: 12, padding: '0 8px' }}
+                                                                className="flex-1 min-w-0"
+                                                                aria-label={t('u.associer_un_vhicule')}
                                                             >
                                                                 <option value="">{t('u.associer_un_vhicule')}</option>
                                                                 {vehicles.map((v) => (
@@ -1012,16 +922,10 @@ const GpsTracking = () => {
                                                                         {(v.marque_name || 'Véhicule') + ' ' + (v.modele_name || '')} — {v.matricule}
                                                                     </option>
                                                                 ))}
-                                                            </select>
-                                                            <button
-                                                                onClick={() => associateDevice(d, chosen)}
-                                                                disabled={associatingDeviceId === d.id || !chosen}
-                                                                className="h-[30px] px-3 rounded-token text-[11.5px] font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 flex-shrink-0"
-                                                                style={{ background: 'var(--primary-container)' }}
-                                                            >
-                                                                <span className="material-symbols-outlined text-[14px]">link</span>
+                                                            </Select>
+                                                            <Button size="sm" icon="link" onClick={() => associateDevice(d, chosen)} disabled={associatingDeviceId === d.id || !chosen}>
                                                                 {t('u.associer')}
-                                                            </button>
+                                                            </Button>
                                                         </>
                                                     )}
                                                 </div>

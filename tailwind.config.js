@@ -1,5 +1,70 @@
 /** @type {import('tailwindcss').Config} */
+
+// Palette = jetons Astryx (variables CSS posées par <Theme theme={kriniTheme}>, voir src/theme).
+// Les noms historiques (primary, stroke, on-surface, slate-*, indigo-*…) sont conservés pour que
+// les pages existantes changent de rendu sans être modifiées ; ils suivent le thème (clair/sombre).
+//
+// Les valeurs sont des fonctions pour que les modificateurs d'opacité (bg-primary/30, ring-danger/20)
+// continuent de fonctionner avec des couleurs `var(...)`.
+// opacityValue : undefined, 'var(--tw-*-opacity)' (utilitaire sans modificateur) ou un nombre ('0.3').
+const c = (expr) => ({ opacityValue }) => {
+  const alpha = Number(opacityValue);
+  return opacityValue === undefined || Number.isNaN(alpha) ? expr : `color-mix(in srgb, ${expr} ${alpha * 100}%, transparent)`;
+};
+const mix = (a, pct, b) => `color-mix(in srgb, ${a} ${pct}%, ${b})`;
+
+const T = {
+  accent: 'var(--color-accent)',
+  onAccent: 'var(--color-on-accent)',
+  accentMuted: 'var(--color-accent-muted)',
+  body: 'var(--color-background-body)',
+  surface: 'var(--color-background-surface)',
+  card: 'var(--color-background-card)',
+  muted: 'var(--color-background-muted)',
+  border: 'var(--color-border)',
+  borderStrong: 'var(--color-border-emphasized)',
+  text: 'var(--color-text-primary)',
+  text2: 'var(--color-text-secondary)',
+  textOff: 'var(--color-text-disabled)',
+  hover: 'var(--color-tint-hover)',
+  success: 'var(--color-success)',
+  successMuted: 'var(--color-success-muted)',
+  warning: 'var(--color-warning)',
+  warningMuted: 'var(--color-warning-muted)',
+  error: 'var(--color-error)',
+  errorMuted: 'var(--color-error-muted)',
+};
+const textMuted = mix(T.text2, 62, T.textOff); // métadonnées (ex-#64748B)
+const accentDeep = mix(T.accent, 86, 'black');
+const accentBorder = mix(T.accent, 32, T.surface);
+const dark = (color) => mix(color, 72, 'black');
+const soft = (color) => mix(color, 30, T.surface);
+
+// Échelle neutre : slate-50…900 (utilisée ~500 fois dans les pages)
+const neutral = {
+  50: c(T.body),
+  100: c(T.muted),
+  200: c(T.border),
+  300: c(T.borderStrong),
+  400: c(T.textOff),
+  500: c(textMuted),
+  600: c(T.text2),
+  700: c(mix(T.text2, 70, T.text)),
+  800: c(mix(T.text2, 30, T.text)),
+  900: c(T.text),
+  950: c(T.text),
+};
+
+// Teintes historiques redirigées vers les rôles du design system
+const ramp = (base, muted) => ({
+  50: c(muted), 100: c(muted), 200: c(soft(base)), 300: c(mix(base, 55, T.surface)), 400: c(mix(base, 80, T.surface)),
+  500: c(base), 600: c(base), 700: c(dark(base)), 800: c(mix(base, 56, 'black')), 900: c(mix(base, 42, 'black')),
+});
+
 export default {
+  // Le reset est fourni par Astryx (@astryxdesign/core/reset.css, en couche) : le preflight de
+  // Tailwind n'est pas en couche et écraserait les styles des composants Astryx.
+  corePlugins: { preflight: false },
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,166 +72,117 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ===== Kricar Agency — Design System officiel =====
+        // Marque
+        primary: c(T.accent),
+        'primary-deep': c(accentDeep),
+        'primary-hover': c(accentDeep),
+        'primary-light': c(T.accentMuted),
+        'primary-border': c(accentBorder),
+        'on-primary': c(T.onAccent),
+        'primary-container': c(T.accent),
+        'on-primary-container': c(T.onAccent),
 
-        // Brand
-        primary: '#1D4ED8',
-        'primary-deep': '#1E40AF',
-        'primary-hover': '#1E40AF',
-        'primary-light': '#DBEAFE',
-        'primary-border': '#93C5FD',
-        'on-primary': '#FFFFFF',
-        'primary-container': '#1D4ED8',
-        'on-primary-container': '#FFFFFF',
+        // Fonds
+        'app-bg': c(T.body),
+        'slate-bg': c(T.body),
+        'card-white': c(T.card),
+        surface: c(T.body),
+        'surface-dim': c(T.border),
+        'surface-bright': c(T.surface),
+        'surface-container-lowest': c(T.surface),
+        'surface-container-low': c(T.body),
+        'surface-container': c(T.muted),
+        'surface-container-high': c(T.accentMuted),
+        'surface-container-highest': c(accentBorder),
+        'surface-hover': c(T.hover),
+        'surface-active': c(T.accentMuted),
 
-        // Backgrounds
-        'app-bg': '#F8FAFC',
-        'slate-bg': '#F8FAFC',
-        'card-white': '#FFFFFF',
-        surface: '#F8FAFC',
-        'surface-dim': '#E2E8F0',
-        'surface-bright': '#FFFFFF',
-        'surface-container-lowest': '#FFFFFF',
-        'surface-container-low': '#F8FAFC',
-        'surface-container': '#F1F5F9',
-        'surface-container-high': '#EFF6FF',
-        'surface-container-highest': '#DBEAFE',
-        'surface-hover': '#F1F5F9',
-        'surface-active': '#EFF6FF',
+        // Bordures
+        stroke: c(T.border),
+        'stroke-strong': c(T.borderStrong),
+        outline: c(T.borderStrong),
+        'outline-variant': c(T.border),
 
-        // Borders
-        stroke: '#E2E8F0',
-        'stroke-strong': '#CBD5E1',
-        outline: '#CBD5E1',
-        'outline-variant': '#E2E8F0',
+        // Texte
+        'on-surface': c(T.text),
+        'on-surface-variant': c(T.text2),
+        'text-primary': c(T.text),
+        'text-secondary': c(T.text2),
+        'text-muted': c(textMuted),
+        'text-disabled': c(T.textOff),
 
-        // Text
-        'on-surface': '#0F172A',
-        'on-surface-variant': '#475569',
-        'text-primary': '#0F172A',
-        'text-secondary': '#475569',
-        'text-muted': '#64748B',
-        'text-disabled': '#94A3B8',
+        // Secondaire
+        secondary: c(T.text2),
+        'secondary-container': c(T.muted),
+        'on-secondary-container': c(T.text2),
 
-        // Secondary
-        secondary: '#475569',
-        'secondary-container': '#F1F5F9',
-        'on-secondary-container': '#475569',
+        // Sémantique
+        success: c(T.success),
+        'success-bg': c(T.successMuted),
+        'success-dark': c(dark(T.success)),
+        'success-border': c(soft(T.success)),
+        warning: c(T.warning),
+        'warning-bg': c(T.warningMuted),
+        'warning-dark': c(mix(T.warning, 60, 'black')),
+        'warning-border': c(soft(T.warning)),
+        danger: c(T.error),
+        'danger-bg': c(T.errorMuted),
+        'danger-dark': c(dark(T.error)),
+        'danger-border': c(soft(T.error)),
+        'error-c': c(T.error),
+        'error-bg': c(T.errorMuted),
+        'on-error-container': c(dark(T.error)),
+        info: c('var(--color-text-blue)'),
+        'info-bg': c('var(--color-background-blue)'),
+        'info-dark': c(mix('var(--color-text-blue)', 80, 'black')),
+        'info-border': c('var(--color-border-blue)'),
 
-        // Semantic
-        success: '#10B981',
-        'success-bg': '#D1FAE5',
-        'success-dark': '#047857',
-        'success-border': '#A7F3D0',
-        warning: '#F59E0B',
-        'warning-bg': '#FEF3C7',
-        'warning-dark': '#B45309',
-        'warning-border': '#FDE68A',
-        danger: '#EF4444',
-        'danger-bg': '#FEE2E2',
-        'danger-dark': '#B91C1C',
-        'danger-border': '#FECACA',
-        'error-c': '#EF4444',
-        'error-bg': '#FEE2E2',
-        'on-error-container': '#B91C1C',
-        info: '#0EA5E9',
-        'info-bg': '#E0F2FE',
-        'info-dark': '#075985',
-        'info-border': '#BAE6FD',
+        // Badges (mêmes tons que le reste : une seule définition)
+        'badge-success-bg': c(T.successMuted),
+        'badge-success-text': c(dark(T.success)),
+        'badge-success-border': c(soft(T.success)),
+        'badge-warning-bg': c(T.warningMuted),
+        'badge-warning-text': c(mix(T.warning, 60, 'black')),
+        'badge-warning-border': c(soft(T.warning)),
+        'badge-danger-bg': c(T.errorMuted),
+        'badge-danger-text': c(dark(T.error)),
+        'badge-danger-border': c(soft(T.error)),
+        'badge-info-bg': c('var(--color-background-blue)'),
+        'badge-info-text': c('var(--color-text-blue)'),
+        'badge-info-border': c('var(--color-border-blue)'),
+        'badge-neutral-bg': c(T.muted),
+        'badge-neutral-text': c(T.text2),
+        'badge-neutral-border': c(T.border),
 
-        // ===== Systeme de badges (Krincar Agency — structure code.html, couleurs officielles Kricar) =====
-        // Tokens dedies prefix utiles, sans ecraser la palette Kricar ci-dessus.
-        'badge-success-bg': '#D1FAE5',
-        'badge-success-text': '#047857',
-        'badge-success-border': '#A7F3D0',
-        'badge-warning-bg': '#FEF3C7',
-        'badge-warning-text': '#B45309',
-        'badge-warning-border': '#FDE68A',
-        'badge-danger-bg': '#FEE2E2',
-        'badge-danger-text': '#B91C1C',
-        'badge-danger-border': '#FECACA',
-        'badge-info-bg': '#E0F2FE',
-        'badge-info-text': '#075985',
-        'badge-info-border': '#BAE6FD',
-        'badge-neutral-bg': '#F1F5F9',
-        'badge-neutral-text': '#475569',
-        'badge-neutral-border': '#E2E8F0',
+        // Catégories métier
+        'cat-vehicule-bg': c('var(--color-background-green)'), 'cat-vehicule-text': c('var(--color-text-green)'),
+        'cat-resa-bg': c('var(--color-background-yellow)'), 'cat-resa-text': c('var(--color-text-yellow)'),
+        'cat-client-bg': c('var(--color-background-blue)'), 'cat-client-text': c('var(--color-text-blue)'),
+        'cat-contrat-bg': c('var(--color-background-purple)'), 'cat-contrat-text': c('var(--color-text-purple)'),
+        'cat-agence-bg': c('var(--color-background-gray)'), 'cat-agence-text': c('var(--color-text-gray)'),
 
-        // Catégories métier (badges soft / outline-icône)
-        'cat-vehicule-bg': '#e6f4ea',
-        'cat-vehicule-text': '#1e8e3e',
-        'cat-resa-bg': '#fef7e0',
-        'cat-resa-text': '#f9ab00',
-        'cat-client-bg': '#e8f0fe',
-        'cat-client-text': '#4285f4',
-        'cat-contrat-bg': '#f3e8fd',
-        'cat-contrat-text': '#9334e6',
-        'cat-agence-bg': '#f1f3f4',
-        'cat-agence-text': '#5f6368',
-
-        // Aliases vers la palette bleue Kricar : indigo/blue existants → bleu brand
-        indigo: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#1d4ed8',
-          700: '#1e40af',
-          800: '#1e3a8a',
-          900: '#172554',
-          950: '#172554',
-        },
-        blue: {
-          600: '#1D4ED8',
-          700: '#1E40AF',
-        },
-        // Aliases sémantiques : emerald/amber/rose → succès/alerte/danger du design system
-        emerald: {
-          50: '#D1FAE5',
-          100: '#D1FAE5',
-          200: '#A7F3D0',
-          300: '#6EE7B7',
-          400: '#34D399',
-          500: '#10B981',
-          600: '#10B981',
-          700: '#047857',
-          800: '#065F46',
-          900: '#064E3B',
-        },
-        amber: {
-          50: '#FEF3C7',
-          100: '#FEF3C7',
-          200: '#FDE68A',
-          300: '#FCD34D',
-          400: '#FBBF24',
-          500: '#F59E0B',
-          600: '#F59E0B',
-          700: '#B45309',
-          800: '#92400E',
-          900: '#78350F',
-        },
-        rose: {
-          50: '#FEE2E2',
-          100: '#FEE2E2',
-          200: '#FECACA',
-          300: '#FCA5A5',
-          400: '#F87171',
-          500: '#EF4444',
-          600: '#EF4444',
-          700: '#B91C1C',
-          800: '#991B1B',
-          900: '#7F1D1D',
-        },
+        // Anciennes échelles Tailwind
+        slate: neutral,
+        gray: neutral,
+        indigo: ramp(T.accent, T.accentMuted),
+        blue: ramp(T.accent, T.accentMuted),
+        emerald: ramp(T.success, T.successMuted),
+        green: ramp(T.success, T.successMuted),
+        amber: ramp(T.warning, T.warningMuted),
+        orange: ramp(T.warning, T.warningMuted),
+        rose: ramp(T.error, T.errorMuted),
+        red: ramp(T.error, T.errorMuted),
       },
+      backgroundColor: { white: c(T.surface) },
       fontFamily: {
-        sans: ['Manrope', 'sans-serif'],
+        // Inter pour le latin ; Tajawal prend le relais pour l'arabe (Inter n'a pas ces glyphes).
+        sans: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
+        manrope: ['Inter', 'Tajawal', 'system-ui', 'sans-serif'],
       },
       fontSize: {
-        'headline-lg': ['32px', { lineHeight: '40px', fontWeight: '700' }],
-        'headline-md': ['24px', { lineHeight: '32px', fontWeight: '600' }],
-        'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'headline-lg': ['28px', { lineHeight: '36px', fontWeight: '700' }],
+        'headline-md': ['22px', { lineHeight: '30px', fontWeight: '600' }],
+        'body-md': ['15px', { lineHeight: '22px', fontWeight: '400' }],
         'label-lg': ['14px', { lineHeight: '20px', fontWeight: '600' }],
         'label-md': ['13px', { lineHeight: '18px', fontWeight: '500' }],
         'label-sm': ['12px', { lineHeight: '16px', fontWeight: '600' }],
@@ -176,15 +192,16 @@ export default {
         sm: '4px',
         DEFAULT: '8px',
         md: '8px',
-        lg: '8px',
+        lg: '10px',
         xl: '12px',
-        '2xl': '16px',
+        '2xl': '12px',
+        '3xl': '16px',
         full: '9999px',
       },
       boxShadow: {
-        l1: '0px 1px 3px rgba(0,0,0,0.05), 0px 10px 15px -3px rgba(0,0,0,0.02)',
-        l2: '0px 4px 6px -1px rgba(0,0,0,0.08), 0px 2px 4px -2px rgba(0,0,0,0.05)',
-        soft: '0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.04)',
+        l1: 'var(--shadow-low)',
+        l2: 'var(--shadow-med)',
+        soft: 'var(--shadow-low)',
       },
     },
   },

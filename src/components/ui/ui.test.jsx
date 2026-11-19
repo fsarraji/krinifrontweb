@@ -7,44 +7,29 @@ import { Input } from './Input';
 import Table from './Table';
 import Button from './Button';
 
-describe('Modal', () => {
-    it('ferme avec Échap et verrouille le scroll', () => {
-        const onClose = vi.fn();
-        const { rerender } = render(
-            <Modal isOpen onClose={onClose} title="Titre"><input aria-label="champ" /></Modal>
-        );
-        expect(document.body.style.overflow).toBe('hidden');
-        fireEvent.keyDown(document, { key: 'Escape' });
-        expect(onClose).toHaveBeenCalledTimes(1);
-        rerender(<Modal isOpen={false} onClose={onClose} title="Titre" />);
-        expect(document.body.style.overflow).toBe('');
-    });
-
-    it('expose un dialogue nommé par son titre et met le focus dans le panneau', () => {
-        render(<Modal isOpen onClose={() => {}} title="Mon titre"><input aria-label="champ" /></Modal>);
-        const dialog = screen.getByRole('dialog', { name: 'Mon titre' });
-        expect(dialog).toHaveAttribute('aria-modal', 'true');
-        expect(dialog).toContainElement(document.activeElement);
-    });
-
-    it('piège le focus (Tab depuis le dernier élément revient au premier)', () => {
+describe('Modal (Dialog Astryx)', () => {
+    // Échap, piège de focus et clic sur le fond sont gérés par <dialog> natif (non émulé par jsdom).
+    it('affiche un dialogue nommé par son titre, avec contenu et pied de page', () => {
         render(
-            <Modal isOpen onClose={() => {}} title="T" footer={<button type="button">Valider</button>}>
+            <Modal isOpen onClose={() => {}} title="Mon titre" subtitle="Sous-titre" footer={<button type="button">Valider</button>}>
                 <input aria-label="champ" />
             </Modal>
         );
-        const last = screen.getByText('Valider');
-        last.focus();
-        fireEvent.keyDown(document, { key: 'Tab' });
-        expect(document.activeElement).toBe(screen.getByLabelText('Fermer'));
+        const dialog = screen.getByRole('dialog', { name: /Mon titre/ });
+        expect(dialog).toContainElement(screen.getByLabelText('champ'));
+        expect(dialog).toContainElement(screen.getByText('Valider'));
+        expect(screen.getByText('Sous-titre')).toBeInTheDocument();
     });
 
-    it('ferme au clic sur le fond mais pas dans le panneau', () => {
+    it("n'expose aucun dialogue quand il est fermé", () => {
+        render(<Modal isOpen={false} onClose={() => {}} title="Caché">contenu</Modal>);
+        expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('appelle onClose depuis le bouton de fermeture', () => {
         const onClose = vi.fn();
-        const { container } = render(<Modal isOpen onClose={onClose} title="T">contenu</Modal>);
-        fireEvent.click(screen.getByText('contenu'));
-        expect(onClose).not.toHaveBeenCalled();
-        fireEvent.click(container.firstChild);
+        render(<Modal isOpen onClose={onClose} title="T">contenu</Modal>);
+        fireEvent.click(screen.getByRole('button', { name: /fermer|close/i }));
         expect(onClose).toHaveBeenCalledTimes(1);
     });
 });
@@ -59,8 +44,11 @@ describe('Field', () => {
         const input = screen.getByLabelText(/Nom/);
         expect(input).toHaveAttribute('aria-invalid', 'true');
         expect(input).toHaveAttribute('aria-required', 'true');
-        expect(input.getAttribute('aria-describedby')).toMatch(/hint.*error|error.*hint/);
-        expect(screen.getByRole('alert')).toHaveTextContent('Obligatoire');
+        // Astryx relie l'aide et l'erreur au champ via aria-describedby (identifiants générés)
+        const described = (input.getAttribute('aria-describedby') || '').split(' ').filter(Boolean);
+        expect(described.length).toBeGreaterThan(0);
+        expect(document.body).toHaveTextContent('Aide');
+        expect(document.body).toHaveTextContent('Obligatoire');
     });
 });
 

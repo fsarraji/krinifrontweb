@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import I18nProvider from './i18n/I18nProvider.jsx'
+import AstryxProviders from './i18n/AstryxProviders.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <I18nProvider>
-      <App />
+      <AstryxProviders>
+        <App />
+      </AstryxProviders>
     </I18nProvider>
   </StrictMode>,
 )

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Table from './ui/Table';
+import { Input } from './ui/Input';
 import api from '../api';
 import useFetchAll from '../hooks/useFetchAll';
 import Dropdown from './Dropdown';
@@ -121,67 +123,43 @@ const UserManagement = () => {
                 }
             />
 
-            <div className="card rounded-token shadow-l1 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="text-start border-b border-stroke" style={{ background: 'var(--slate-bg)' }}>
-                                <th className="px-6 py-4">{t('u.utilisateur')}</th>
-                                <th className="px-6 py-4">{t('u.agence')}</th>
-                                <th className="px-6 py-4">{t('u.rle')}</th>
-                                <th className="px-6 py-4">{t('u.statut')}</th>
-                                <th className="px-6 py-4 text-end">{t('u.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stroke">
-                            {users.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="px-6 py-4">
-                                        <EmptyState
-                                            icon="person_off"
-                                            title={t('u.aucun_utilisateur')}
-                                            description={t('u.crez_un_premier_utilisateur_pour')}
-                                        />
-                                    </td>
-                                </tr>
-                            ) : users.map(user => (
-                                <tr key={user.id} className="group hover:bg-surface-hover transition-colors">
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center font-bold text-primary">
-                                                {user.username[0].toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-on-surface">{user.username}</p>
-                                                <p className="text-[10px] text-on-surface-variant">{user.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <p className="text-sm font-medium">{user.agency_name || t('u.systme_super_admin')}</p>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <span className="text-xs font-semibold text-on-surface-variant">{roleOptions.find((r) => r.value === user.role)?.label || user.role}</span>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <StatusBadge
-                                            variant={user.is_active ? 'success' : 'neutral'}
-                                            appearance="dot"
-                                            label={user.is_active ? t('u.actif') : t('u.inactif')}
-                                        />
-                                    </td>
-                                    <td className="px-6 py-5 text-end">
-                                        <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity justify-end">
-                                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(user)} />
-                                            <Button variant="ghost" iconOnly icon="delete" className="!text-error hover:!bg-error/10" aria-label={t('u.supprimer')} onClick={() => handleDelete(user.id)} />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <Table
+                caption={t('u.gestion_des_utilisateurs')}
+                rows={users}
+                emptyTitle={t('u.aucun_utilisateur')}
+                emptyDescription={t('u.crez_un_premier_utilisateur_pour')}
+                columns={[
+                    {
+                        key: 'username', label: t('u.utilisateur'),
+                        render: (_, user) => (
+                            <div className="flex items-center gap-3">
+                                <span className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center font-bold text-primary shrink-0">
+                                    {user.username[0].toUpperCase()}
+                                </span>
+                                <div>
+                                    <p className="text-sm font-semibold text-on-surface">{user.username}</p>
+                                    <p className="text-label-sm font-normal text-text-muted">{user.email}</p>
+                                </div>
+                            </div>
+                        ),
+                    },
+                    { key: 'agency_name', label: t('u.agence'), render: (v) => v || t('u.systme_super_admin') },
+                    { key: 'role', label: t('u.rle'), render: (v) => roleOptions.find((r) => r.value === v)?.label || v },
+                    {
+                        key: 'is_active', label: t('u.statut'),
+                        render: (v) => <StatusBadge variant={v ? 'success' : 'neutral'} appearance="dot" label={v ? t('u.actif') : t('u.inactif')} />,
+                    },
+                    {
+                        key: 'actions', label: t('u.actions'), align: 'right',
+                        render: (_, user) => (
+                        <div className="flex items-center gap-1 justify-end">
+                            <Button variant="ghost" iconOnly icon="edit" aria-label={t('u.modifier')} onClick={() => openModal(user)} />
+                            <Button variant="ghost" iconOnly icon="delete" aria-label={t('u.supprimer')} onClick={() => handleDelete(user.id)} />
+                        </div>
+                        ),
+                    },
+                ]}
+            />
 
             <Modal
                 isOpen={showModal}
@@ -198,16 +176,16 @@ const UserManagement = () => {
                 <form id="user-form" onSubmit={handleSave} className="space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <Field label={t('u.nom_d_utilisateur')} required>
-                            <input className="field w-full" type="text" value={form.username} onChange={(e) => setField('username', e.target.value)} required />
+                            <Input type="text" value={form.username} onChange={(e) => setField('username', e.target.value)} required />
                         </Field>
                         <Field label={t('u.email')}>
-                            <input className="field w-full" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
+                            <Input type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
                         </Field>
                         <Field label={t('u.prnom')}>
-                            <input className="field w-full" type="text" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} />
+                            <Input type="text" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} />
                         </Field>
                         <Field label={t('u.nom')}>
-                            <input className="field w-full" type="text" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} />
+                            <Input type="text" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} />
                         </Field>
                         <Field label={t('u.agence')}>
                             <Dropdown
@@ -227,8 +205,8 @@ const UserManagement = () => {
                             />
                         </Field>
                         <Field label={t('u.mot_de_passe')} hint={isEditing ? t('u.laisser_vide_pour_ne_pas_changer') : undefined}>
-                            <input
-                                className="field w-full"
+                            <Input
+                               
                                 type="password"
                                 value={form.password}
                                 onChange={(e) => setField('password', e.target.value)}

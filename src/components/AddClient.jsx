@@ -1,4 +1,8 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import FileField from './ui/FileField';
+import Card from './ui/Card';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
+import { Input, Select, Textarea } from './ui/Input';
 import { translateOr } from '../i18n/helpers';
 import React, { useState } from 'react';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
@@ -106,12 +110,6 @@ const AddClient = () => {
 
     const hasError = (name) => Boolean(fieldErrors[name]) || Boolean(uniqueErrors[name]);
 
-    const inputClass = (name) => `field transition-all duration-200 ${
-        hasError(name)
-            ? 'border-rose-400 bg-rose-50/40 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500'
-            : 'focus:bg-white'
-    }`;
-
     const fieldErrorMsg = (name) => uniqueErrors[name] || (fieldErrors[name] ? t('u.champ_requis') : '');
 
     const handleChange = (e) => {
@@ -125,12 +123,9 @@ const AddClient = () => {
         }
     };
 
-    const handleFileChange = async (e) => {
-        const { name, files: selectedFiles } = e.target;
-        if (selectedFiles.length > 0) {
-            const optimized = await optimizeImageFile(selectedFiles[0]);
-            setFiles(prev => ({ ...prev, [name]: optimized }));
-        }
+    const setFile = async (name, file) => {
+        const next = file ? await optimizeImageFile(file) : null;
+        setFiles(prev => ({ ...prev, [name]: next }));
     };
 
     const handleSubmit = async (e) => {
@@ -235,12 +230,12 @@ const AddClient = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
                                     <label className="label">{t('u.prnom')}</label>
-                                    <input
+                                    <Input invalid={hasError('prenom')}
                                         name="prenom"
                                         value={formData.prenom}
                                         onChange={handleChange}
                                         required
-                                        className={inputClass('prenom')}
+                                       
                                         placeholder="ex. Jonathan"
                                         type="text"
                                     />
@@ -253,12 +248,12 @@ const AddClient = () => {
                                 </div>
                                 <div>
                                     <label className="label">{t('u.nom')}</label>
-                                    <input
+                                    <Input invalid={hasError('nom')}
                                         name="nom"
                                         value={formData.nom}
                                         onChange={handleChange}
                                         required
-                                        className={inputClass('nom')}
+                                       
                                         placeholder="ex. Wick"
                                         type="text"
                                     />
@@ -271,52 +266,37 @@ const AddClient = () => {
                                 </div>
                                 <div>
                                     <label className="label">{t('u.sexe')}</label>
-                                    <div className="flex gap-3">
-                                        {SEXE_OPTIONS.map(opt => (
-                                            <label
-                                                key={opt.value}
-                                                className="flex-1 flex items-center gap-2.5 px-4 py-2.5 rounded-lg border cursor-pointer transition-all duration-200"
-                                                style={{
-                                                    borderColor: formData.sexe === opt.value ? 'var(--primary-container)' : 'var(--stroke)',
-                                                    background: formData.sexe === opt.value ? 'var(--info-bg)' : 'var(--slate-bg)'
-                                                }}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="sexe"
-                                                    value={opt.value}
-                                                    checked={formData.sexe === opt.value}
-                                                    onChange={handleChange}
-                                                    className="accent-[var(--primary-container)]"
-                                                />
-                                                <span className="text-sm font-semibold" style={{ color: 'var(--on-surface)' }}>{translateOr(t, `sexe.${opt.value}`, opt.label)}</span>
-                                            </label>
-                                        ))}
+                                    <div className="w-fit">
+                                        <SegmentedControl label={t('u.sexe')} value={formData.sexe} onChange={(value) => handleChange({ target: { name: 'sexe', value } })}>
+                                            {SEXE_OPTIONS.map((opt) => (
+                                                <SegmentedControlItem key={opt.value} value={opt.value} label={translateOr(t, `sexe.${opt.value}`, opt.label)} />
+                                            ))}
+                                        </SegmentedControl>
                                     </div>
                                 </div>
                                 <div>
                                     <label className="label">{t('u.nationalit')}</label>
-                                    <select
+                                    <Select invalid={hasError('nationalite')}
                                         name="nationalite"
                                         value={formData.nationalite}
                                         onChange={handleChange}
-                                        className={inputClass('nationalite')}
+                                       
                                     >
                                         <option value="">{t('u.slectionner_2')}</option>
                                         {NATIONALITES.map(n => (
                                             <option key={n} value={n}>{translateOr(t, `nat.${n}`, n)}</option>
                                         ))}
-                                    </select>
+                                    </Select>
                                 </div>
                                 <div>
                                     <label className="label">{t('u.tlphone')}</label>
-                                    <input
+                                    <Input invalid={hasError('telephone')}
                                         name="telephone"
                                         value={formData.telephone}
                                         onChange={handleChange}
                                         onBlur={handleBlurUnique('telephone')}
                                         required
-                                        className={inputClass('telephone')}
+                                       
                                         placeholder="ex. +212 6 12 34 56 78"
                                         type="tel"
                                     />
@@ -329,12 +309,12 @@ const AddClient = () => {
                                 </div>
                                 <div className="sm:col-span-2">
                                     <label className="label">{t('u.adresse_email')}</label>
-                                    <input
+                                    <Input invalid={hasError('email')}
                                         name="email"
                                         value={formData.email}
                                         onChange={handleChange}
                                         onBlur={handleBlurUnique('email')}
-                                        className={inputClass('email')}
+                                       
                                         placeholder={t('u.ex_jonathan_wick_example_com')}
                                         type="email"
                                     />
@@ -352,15 +332,15 @@ const AddClient = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div className="sm:col-span-2">
                                     <label className="label">{t('u.adresse_rsidentielle')}</label>
-                                    <textarea
+                                    <Textarea invalid={hasError('adresse')}
                                         name="adresse"
                                         value={formData.adresse}
                                         onChange={handleChange}
                                         required
-                                        className={`${inputClass('adresse')} resize-none`}
+                                       
                                         placeholder={t('u.rue_numro_ville_code_postal')}
                                         rows="3"
-                                    ></textarea>
+                                    ></Textarea>
                                     {fieldErrorMsg('adresse') && (
                                         <p className="text-[11px] font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--danger)' }}>
                                             <span className="material-symbols-outlined text-[13px]">error</span>
@@ -370,22 +350,22 @@ const AddClient = () => {
                                 </div>
                                 <div>
                                     <label className="label">{t('u.ville')}</label>
-                                    <input
+                                    <Input invalid={hasError('ville')}
                                         name="ville"
                                         value={formData.ville}
                                         onChange={handleChange}
-                                        className={inputClass('ville')}
+                                       
                                         placeholder="ex. Casablanca"
                                         type="text"
                                     />
                                 </div>
                                 <div>
                                     <label className="label">{t('u.pays')}</label>
-                                    <input
+                                    <Input invalid={hasError('pays')}
                                         name="pays"
                                         value={formData.pays}
                                         onChange={handleChange}
-                                        className={inputClass('pays')}
+                                       
                                         placeholder="ex. Maroc"
                                         type="text"
                                     />
@@ -397,13 +377,13 @@ const AddClient = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
                                     <label className="label">{cinLabelFor(formData.nationalite)}</label>
-                                    <input
+                                    <Input invalid={hasError('cin_passport')}
                                         name="cin_passport"
                                         value={formData.cin_passport}
                                         onChange={handleChange}
                                         onBlur={handleBlurUnique('cin_passport')}
                                         required
-                                        className={inputClass('cin_passport')}
+                                       
                                         placeholder="ex. AB123456"
                                         type="text"
                                     />
@@ -416,23 +396,23 @@ const AddClient = () => {
                                 </div>
                                 <div>
                                     <label className="label">Expiration {cinLabelFor(formData.nationalite)}</label>
-                                    <input
+                                    <Input invalid={hasError('date_expiration_cin')}
                                         name="date_expiration_cin"
                                         value={formData.date_expiration_cin}
                                         onChange={handleChange}
-                                        className={inputClass('date_expiration_cin')}
+                                       
                                         type="date"
                                     />
                                 </div>
                                 <div>
                                     <label className="label">{t('u.n_de_permis')}</label>
-                                    <input
+                                    <Input invalid={hasError('permis_conduite')}
                                         name="permis_conduite"
                                         value={formData.permis_conduite}
                                         onChange={handleChange}
                                         onBlur={handleBlurUnique('permis_conduite')}
                                         required
-                                        className={inputClass('permis_conduite')}
+                                       
                                         placeholder="ex. AB12345678"
                                         type="text"
                                     />
@@ -445,24 +425,24 @@ const AddClient = () => {
                                 </div>
                                 <div>
                                     <label className="label">{t('u.date_de_dlivrance')}</label>
-                                    <input
+                                    <Input invalid={hasError('date_delivrance_permis')}
                                         name="date_delivrance_permis"
                                         value={formData.date_delivrance_permis}
                                         onChange={handleChange}
-                                        className={inputClass('date_delivrance_permis')}
+                                       
                                         type="date"
                                     />
                                 </div>
                                 <div className="sm:col-span-2">
                                     <label className="label">{t('u.remarques')}</label>
-                                    <textarea
+                                    <Textarea invalid={hasError('remarques')}
                                         name="remarques"
                                         value={formData.remarques}
                                         onChange={handleChange}
-                                        className={`${inputClass('remarques')} resize-none`}
+                                       
                                         rows="3"
                                         placeholder={t('u.notes_internes_sur_ce_client_opt')}
-                                    ></textarea>
+                                    ></Textarea>
                                 </div>
                             </div>
                     )}
@@ -472,34 +452,22 @@ const AddClient = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div>
                                         <label className="label">Scan {cinLabelFor(formData.nationalite)}</label>
-                                        <label className="dropzone p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
-                                            <span className="material-symbols-outlined text-[24px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>badge</span>
-                                            <p className="text-[12px] font-medium text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_cin ? files.scan_cin.name : t('u.glisser_un_fichier_ou_parcourir')}
-                                            </p>
-                                            <input type="file" name="scan_cin" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
-                                        </label>
+                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_cin} onChange={(file) => setFile('scan_cin', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
                                     </div>
                                     <div>
                                         <label className="label">{t('u.scan_permis_de_conduire')}</label>
-                                        <label className="dropzone p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white transition-colors">
-                                            <span className="material-symbols-outlined text-[24px]" style={{ color: 'var(--on-surface-variant)', opacity: 0.5 }}>contract</span>
-                                            <p className="text-[12px] font-medium text-center" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                                                {files.scan_permis ? files.scan_permis.name : t('u.glisser_un_fichier_ou_parcourir')}
-                                            </p>
-                                            <input type="file" name="scan_permis" className="hidden" accept="image/*,.pdf" onChange={handleFileChange} />
-                                        </label>
+                                        <FileField label={t('u.glisser_un_fichier_ou_parcourir')} isLabelHidden value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
                                     </div>
                                 </div>
 
-                            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-soft">
+                            <Card padding={5} variant="blue">
                                 <div className="flex items-start gap-3">
                                     <span className="material-symbols-outlined text-[18px] mt-0.5 text-blue-600">info</span>
                                     <p className="text-[12.5px] font-medium text-blue-700">
                                         {t('u.le_dossier_client_sera_automatiq')}
                                     </p>
                                 </div>
-                            </div>
+                            </Card>
                         </>
                     )}
                     </div>
@@ -507,7 +475,7 @@ const AddClient = () => {
             </form>
 
             {/* Bottom security + actions */}
-            <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+            <Card padding={4} variant="default" className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <span className="material-symbols-outlined">shield</span>
@@ -533,7 +501,7 @@ const AddClient = () => {
                         </Button>
                     )}
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };

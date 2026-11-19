@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { CheckboxInput } from '@astryxdesign/core';
 import api, { fetchAllPages } from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
@@ -216,10 +217,7 @@ const Maintenance = () => {
                     <Field label={t('u.notes')} error={errors.notes}>
                         <Input type="text" value={form.notes} onChange={set('notes')} />
                     </Field>
-                    <label className="flex items-center gap-2 text-sm font-medium text-on-surface">
-                        <input type="checkbox" className="accent-primary" checked={form.create_expense} onChange={set('create_expense')} />
-                        {t('u.enregistrer_aussi_comme_dpense_c')}
-                    </label>
+                    <CheckboxInput label={t('u.enregistrer_aussi_comme_dpense_c')} value={form.create_expense} onChange={(checked) => setForm((f) => ({ ...f, create_expense: checked }))} />
                 </form>
             </Modal>
         </div>

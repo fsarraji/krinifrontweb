@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import Button from './ui/Button';
+import FileField from './ui/FileField';
 import Dropdown from './Dropdown';
 import { apiErrorText } from '../utils/apiErrorText';
 import { optimizeImageFile } from '../utils/imageUtils';
@@ -27,7 +28,6 @@ const ContractPhotos = ({ contractId, locked = false }) => {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [kind, setKind] = useState('DEPART');
-    const fileRef = useRef(null);
 
     const load = useCallback(async () => {
         try {
@@ -42,9 +42,7 @@ const ContractPhotos = ({ contractId, locked = false }) => {
 
     useEffect(() => { load(); }, [load]);
 
-    const handleFile = async (event) => {
-        const file = event.target.files?.[0];
-        event.target.value = '';
+    const handleFile = async (file) => {
         if (!file) return;
         if (!file.type.startsWith('image/')) {
             toast.error(t('u.le_fichier_doit_tre_une_image'));
@@ -103,18 +101,18 @@ const ContractPhotos = ({ contractId, locked = false }) => {
                         <p className="label mb-1.5">{t('u.type_de_photo')}</p>
                         <Dropdown options={kindOptions} value={kind} onChange={(v) => setKind(v || 'DEPART')} />
                     </div>
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="sr-only"
-                        aria-label={t('u.choisir_une_photo')}
-                        onChange={handleFile}
-                    />
-                    <Button size="sm" icon="add_a_photo" loading={uploading} onClick={() => fileRef.current?.click()}>
-                        {t('u.ajouter_une_photo')}
-                    </Button>
+                    <div className="min-w-[260px] flex-1">
+                        <FileField
+                            mode="input"
+                            label={t('u.choisir_une_photo')}
+                            isLabelHidden
+                            value={null}
+                            onChange={handleFile}
+                            accept="image/*"
+                            placeholder={t('u.ajouter_une_photo')}
+                            loading={uploading}
+                        />
+                    </div>
                 </div>
             )}
 
@@ -137,14 +135,7 @@ const ContractPhotos = ({ contractId, locked = false }) => {
                                 </a>
                                 <p className="px-2 py-1 text-[11px] font-semibold text-slate-600">{KIND_LABEL[photo.kind] || photo.kind}</p>
                                 {!locked && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(photo)}
-                                        aria-label={t('u.supprimer_la_photo', { kind: KIND_LABEL[photo.kind] || '' }).trim()}
-                                        className="absolute top-1 end-1 rounded-full bg-white/90 p-1 text-danger shadow"
-                                    >
-                                        <span className="material-symbols-outlined text-[16px]" aria-hidden="true">delete</span>
-                                    </button>
+                                    <Button variant="ghost" size="sm" iconOnly icon="delete" className="!text-danger" onClick={() => handleDelete(photo)} aria-label={t('u.supprimer_la_photo', { kind: KIND_LABEL[photo.kind] || '' }).trim()} />
                                 )}
                             </li>
                         ))}

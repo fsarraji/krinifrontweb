@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Card from './ui/Card';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
@@ -109,7 +110,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
                 {/* Fleet table */}
-                <div className="xl:col-span-2 card rounded-token overflow-hidden shadow-l1">
+                <Card padding={0} variant="default" className="xl:col-span-2 overflow-hidden">
                     <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid var(--stroke)' }}>
                         <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>{t('dashboard.recentTitle')}</h3>
                         <div className="flex items-center gap-2">
@@ -131,10 +132,10 @@ const Dashboard = () => {
                             { key: 'montant_total', label: t('dashboard.col.amount'), align: 'right', className: 'font-semibold', render: (v) => formatMoney(v) },
                         ]}
                     />
-                </div>
+                </Card>
 
                 {/* Alerts Box */}
-                <div className="card rounded-token overflow-hidden flex flex-col shadow-l1">
+                <Card padding={0} variant="default" className="overflow-hidden flex flex-col">
                     <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--stroke)' }}>
                         <h3 className="font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>{t('dashboard.upcoming')}</h3>
                         <span className="material-symbols-outlined text-[18px]" style={{ color: 'var(--on-surface-variant)' }}>event</span>
@@ -177,7 +178,7 @@ const Dashboard = () => {
                             {t('dashboard.seeAlerts')}
                         </Button>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     );

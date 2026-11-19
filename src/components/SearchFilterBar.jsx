@@ -1,81 +1,37 @@
-import React, { useEffect, useId, useState } from 'react';
-import { Input } from './ui/Input';
+import React from 'react';
+import { Selector, TextInput } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
 
-// Barre de recherche + filtre déroulant. Le menu se ferme au clic extérieur et avec Échap.
+// Barre de recherche + filtre déroulant (TextInput et Selector Astryx).
+// options : [{ value, label, dot? }] ; la valeur sélectionnée est toujours renvoyée telle quelle.
 const SearchFilterBar = ({ placeholder, search, onSearchChange, options, filter, onFilterChange }) => {
     const { t } = useI18n();
-    const [open, setOpen] = useState(false);
-    const menuId = useId();
-    const current = options?.find((o) => o.value === filter) || options?.[0];
-
-    useEffect(() => {
-        if (!open) return undefined;
-        const onKey = (e) => e.key === 'Escape' && setOpen(false);
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [open]);
-
-    const handleSelect = (value) => {
-        onFilterChange(value);
-        setOpen(false);
-    };
+    const items = (options || []).map((o) => ({ value: String(o.value), label: String(o.label) }));
+    const byString = new Map((options || []).map((o) => [String(o.value), o.value]));
 
     return (
-        <section className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-3 w-full">
-                {/* Recherche */}
-                <div className="relative flex-1 min-w-[200px]">
-                    <span className="material-symbols-outlined absolute start-3.5 top-1/2 -translate-y-1/2 text-text-disabled text-[20px] pointer-events-none" aria-hidden="true">search</span>
-                    <Input
-                        type="search"
-                        value={search}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        className="ps-11 py-3 shadow-l1"
-                        placeholder={placeholder}
-                        aria-label={placeholder || t('common.search')}
+        <section className="flex flex-wrap items-center gap-3 w-full">
+            <div className="flex-1 min-w-[200px]">
+                <TextInput
+                    label={placeholder || t('common.search')}
+                    isLabelHidden
+                    placeholder={placeholder}
+                    value={search ?? ''}
+                    onChange={(v) => onSearchChange(v)}
+                    hasClear
+                />
+            </div>
+            {items.length > 0 && (
+                <div className="shrink-0 min-w-[10rem]">
+                    <Selector
+                        label={t('common.all')}
+                        isLabelHidden
+                        options={items}
+                        value={String(filter ?? '')}
+                        onChange={(v) => onFilterChange(byString.has(v) ? byString.get(v) : v)}
                     />
                 </div>
-
-                {/* Filtre */}
-                {options && options.length > 0 && (
-                    <div className="relative inline-block shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => setOpen((o) => !o)}
-                            aria-haspopup="listbox"
-                            aria-expanded={open}
-                            aria-controls={menuId}
-                            className="flex items-center justify-between gap-2.5 px-5 py-3 bg-white border border-stroke rounded-token text-sm font-semibold text-on-surface-variant hover:bg-surface-hover shadow-l1 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 min-w-[7.5rem]"
-                        >
-                            <span className="flex items-center gap-2.5">
-                                <span className={`w-2 h-2 ${(current && current.dot) || 'bg-primary'} rounded-full`} aria-hidden="true" />
-                                <span>{(current && current.label) || t('common.all')}</span>
-                            </span>
-                            <span className="material-symbols-outlined text-text-disabled text-base" aria-hidden="true">expand_more</span>
-                        </button>
-                        {open && (
-                            <>
-                                <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
-                                <ul id={menuId} role="listbox" className="absolute top-full end-0 mt-2 w-48 bg-white border border-stroke rounded-token shadow-l2 z-50 py-1">
-                                    {options.map((opt) => (
-                                        <li key={String(opt.value)} role="option" aria-selected={opt.value === filter}>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleSelect(opt.value)}
-                                                className={`w-full text-start px-4 py-2 text-sm transition-colors flex items-center gap-2.5 focus:outline-none focus-visible:bg-surface-hover ${opt.value === filter ? 'text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-hover'}`}
-                                            >
-                                                <span className={`w-2 h-2 ${opt.dot || 'bg-primary'} rounded-full`} aria-hidden="true" />
-                                                {opt.label}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </>
-                        )}
-                    </div>
-                )}
-            </div>
+            )}
         </section>
     );
 };

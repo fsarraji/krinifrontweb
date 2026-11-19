@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Card from './ui/Card';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { fetchAllPages } from '../api';
@@ -252,36 +254,16 @@ const Clients = () => {
                 </div>
 
                 {/* View switcher */}
-                <div className="flex items-center p-1 rounded-token shrink-0" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
-                    <button
-                        onClick={() => setViewMode('table')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-token text-[13px] font-semibold transition-all ${
-                            viewMode === 'table'
-                                ? 'card text-on-surface shadow-sm'
-                                : 'hover:bg-slate-100'
-                        }`}
-                        style={{ color: viewMode === 'table' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">table_rows</span>
-                        {tr('clients.view.table')}
-                    </button>
-                    <button
-                        onClick={() => setViewMode('grid')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-token text-[13px] font-semibold transition-all ${
-                            viewMode === 'grid'
-                                ? 'card text-on-surface shadow-sm'
-                                : 'hover:bg-slate-100'
-                        }`}
-                        style={{ color: viewMode === 'grid' ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}
-                    >
-                        <span className="material-symbols-outlined text-[18px]">grid_view</span>
-                        {tr('clients.view.grid')}
-                    </button>
+                <div className="shrink-0">
+                    <SegmentedControl label={tr('clients.view.table')} value={viewMode} onChange={setViewMode}>
+                        <SegmentedControlItem value="table" icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>table_rows</span>} label={tr('clients.view.table')} />
+                        <SegmentedControlItem value="grid" icon={<span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: 18 }}>grid_view</span>} label={tr('clients.view.grid')} />
+                    </SegmentedControl>
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="card rounded-token overflow-hidden shadow-l1 flex flex-col">
+            <Card padding={0} variant="default" className="overflow-hidden flex flex-col">
                 {loading ? (
                     <div className="p-16 flex items-center justify-center"><Spinner size={28} /></div>
                 ) : clients.length === 0 ? (
@@ -416,7 +398,7 @@ const Clients = () => {
                         onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
                     />
                 )}
-            </div>
+            </Card>
 
             <ClientInfoModal isOpen={!!infoClient} client={infoClient} onClose={() => setInfoClient(null)} />
         </div>

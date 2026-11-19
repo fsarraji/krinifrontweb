@@ -146,14 +146,7 @@ const ContractFees = ({ contractId, locked = false, onChanged }) => {
                             <div className="flex items-center gap-3 shrink-0">
                                 <span className="font-bold">{formatMoney(fee.amount)}</span>
                                 {isOwner && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(fee)}
-                                        aria-label={t('u.supprimer_le_frais', { kind: feeLabel(fee) })}
-                                        className="text-danger hover:bg-danger-bg/50 rounded p-1"
-                                    >
-                                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
-                                    </button>
+                                    <Button variant="ghost" size="sm" iconOnly icon="delete" className="!text-danger" onClick={() => handleDelete(fee)} aria-label={t('u.supprimer_le_frais', { kind: feeLabel(fee) })} />
                                 )}
                             </div>
                         </li>

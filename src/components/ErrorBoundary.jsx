@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@astryxdesign/core';
 import { tNow } from '../i18n/runtime';
 
 // Filet de sécurité : une erreur de rendu n'affiche plus un écran blanc.
@@ -23,13 +24,7 @@ export default class ErrorBoundary extends React.Component {
                 <div className="max-w-md space-y-4">
                     <h1 className="text-xl font-extrabold text-slate-900">{tNow('u.une_erreur_est_survenue')}</h1>
                     <p className="text-sm text-slate-500">{tNow('u.la_page_n_a_pas_pu_s_afficher_re')}</p>
-                    <button
-                        type="button"
-                        onClick={() => window.location.reload()}
-                        className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold"
-                    >
-                        {tNow('u.recharger')}
-                    </button>
+                    <Button label={tNow('u.recharger')} variant="primary" onClick={() => window.location.reload()} />
                 </div>
             </div>
         );

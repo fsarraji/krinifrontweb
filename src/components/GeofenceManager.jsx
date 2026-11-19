@@ -1,4 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import Card from './ui/Card';
+import { Switch } from '@astryxdesign/core';
+import { Input } from './ui/Input';
+import Field from './ui/Field';
+import Button from './ui/Button';
 import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
@@ -6,9 +11,6 @@ import { apiErrorText, fieldErrors } from '../utils/apiErrorText';
 import { useI18n } from '../i18n/context';
 
 const EMPTY = { name: '', latitude: '', longitude: '', radius_km: '25' };
-
-const inputClass =
-    'w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50/50 focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary outline-none disabled:bg-slate-50 disabled:text-slate-500';
 
 const formatKm = (meters) => {
     const km = meters / 1000;
@@ -135,7 +137,7 @@ const GeofenceManager = ({ canEdit }) => {
     const activeCount = zones.filter((z) => z.is_active).length;
 
     return (
-        <section aria-labelledby="geofence-title" className="bg-white rounded-2xl shadow-sm border border-slate-200">
+        <Card padding={0} variant="default" aria-labelledby="geofence-title">
             <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
                 <h2 id="geofence-title" className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary" aria-hidden="true">share_location</span>
@@ -163,24 +165,9 @@ const GeofenceManager = ({ canEdit }) => {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                                        <input
-                                            type="checkbox"
-                                            checked={zone.is_active}
-                                            disabled={!canEdit}
-                                            onChange={() => toggleActive(zone)}
-                                        />
-                                        {t('u.active')}
-                                    </label>
+                                    <Switch label={t('u.active')} value={zone.is_active} isDisabled={!canEdit} onChange={() => toggleActive(zone)} size="sm" />
                                     {canEdit && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(zone)}
-                                            aria-label={t('u.supprimer_la_zone_2', { name: zone.name })}
-                                            className="p-1.5 rounded-lg text-danger hover:bg-danger-bg/50"
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
-                                        </button>
+                                        <Button variant="ghost" iconOnly icon="delete" className="!text-danger" onClick={() => handleDelete(zone)} aria-label={t('u.supprimer_la_zone_2', { name: zone.name })} />
                                     )}
                                 </div>
                             </li>
@@ -190,48 +177,28 @@ const GeofenceManager = ({ canEdit }) => {
 
                 {canEdit && (
                     <div className="grid grid-cols-2 lg:grid-cols-12 gap-3 items-start" onKeyDown={onEnter}>
-                        <div className="col-span-2 lg:col-span-4">
-                            <label htmlFor="gf-name" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.nom')}</label>
-                            <input id="gf-name" className={inputClass} value={draft.name} onChange={set('name')} placeholder={t('u.ex_casablanca')} aria-invalid={Boolean(errors.name)} />
-                            {errors.name && <p role="alert" className="text-xs text-danger mt-1">{errors.name}</p>}
-                        </div>
-                        <div className="lg:col-span-2">
-                            <label htmlFor="gf-lat" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.latitude')}</label>
-                            <input id="gf-lat" className={inputClass} inputMode="decimal" value={draft.latitude} onChange={set('latitude')} placeholder="33.5731" aria-invalid={Boolean(errors.latitude)} />
-                            {errors.latitude && <p role="alert" className="text-xs text-danger mt-1">{errors.latitude}</p>}
-                        </div>
-                        <div className="lg:col-span-2">
-                            <label htmlFor="gf-lon" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.longitude')}</label>
-                            <input id="gf-lon" className={inputClass} inputMode="decimal" value={draft.longitude} onChange={set('longitude')} placeholder="-7.5898" aria-invalid={Boolean(errors.longitude)} />
-                            {errors.longitude && <p role="alert" className="text-xs text-danger mt-1">{errors.longitude}</p>}
-                        </div>
-                        <div className="lg:col-span-2">
-                            <label htmlFor="gf-radius" className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">{t('u.rayon_km')}</label>
-                            <input id="gf-radius" className={inputClass} inputMode="decimal" value={draft.radius_km} onChange={set('radius_km')} aria-invalid={Boolean(errors.radius_m)} />
-                            {errors.radius_m && <p role="alert" className="text-xs text-danger mt-1">{errors.radius_m}</p>}
-                        </div>
-                        <div className="col-span-2 lg:col-span-2 lg:pt-7">
-                            <button
-                                type="button"
-                                onClick={handleAdd}
-                                disabled={saving}
-                                className="w-full px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60"
-                            >
+                        <Field label={t('u.nom')} error={errors.name} className="col-span-2 lg:col-span-4">
+                            <Input value={draft.name} onChange={set('name')} placeholder={t('u.ex_casablanca')} />
+                        </Field>
+                        <Field label={t('u.latitude')} error={errors.latitude} className="lg:col-span-2">
+                            <Input inputMode="decimal" value={draft.latitude} onChange={set('latitude')} placeholder="33.5731" />
+                        </Field>
+                        <Field label={t('u.longitude')} error={errors.longitude} className="lg:col-span-2">
+                            <Input inputMode="decimal" value={draft.longitude} onChange={set('longitude')} placeholder="-7.5898" />
+                        </Field>
+                        <Field label={t('u.rayon_km')} error={errors.radius_m} className="lg:col-span-2">
+                            <Input inputMode="decimal" value={draft.radius_km} onChange={set('radius_km')} />
+                        </Field>
+                        <div className="col-span-2 lg:col-span-2 lg:pt-6">
+                            <Button onClick={handleAdd} disabled={saving} className="w-full">
                                 {saving ? t('u.ajout') : t('u.ajouter_la_zone')}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
 
                 <div className="border-t border-slate-100 pt-4">
-                    <button
-                        type="button"
-                        onClick={checkNow}
-                        disabled={activeCount === 0}
-                        className="text-sm font-semibold text-primary hover:underline disabled:text-slate-400 disabled:no-underline"
-                    >
-                        {t('u.vrifier_maintenant_les_vhicules_')}
-                    </button>
+                    <Button variant="ghost" icon="fact_check" onClick={checkNow} disabled={activeCount === 0}>{t('u.vrifier_maintenant_les_vhicules_')}</Button>
                     {outside !== null && (
                         <div className="mt-3" role="status">
                             {outside.length === 0 ? (
@@ -249,7 +216,7 @@ const GeofenceManager = ({ canEdit }) => {
                     )}
                 </div>
             </div>
-        </section>
+        </Card>
     );
 };
 

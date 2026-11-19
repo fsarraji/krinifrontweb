@@ -1,97 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { tNow } from '../i18n/runtime';
+import { useEffect } from 'react';
+import { useToast } from '@astryxdesign/core';
 
-// Simple event-bus for Toasts
+// Bus d'événements : toast.success(...) peut être appelé hors composants React ; l'affichage est
+// délégué au système de toasts d'Astryx (ToastContainer, monté une fois dans App).
 const LISTENERS = new Set();
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const toast = {
-    success: (message, title = tNow('u.succs')) => notify('success', title, message),
-    error: (message, title = tNow('u.erreur')) => notify('error', title, message),
-    warning: (message, title = tNow('u.attention')) => notify('warning', title, message),
-    info: (message, title = tNow('u.information')) => notify('info', title, message),
+    success: (message, title) => notify('success', title, message),
+    error: (message, title) => notify('error', title, message),
+    warning: (message, title) => notify('warning', title, message),
+    info: (message, title) => notify('info', title, message),
 };
 
 function notify(type, title, message) {
-    const id = Date.now() + Math.random().toString(36).substring(2, 5);
-    const item = { id, type, title, message };
-    LISTENERS.forEach(fn => fn(item));
+    LISTENERS.forEach((fn) => fn({ type, title, message }));
 }
 
 export const ToastContainer = () => {
-    const [toasts, setToasts] = useState([]);
+    const showToast = useToast();
 
     useEffect(() => {
-        const handleNewToast = (toastItem) => {
-            setToasts(prev => [...prev, toastItem]);
-            // Auto remove after 4.5 seconds
-            setTimeout(() => {
-                setToasts(prev => prev.filter(t => t.id !== toastItem.id));
-            }, 4500);
+        const handle = ({ type, title, message }) => {
+            // Astryx ne distingue que « info » et « error » : succès et avertissement passent en « info ».
+            showToast({
+                type: type === 'error' ? 'error' : 'info',
+                body: title ? (
+                    <span><strong>{title}</strong>{message ? ` — ${message}` : ''}</span>
+                ) : message,
+            });
         };
+        LISTENERS.add(handle);
+        return () => LISTENERS.delete(handle);
+    }, [showToast]);
 
-        LISTENERS.add(handleNewToast);
-        return () => LISTENERS.delete(handleNewToast);
-    }, []);
-
-    const removeToast = (id) => {
-        setToasts(prev => prev.filter(t => t.id !== id));
-    };
-
-    if (toasts.length === 0) return null;
-
-    const toastStyles = {
-        success: {
-            bg: 'bg-success',
-            ring: 'ring-success-dark/30',
-            icon: 'check_circle',
-            accent: 'bg-success',
-        },
-        error: {
-            bg: 'bg-danger',
-            ring: 'ring-danger-dark/30',
-            icon: 'error',
-            accent: 'bg-danger',
-        },
-        warning: {
-            bg: 'bg-warning',
-            ring: 'ring-warning-dark/30',
-            icon: 'warning',
-            accent: 'bg-warning',
-        },
-        info: {
-            bg: 'bg-primary',
-            ring: 'ring-primary-deep/30',
-            icon: 'info',
-            accent: 'bg-primary',
-        },
-    };
-
-    return (
-        <div className="fixed top-6 right-6 z-[200] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
-            {toasts.map(t => {
-                const style = toastStyles[t.type] || toastStyles.info;
-                return (
-                    <div
-                        key={t.id}
-                        className={`${style.bg} text-white p-4 rounded-2xl shadow-2xl ring-1 ${style.ring} pointer-events-auto flex items-start gap-3 transform transition-all duration-300 animate-in slide-in-from-top-4 fade-in`}
-                    >
-                        <span className="material-symbols-outlined text-2xl shrink-0 mt-0.5">{style.icon}</span>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-extrabold text-sm tracking-tight leading-tight">{t.title}</p>
-                            <p className="text-xs font-medium text-white/90 mt-0.5 leading-snug break-words">{t.message}</p>
-                        </div>
-                        <button
-                            onClick={() => removeToast(t.id)}
-                            className="text-white/70 hover:text-white transition-colors shrink-0 p-0.5 rounded-lg hover:bg-white/10"
-                        >
-                            <span className="material-symbols-outlined text-lg">close</span>
-                        </button>
-                    </div>
-                );
-            })}
-        </div>
-    );
+    return null;
 };
 
 export default ToastContainer;

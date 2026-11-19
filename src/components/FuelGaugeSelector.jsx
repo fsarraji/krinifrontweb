@@ -105,7 +105,7 @@ const FuelGaugeSelector = ({ value, onChange, compact = false }) => {
         
         // Color: red for Empty (0, 1), dark blue-black for rest
         const isRed = i <= 1;
-        const color = isRed ? '#ef4444' : '#0f172a';
+        const color = isRed ? '#ef4444' : 'var(--on-surface)';
 
         ticks.push(
             <line 
@@ -144,11 +144,11 @@ const FuelGaugeSelector = ({ value, onChange, compact = false }) => {
                 onPointerLeave={handlePointerUp}
             >
                 {/* Gauge Background arc (optional) */}
-                <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4 4" />
+                <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="var(--stroke)" strokeWidth="2" strokeDasharray="4 4" />
 
                 {/* Letters E and F */}
-                <text x="30" y="115" fontSize={compact ? 13 : 22} fontFamily="Inter, sans-serif" fontWeight="900" fill="#0f172a" textAnchor="middle">E</text>
-                <text x="170" y="115" fontSize={compact ? 13 : 22} fontFamily="Inter, sans-serif" fontWeight="900" fill="#0f172a" textAnchor="middle">F</text>
+                <text x="30" y="115" fontSize={compact ? 13 : 22} fontFamily="Inter, sans-serif" fontWeight="900" fill="var(--on-surface)" textAnchor="middle">E</text>
+                <text x="170" y="115" fontSize={compact ? 13 : 22} fontFamily="Inter, sans-serif" fontWeight="900" fill="var(--on-surface)" textAnchor="middle">F</text>
 
                 {/* Ticks */}
                 {ticks}
@@ -164,7 +164,7 @@ const FuelGaugeSelector = ({ value, onChange, compact = false }) => {
                 />
                 
                 {/* Needle center dot */}
-                <circle cx={cx} cy={cy} r={compact ? 8 : 10} fill="#0f172a" />
+                <circle cx={cx} cy={cy} r={compact ? 8 : 10} fill="var(--on-surface)" />
             </svg>
             
             {/* Fuel Icon in center */}

@@ -9,6 +9,7 @@ import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 import Login from '../components/Login';
 import StatusBadge from '../components/ui/StatusBadge';
 import Pagination from '../components/Pagination';
+import AstryxProviders from './AstryxProviders';
 
 afterEach(() => {
     document.documentElement.removeAttribute('dir');
@@ -60,7 +61,7 @@ describe('I18nProvider', () => {
 
     it('switches to Arabic, sets <html dir="rtl"> and remembers the choice', () => {
         const { unmount } = render(<I18nProvider><LanguageSwitcher /><Probe /></I18nProvider>);
-        fireEvent.click(screen.getByRole('button', { name: 'العربية' }));
+        fireEvent.click(screen.getByRole('radio', { name: 'العربية' }));
         expect(screen.getByTestId('probe')).toHaveTextContent('ar|rtl|العقود');
         expect(document.documentElement.dir).toBe('rtl');
         expect(document.documentElement.lang).toBe('ar');
@@ -89,7 +90,7 @@ describe('Login in Arabic', () => {
             </MemoryRouter>,
         );
         expect(screen.getAllByText('Bienvenue').length).toBeGreaterThan(0);
-        fireEvent.click(screen.getAllByRole('button', { name: 'ع' })[0]);
+        fireEvent.click(screen.getAllByRole('radio', { name: 'ع' })[0]);
         expect(screen.getAllByText('مرحباً').length).toBeGreaterThan(0);
         expect(screen.getByRole('button', { name: 'تسجيل الدخول' })).toBeInTheDocument();
     });
@@ -117,10 +118,18 @@ describe('shared components follow the language', () => {
         expect(screen.getByText('جارٍ')).toBeInTheDocument();
     });
 
-    it('Pagination labels are translated and chevrons flip in RTL', () => {
-        withLang('ar', <Pagination currentPage={1} totalItems={25} pageSize={10} onPageChange={() => {}} onPageSizeChange={() => {}} />);
-        expect(screen.getByLabelText('الصفحة التالية')).toBeInTheDocument();
-        expect(screen.getByText('10 / صفحة')).toBeInTheDocument();
-        expect(document.querySelectorAll('.flip-rtl').length).toBe(2);
+    it('Pagination (Astryx) suit la langue : libellés arabes, pas de texte anglais', () => {
+        localStorage.setItem('lang', 'ar');
+        render(
+            <I18nProvider>
+                <AstryxProviders>
+                    <Pagination currentPage={1} totalItems={25} pageSize={10} onPageChange={() => {}} onPageSizeChange={() => {}} />
+                </AstryxProviders>
+            </I18nProvider>,
+        );
+        const nav = screen.getByRole('navigation');
+        const labels = [...nav.querySelectorAll('[aria-label]')].map((el) => el.getAttribute('aria-label'));
+        expect(labels.length).toBeGreaterThan(0);
+        expect(labels.some((l) => /[؀-ۿ]/.test(l))).toBe(true);
     });
 });

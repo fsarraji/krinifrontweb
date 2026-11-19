@@ -71,7 +71,7 @@ const Login = () => {
                 />
                 <div className="relative z-10 max-w-[480px] w-full flex flex-col gap-9">
                     <span className="inline-flex items-center gap-2.5 self-start rounded-full bg-white/10 border border-white/15 px-4 py-2 text-label-lg font-medium text-white backdrop-blur">
-                        <span className="w-2 h-2 rounded-full bg-primary-border shadow-[0_0_12px_rgba(147,197,253,0.9)]" aria-hidden="true" />
+                        <span className="w-2 h-2 rounded-full bg-primary-border shadow-[0_0_12px_var(--primary-border)]" aria-hidden="true" />
                         {t('login.tagline')}
                     </span>
 
@@ -158,17 +158,16 @@ const Login = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 right={
-                                    <button
-                                        type="button"
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        iconOnly
+                                        icon={showPassword ? 'visibility_off' : 'visibility'}
                                         onClick={() => setShowPassword((v) => !v)}
-                                        className="absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-token text-text-disabled hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                        className="absolute end-2 top-1/2 -translate-y-1/2"
                                         aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                                         aria-pressed={showPassword}
-                                    >
-                                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                                            {showPassword ? 'visibility_off' : 'visibility'}
-                                        </span>
-                                    </button>
+                                    />
                                 }
                             />
                         </Field>

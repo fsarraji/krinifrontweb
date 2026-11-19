@@ -31,8 +31,8 @@ describe('GeofenceManager', () => {
         render(<GeofenceManager canEdit />);
         await screen.findByText('Casablanca');
         fireEvent.click(screen.getByRole('button', { name: 'Ajouter la zone' }));
-        expect(await screen.findByText('Le nom est obligatoire.')).toBeInTheDocument();
-        expect(screen.getByText('Latitude entre -90 et 90.')).toBeInTheDocument();
+        expect((await screen.findAllByText('Le nom est obligatoire.')).length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Latitude entre -90 et 90.').length).toBeGreaterThan(0);
         expect(api.post).not.toHaveBeenCalled();
     });
 
@@ -43,8 +43,8 @@ describe('GeofenceManager', () => {
         fill('Latitude', '95');
         fill('Longitude', '-200');
         fireEvent.click(screen.getByRole('button', { name: 'Ajouter la zone' }));
-        expect(await screen.findByText('Latitude entre -90 et 90.')).toBeInTheDocument();
-        expect(screen.getByText('Longitude entre -180 et 180.')).toBeInTheDocument();
+        expect((await screen.findAllByText('Latitude entre -90 et 90.')).length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Longitude entre -180 et 180.').length).toBeGreaterThan(0);
         expect(api.post).not.toHaveBeenCalled();
     });
 
@@ -85,7 +85,7 @@ describe('GeofenceManager', () => {
         await screen.findByText('Casablanca');
         expect(screen.queryByRole('button', { name: 'Ajouter la zone' })).toBeNull();
         expect(screen.queryByLabelText(/Supprimer la zone/)).toBeNull();
-        expect(screen.getByRole('checkbox')).toBeDisabled();
+        expect(screen.getByRole('switch')).toBeDisabled();
     });
 
     it('reports vehicles outside the zones on demand', async () => {

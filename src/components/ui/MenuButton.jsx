@@ -1,38 +1,39 @@
-import React, { useRef } from 'react';
-import DropdownMenu from './DropdownMenu';
+import React from 'react';
+import { DropdownMenu, DropdownMenuItem } from '@astryxdesign/core';
 import { useI18n } from '../../i18n/context';
+import { materialIcon } from './navIcons';
+
+const MoreIcon = materialIcon('more_vert');
 
 /**
- * Bouton "..." avec DropdownMenu contextuel.
- * Générique : fonctionne avec n'importe quel item ayant un `.id`.
- *
- * Props:
- * - item: { id } — l'élément associé au menu
- * - items: array — éléments du dropdown (même format que DropdownMenu)
- * - menuId: number | null — id de l'élément dont le menu est ouvert
- * - setMenuId: (id | null) => void
+ * Bouton "⋮" avec menu contextuel (Astryx DropdownMenu).
+ * items : [{ key, icon, label, destructive, onClick }]
+ * `item`, `menuId`, `setMenuId` sont conservés pour compatibilité : l'ouverture est gérée par Astryx.
  */
-const MenuButton = ({ item, items, menuId, setMenuId }) => {
+const MenuButton = ({ items }) => {
     const { t } = useI18n();
-    const btnRef = useRef(null);
     return (
-        <div className="inline-block">
-            <button
-                ref={btnRef}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuId(menuId === item.id ? null : item.id); }}
-                className="p-2 rounded-token hover:bg-slate-100 transition-colors"
-                style={{ color: 'var(--on-surface-variant)' }}
-                title={t('u.options')} aria-label={t('u.options')}
-            >
-                <span className="material-symbols-outlined text-[18px]">more_vert</span>
-            </button>
-            <DropdownMenu
-                open={menuId === item.id}
-                onClose={() => setMenuId(null)}
-                items={items}
-                anchorRef={btnRef}
-            />
-        </div>
+        <DropdownMenu
+            button={{
+                label: t('u.options'),
+                icon: <MoreIcon />,
+                variant: 'ghost',
+                isIconOnly: true,
+            }}
+        >
+            {items.map((it) => {
+                const Icon = it.icon ? materialIcon(it.icon) : null;
+                return (
+                    <DropdownMenuItem
+                        key={it.key}
+                        label={it.label}
+                        icon={Icon ? <Icon /> : undefined}
+                        variant={it.destructive ? 'destructive' : undefined}
+                        onClick={() => it.onClick()}
+                    />
+                );
+            })}
+        </DropdownMenu>
     );
 };
 

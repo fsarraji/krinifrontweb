@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import Card from './ui/Card';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import api from '../api';
 import { toast } from './Toast';
 import { downloadFile } from '../utils/download';
@@ -36,10 +38,10 @@ const Table = ({ columns, rows, empty }) => {
 };
 
 const Stat = ({ label, value, tone }) => (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4">
+    <Card padding={4} variant="default">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p>
         <p className={`text-xl font-extrabold mt-1 ${tone === 'neg' ? 'text-danger-dark' : 'text-slate-900'}`}>{value}</p>
-    </div>
+    </Card>
 );
 
 const money = (v) => formatMoney(v);
@@ -94,18 +96,12 @@ const Reports = () => {
                 actions={<Button variant="outline" icon="download" onClick={exportCsv}>{t('u.export_csv')}</Button>}
             />
 
-            <div role="tablist" className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-fit">
-                {tabs.map(tb => (
-                    <button
-                        key={tb.id}
-                        role="tab"
-                        aria-selected={tab === tb.id}
-                        onClick={() => setTab(tb.id)}
-                        className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${tab === tb.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                    >
-                        {t(tb.labelKey)}
-                    </button>
-                ))}
+            <div className="w-fit max-w-full overflow-x-auto">
+                <SegmentedControl label={t('u.rapports')} value={tab} onChange={setTab}>
+                    {tabs.map((tb) => (
+                        <SegmentedControlItem key={tb.id} value={tb.id} label={t(tb.labelKey)} />
+                    ))}
+                </SegmentedControl>
             </div>
 
             <div className="flex flex-wrap items-end gap-3">
@@ -118,7 +114,7 @@ const Reports = () => {
                 {tab === 'revenue' && (
                     <label className="block text-label-sm uppercase tracking-wider text-text-muted">
                         {t('u.anne')}
-                        <input type="number" value={year} min="2000" max="2100" onChange={(e) => setYear(e.target.value)} className="block mt-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium w-28" />
+                        <Input type="number" value={year} min="2000" max="2100" onChange={(e) => setYear(e.target.value)} className="block mt-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium w-28" />
                     </label>
                 )}
                 {!['cash', 'revenue'].includes(tab) && (

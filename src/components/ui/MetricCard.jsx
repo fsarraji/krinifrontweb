@@ -1,58 +1,41 @@
 import React from 'react';
+import { Card, Text } from '@astryxdesign/core';
 
 /**
- * Carte de métrique standard : icône circulaire + valeur + label + tendance.
- * Remplace les KPI codés en dur dans Dashboard.jsx / Vehicles.jsx / etc.
- *
- * Exemple :
- * <MetricCard
- *   icon="payments"
- *   iconBg="bg-info-bg" iconColor="text-info"
- *   value="128 400" unit="DH"
- *   label="Revenu du mois"
- *   trend={{ value: '+8,2%', positive: true, caption: 'vs mois dernier' }}
- * />
+ * Carte de métrique (Card + Text Astryx) : libellé + icône, valeur en chiffres tabulaires, tendance.
+ * tone : 'default' | 'primary' (carte bleue) | 'danger' (carte rouge). iconBg / iconColor : compatibilité.
  */
+const VARIANTS = { default: 'default', primary: 'blue', danger: 'red' };
+
 export default function MetricCard({ icon, iconBg = 'bg-info-bg', iconColor = 'text-info', value, unit, label, trend, tone = 'default', children, className = '' }) {
-  const isDanger = tone === 'danger';
-  const isPrimary = tone === 'primary';
+  const trendColor = (positive) => (positive ? 'text-success-dark' : 'text-danger-dark');
 
   return (
-    <div className={`rounded-lg p-card-padding border shadow-l1 ${
-      isDanger ? 'bg-danger-bg border-danger-border'
-      : isPrimary ? 'bg-primary-container border-transparent'
-      : 'bg-card-white border-stroke'
-    } ${className}`}>
-      <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-4 ${
-        isDanger ? 'bg-white' : isPrimary ? 'bg-white/20' : iconBg
-      }`}>
-        <span className={`material-symbols-outlined text-[20px] ${
-          isDanger ? 'text-danger' : isPrimary ? 'text-white' : iconColor
-        }`}>{icon}</span>
-      </div>
-      <p className={`text-headline-lg leading-8 ${
-        isDanger ? 'text-danger-dark' : isPrimary ? 'text-white' : 'text-on-surface'
-      }`}>
-        {value}
-        {unit && <span className={`text-body-sm font-medium ml-1 ${isPrimary ? 'text-white/70' : 'text-on-surface-variant/60'}`}>{unit}</span>}
-      </p>
-      <p className={`text-body-sm mt-1 ${isDanger ? 'text-danger/80' : isPrimary ? 'text-white/70' : 'text-on-surface-variant/60'}`}>{label}</p>
-
-      {trend && (
-        <div className="flex items-center gap-1 mt-3">
-          {trend.positive !== undefined && (
-            <span className={`material-symbols-outlined text-[14px] ${
-              trend.positive ? (isPrimary ? 'text-white' : 'text-success') : (isPrimary ? 'text-white' : 'text-danger')
-            }`}>
-              {trend.positive ? 'trending_up' : 'trending_down'}
-            </span>
-          )}
-          <span className={`text-body-sm font-semibold ${trend.positive ? (isPrimary ? 'text-white' : 'text-success') : (isPrimary ? 'text-white' : 'text-danger')}`}>{trend.value}</span>
-          {trend.caption && <span className={`text-body-sm ${isPrimary ? 'text-white/70' : 'text-on-surface-variant/50'}`}>{trend.caption}</span>}
+    <div className={className}>
+      <Card variant={VARIANTS[tone] || 'default'} padding={5}>
+        <div className="flex items-start justify-between gap-3">
+          <Text type="label" color="secondary">{label}</Text>
+          <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${tone === 'default' ? `${iconBg} ${iconColor}` : 'bg-surface-bright text-primary'}`}>
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{icon}</span>
+          </span>
         </div>
-      )}
-
-      {children && <div className="mt-3">{children}</div>}
+        <p className="mt-2 text-[28px] leading-9 font-semibold tracking-tight tabular-nums">
+          {value}
+          {unit && <>{' '}<span className="text-sm font-medium opacity-70">{unit}</span></>}
+        </p>
+        {trend && (
+          <div className="flex items-center gap-1 mt-2">
+            {trend.positive !== undefined && (
+              <span className={`material-symbols-outlined text-[16px] ${trendColor(trend.positive)}`} aria-hidden="true">
+                {trend.positive ? 'trending_up' : 'trending_down'}
+              </span>
+            )}
+            <span className={`text-label-md font-semibold ${trendColor(trend.positive)}`}>{trend.value}</span>
+            {trend.caption && <span className="text-label-md opacity-70">{trend.caption}</span>}
+          </div>
+        )}
+        {children && <div className="mt-3">{children}</div>}
+      </Card>
     </div>
   );
 }
