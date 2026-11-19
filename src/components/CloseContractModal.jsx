@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import Card from './ui/Card';
 import { Input, Textarea } from './ui/Input';
 import { translateOr } from '../i18n/helpers';
 import React, { useState, useEffect } from 'react';
@@ -324,7 +325,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
 
           {/* Step 1: Dates & KM */}
           {step === 1 && (
-            <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
+            <Card padding={4} variant="default">
               <SectionTitle icon="speed" title={t('u.dates_kilomtrage')} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div className="p-3 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>
@@ -384,29 +385,26 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                        
                       />
                     </div>
-                    <button
-                      type="button"
-                      onClick={fetchGpsKm}
-                      disabled={kmLoading || !hasDevice}
-                      title={!hasDevice ? t('u.ce_vhicule_n_a_pas_de_dispositif') : t('u.remplir_avec_le_kilomtrage_gps_t')}
-                      className="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
+                    <Button
+                        variant="secondary"
+                        icon="satellite_alt"
+                        loading={kmLoading}
+                        onClick={fetchGpsKm}
+                        disabled={!hasDevice}
+                        title={!hasDevice ? t('u.ce_vhicule_n_a_pas_de_dispositif') : t('u.remplir_avec_le_kilomtrage_gps_t')}
                     >
-                      <span className={`material-symbols-outlined text-[16px] ${kmLoading ? 'animate-spin' : ''}`}>
-                        {kmLoading ? 'progress_activity' : 'satellite_alt'}
-                      </span>
-                      GPS
-                    </button>
+                        GPS
+                    </Button>
                   </div>
                   <FieldError message={fieldErrors.kmRetour} />
                 </div>
               </div>
-            </section>
+            </Card>
           )}
 
           {/* Step 2: Fuel & Condition + Accessories */}
           {step === 2 && (
-            <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
+            <Card padding={4} variant="default">
               {/* Row 1: Carburant (1/3) | Accessoires (2/3) */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 <div>
@@ -479,12 +477,12 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                  
                 />
               </div>
-            </section>
+            </Card>
           )}
 
           {/* Step 3: Return Damage Map */}
           {step === 3 && (
-            <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
+            <Card padding={4} variant="default">
               <div className="flex items-center justify-between mb-3">
                 <SectionTitle icon="car_crash" title={t('u.revue_des_dgts_au_retour')} />
                 <div className="flex items-center gap-2 text-[11px] font-bold" style={{ color: 'var(--on-surface-variant)' }}>
@@ -498,12 +496,12 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                 type="RETOUR"
                 readOnly={false}
               />
-            </section>
+            </Card>
           )}
 
           {/* Step 4: Billing & Payment */}
           {step === 4 && (
-            <section className="bg-white p-4 rounded-xl border border-outline-variant/30">
+            <Card padding={4} variant="default">
               <SectionTitle icon="payments" title={t('u.rglement_facture')} />
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -592,7 +590,7 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   />
                 </div>
               </div>
-            </section>
+            </Card>
           )}
         </div>
     </Modal>

@@ -1,5 +1,7 @@
 import { apiPathFromUrl } from '../utils/pagination';
-import { CheckboxInput } from '@astryxdesign/core';
+import Button from './ui/Button';
+import Card from './ui/Card';
+import { CheckboxInput, Slider } from '@astryxdesign/core';
 import { Input } from './ui/Input';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -72,12 +74,7 @@ const Marketplace = () => {
               <span className="material-symbols-outlined cursor-pointer hover:bg-surface-hover p-2 rounded-md transition-all">language</span>
               <span className="material-symbols-outlined cursor-pointer hover:bg-surface-hover p-2 rounded-md transition-all">help_outline</span>
             </div>
-            <button 
-              onClick={() => navigate('/login')}
-              className="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold tracking-wide active:scale-95 duration-150 ease-in-out transition-all"
-            >
-              {t('u.se_connecter')}
-            </button>
+            <Button onClick={() => navigate('/login')}>{t('u.se_connecter')}</Button>
           </div>
         </div>
       </nav>
@@ -130,10 +127,7 @@ const Marketplace = () => {
                 />
               </div>
             </div>
-            <button className="bg-primary hover:bg-primary-deep text-white px-8 py-3.5 rounded-lg font-bold transition-all h-[50px] flex items-center gap-2">
-              <span className="material-symbols-outlined text-lg">search</span>
-              {t('u.trouver_un_vhicule')}
-            </button>
+            <Button size="lg" icon="search">{t('u.trouver_un_vhicule')}</Button>
           </div>
         </section>
 
@@ -148,29 +142,33 @@ const Marketplace = () => {
                 </h3>
                 <div className="space-y-8">
                   {/* Agency Filter Placeholder */}
-                  <div className="bg-slate-50 p-4 rounded-xl">
+                  <Card padding={4} variant="muted">
                     <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4">{t('u.agence_de_location')}</span>
                     <div className="space-y-3">
                       {['Vantage Elite', 'Hertz Premium', 'Sixt Luxury'].map(agency => (
                         <CheckboxInput key={agency} label={agency} value={false} onChange={() => {}} />
                       ))}
                     </div>
-                  </div>
+                  </Card>
 
                   {/* Price Range */}
-                  <div className="bg-slate-50 p-4 rounded-xl">
+                  <Card padding={4} variant="muted">
                     <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4">{t('u.prix_jour_max', { max: formatMoney(filters.price, { decimals: 0 }) })}</span>
-                    <input 
-                      className="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-primary" 
-                      max="1000" min="50" step="50" type="range" 
-                      value={filters.price}
-                      onChange={(e) => setFilters({...filters, price: parseInt(e.target.value)})}
+                    <Slider
+                        label={t('u.prix_jour_max', { max: formatMoney(filters.price, { decimals: 0 }) })}
+                        isLabelHidden
+                        min={50}
+                        max={1000}
+                        step={50}
+                        value={filters.price}
+                        onChange={(v) => setFilters({ ...filters, price: v })}
+                        valueDisplay="none"
                     />
                     <div className="flex justify-between mt-2 text-xs font-bold text-slate-400">
                       <span>50 MAD</span>
                       <span className="text-primary">1 000+ MAD</span>
                     </div>
-                  </div>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -208,7 +206,7 @@ const Marketplace = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {filteredVehicles.map(vehicle => (
-                  <div key={vehicle.id} className="group bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
+                  <Card padding={0} variant="default" key={vehicle.id} className="group overflow-hidden transition-all duration-300 hover:translate-y-[-4px]">
                     <div className="relative h-64 overflow-hidden bg-slate-100">
                       {resolveImage(vehicle.image) ? (
                         <img 
@@ -256,10 +254,10 @@ const Marketplace = () => {
                           </div>
                           <span className="text-xs font-bold text-slate-500">{vehicle.agency_details?.name || 'Kricar Partner'}</span>
                         </div>
-                        <button className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:shadow-lg transition-all">{t('u.rserver')}</button>
+                        <Button>{t('u.rserver')}</Button>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             )}

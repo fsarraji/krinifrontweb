@@ -1,5 +1,6 @@
 import { tNow } from '../i18n/runtime';
-import { Switch } from '@astryxdesign/core';
+import Card from './ui/Card';
+import { Switch, CheckboxInput } from '@astryxdesign/core';
 import Button from './ui/Button';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { Input, Textarea } from './ui/Input';
@@ -232,7 +233,7 @@ const Settings = () => {
     const isOwner = userRole === 'OWNER' || userRole === 'SUPERADMIN';
 
     const SectionCard = ({ icon, title, description, children }) => (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
+        <Card padding={0} variant="default">
             <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
                 <h2 className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">{icon}</span>
@@ -244,7 +245,7 @@ const Settings = () => {
                 </p>
             </div>
             <div className="p-6 space-y-6">{children}</div>
-        </div>
+        </Card>
     );
 
     const Message = ({ msg }) =>
@@ -333,7 +334,7 @@ const Settings = () => {
 
                     {/* Section Caution */}
                     <SectionCard icon="security" title={t('u.gestion_de_la_caution')} description={t('u.dfinissez_si_les_locations_ncess')}>
-                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <Card padding={4} variant="muted" className="flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-slate-800">{t('u.activer_la_caution')}</h3>
                                 <p className="text-xs text-slate-500 mt-1">{t('u.si_dsactive_aucune_caution_ne_se')}</p>
@@ -343,7 +344,7 @@ const Settings = () => {
                                 onChange={(e) => setSettings({ ...settings, caution_active: e.target.checked })}
                                 disabled={!isOwner || saving}
                             />
-                        </div>
+                        </Card>
 
                         <div className={`transition-all duration-300 ${!settings.caution_active ? 'opacity-40 pointer-events-none' : ''}`}>
                             <label className={fieldLabel}>{t('u.montant_de_la_caution_mad')}</label>
@@ -380,7 +381,7 @@ const Settings = () => {
 
                     {/* Section Kilométrage */}
                     <SectionCard icon="speed" title={t('u.kilomtrage_inclus_supplment')} description={t('u.dfinissez_le_nombre_de_km_inclus')}>
-                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <Card padding={4} variant="muted" className="flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-slate-800">{t('u.activer_la_facturation_des_km_su')}</h3>
                                 <p className="text-xs text-slate-500 mt-1">{t('u.si_dsactiv_le_kilomtrage_sera_il')}</p>
@@ -390,7 +391,7 @@ const Settings = () => {
                                 onChange={(e) => setSettings({ ...settings, km_extra_active: e.target.checked })}
                                 disabled={!isOwner || saving}
                             />
-                        </div>
+                        </Card>
 
                         <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 ${!settings.km_extra_active ? 'opacity-40 pointer-events-none' : ''}`}>
                             <div>
@@ -425,7 +426,7 @@ const Settings = () => {
 
                         {/* Preview calculation */}
                         {settings.km_extra_active && (
-                            <div className="p-4 bg-surface-container-high rounded-xl border border-primary-light">
+                            <Card padding={4} variant="muted">
                                 <p className="text-xs font-bold text-primary-deep uppercase tracking-wider mb-2 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">info</span>
                                     {t('u.exemple_de_calcul_3_jours_900_km')}
@@ -439,7 +440,7 @@ const Settings = () => {
                                         <p className="text-success font-bold">{t('u.aucun_dpassement_inclus_dans_le_')}</p>
                                     )}
                                 </div>
-                            </div>
+                            </Card>
                         )}
                     </SectionCard>
 
@@ -488,16 +489,7 @@ const Settings = () => {
                             </div>
                             {traccarPasswordSet && (
                                 <div className="flex items-end pb-1">
-                                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-600 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={clearTraccarPassword}
-                                            onChange={(e) => setClearTraccarPassword(e.target.checked)}
-                                            disabled={!isOwner || saving}
-                                            className="w-4 h-4 accent-red-600"
-                                        />
-                                        {t('u.effacer_le_mot_de_passe_enregist')}
-                                    </label>
+                                    <CheckboxInput label={t('u.effacer_le_mot_de_passe_enregist')} value={clearTraccarPassword} onChange={(c) => setClearTraccarPassword(c)} isDisabled={!isOwner || saving} />
                                 </div>
                             )}
                         </div>

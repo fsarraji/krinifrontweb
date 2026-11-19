@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import api from '../api';
 import { toast } from './Toast';
@@ -37,10 +38,10 @@ const Table = ({ columns, rows, empty }) => {
 };
 
 const Stat = ({ label, value, tone }) => (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4">
+    <Card padding={4} variant="default">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p>
         <p className={`text-xl font-extrabold mt-1 ${tone === 'neg' ? 'text-danger-dark' : 'text-slate-900'}`}>{value}</p>
-    </div>
+    </Card>
 );
 
 const money = (v) => formatMoney(v);

@@ -1,4 +1,6 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { CheckboxInput } from '@astryxdesign/core';
+import Card from './ui/Card';
 import { Input, Textarea } from './ui/Input';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -365,15 +367,9 @@ const ContractForm = () => {
                         {currentStep === 2 && (
                             <div className={hasError('client') ? 'border-danger ring-1 ring-danger/30 rounded-xl' : ''}>
                                 <div className="flex items-center justify-between mb-6">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowClientModal(true)}
-                                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors"
-                                        style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
-                                    >
-                                        <span className="material-symbols-outlined text-sm">add</span>
+                                    <Button variant="secondary" size="sm" icon="add" onClick={() => setShowClientModal(true)}>
                                         {t('u.nouveau_client')}
-                                    </button>
+                                    </Button>
                                 </div>
                                 <div>
                                     <label className="label mb-2">{t('u.slectionner_un_client_existant')}</label>
@@ -540,19 +536,17 @@ const ContractForm = () => {
                                                 value={formData.km_sortie}
                                                 onChange={(e) => setFormData({...formData, km_sortie: e.target.value})}
                                             />
-                                            <button
-                                                type="button"
+                                            <Button
+                                                variant="secondary"
+                                                icon="satellite_alt"
+                                                loading={kmLoading}
                                                 onClick={fetchGpsKm}
-                                                disabled={kmLoading || !selectedVehicle}
-                                                title={t('u.remplir_avec_le_kilomtrage_gps_t')} aria-label={t('u.remplir_avec_le_kilomtrage_gps_t')}
-                                                className="px-3 rounded-lg text-[12px] font-semibold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
-                                                style={{ background: 'var(--info-bg)', color: 'var(--primary-container)' }}
+                                                disabled={!selectedVehicle}
+                                                title={t('u.remplir_avec_le_kilomtrage_gps_t')}
+                                                aria-label={t('u.remplir_avec_le_kilomtrage_gps_t')}
                                             >
-                                                <span className={`material-symbols-outlined text-[16px] ${kmLoading ? 'animate-spin' : ''}`}>
-                                                    {kmLoading ? 'progress_activity' : 'satellite_alt'}
-                                                </span>
                                                 GPS
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
@@ -586,19 +580,7 @@ const ContractForm = () => {
                                         { id: 'papiers', label: t('u.papiers') },
                                         { id: 'cles', label: t('u.cls') },
                                     ].map(item => (
-                                        <label
-                                            key={item.id}
-                                            className={`check-item ${formData[item.id] ? 'on' : ''}`}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4"
-                                                style={{ accentColor: 'var(--success)' }}
-                                                checked={formData[item.id]}
-                                                onChange={() => setFormData({...formData, [item.id]: !formData[item.id]})}
-                                            />
-                                            <span className="text-[12.5px] font-semibold">{item.label}</span>
-                                        </label>
+                                        <CheckboxInput key={item.id} label={item.label} value={Boolean(formData[item.id])} onChange={(c) => setFormData({ ...formData, [item.id]: c })} />
                                     ))}
                                 </div>
 
@@ -615,7 +597,7 @@ const ContractForm = () => {
 
                     {/* Right column: summary */}
                     <div className="space-y-6">
-                        <div className="card shadow-l1 p-6">
+                        <Card padding={6} variant="default">
                             <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>{t('u.rsum_du_contrat')}</h3>
                             <div className="space-y-3 text-[13px]">
                                 <div className="flex justify-between">
@@ -655,17 +637,17 @@ const ContractForm = () => {
                                     {formatMoney(totalEstimate())}
                                 </span>
                             </div>
-                        </div>
+                        </Card>
 
                         {currentStep === 4 && (
-                            <div className="card shadow-l1 p-5" style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}>
+                            <Card padding={5} variant="green"  style={{ background: 'var(--success-bg)', borderColor: 'var(--success-border)' }}>
                                 <div className="flex items-start gap-3">
                                     <span className="material-symbols-outlined text-[18px] mt-0.5" style={{ color: 'var(--success)' }}>task_alt</span>
                                     <p className="text-[12.5px] font-medium" style={{ color: 'var(--success-dark)' }}>
                                         {t('u.toutes_les_tapes_prcdentes_sont_')}
                                     </p>
                                 </div>
-                            </div>
+                            </Card>
                         )}
 
                         <div className="p-6 rounded-lg" style={{ background: 'var(--slate-bg)', border: '1px solid var(--stroke)' }}>

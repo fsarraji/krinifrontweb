@@ -1,4 +1,5 @@
 import React from 'react';
+import Card from './Card';
 import Modal from './Modal';
 
 /**
@@ -22,7 +23,7 @@ export const Row = ({ icon, label, value, strong }) => (
 export const Section = ({ title, children }) => (
     <div className="mt-5 first:mt-0">
         <p className="text-label-sm uppercase tracking-wider mb-1.5 text-text-muted">{title}</p>
-        <div className="card rounded-token p-4 shadow-l1">{children}</div>
+        <Card padding={4} variant="default">{children}</Card>
     </div>
 );
 

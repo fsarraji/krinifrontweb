@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { Link, useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n/context';
@@ -9,7 +10,6 @@ import { resolveImage } from '../imageUrl';
 import { SkeletonCards, SkeletonTable } from './Skeleton';
 import StatusBadge from './ui/StatusBadge';
 import { normalizeVehicleStatut } from '../utils/vehicleStatus';
-import DropdownMenu from './ui/DropdownMenu';
 import VehicleInfoModal from './ui/VehicleInfoModal';
 import ArchiveVehicleModal from './ui/ArchiveVehicleModal';
 import { messageBox } from './MessageBox';
@@ -230,7 +230,7 @@ const Vehicles = () => {
             </div>
 
             {/* Data Table / Grid */}
-            <div className="card rounded-token overflow-hidden shadow-l1">
+            <Card padding={0} variant="default" className="overflow-hidden">
                 {viewMode === 'table' ? (
                     <Table
                         className="!border-0 !rounded-none"
@@ -381,7 +381,7 @@ const Vehicles = () => {
                     onPageChange={setCurrentPage}
                     onPageSizeChange={(newSize) => { setPageSize(newSize); setCurrentPage(1); }}
                 />
-            </div>
+            </Card>
 
             <VehicleInfoModal isOpen={!!infoVehicle} vehicle={infoVehicle} onClose={() => setInfoVehicle(null)} />
             <ArchiveVehicleModal isOpen={!!archiveVehicle} vehicle={archiveVehicle} onClose={() => setArchiveVehicle(null)} onArchived={load} />

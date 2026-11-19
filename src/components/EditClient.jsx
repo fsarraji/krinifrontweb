@@ -1,5 +1,6 @@
 import { tNow } from '../i18n/runtime';
-import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
+import Card from './ui/Card';
+import { SegmentedControl, SegmentedControlItem, Switch } from '@astryxdesign/core';
 import { formatDate, formatMoney } from '../utils/formatters';
 import StatusBadge from './ui/StatusBadge';
 import Table from './ui/Table';
@@ -415,7 +416,7 @@ const EditClient = () => {
                 {/* Right Column: Sidebar */}
                 <div className="space-y-6">
                     {/* Client Profile Summary */}
-                    <div className="card shadow-l1 p-6 flex flex-col items-center text-center">
+                    <Card padding={6} variant="default" className="flex flex-col items-center text-center">
                         <div className="relative mb-5">
                             <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'var(--primary-container)', color: '#fff' }}>
                                 <span className="material-symbols-outlined text-4xl">person</span>
@@ -452,10 +453,10 @@ const EditClient = () => {
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Internal Notes */}
-                    <div className="card shadow-l1 p-6">
+                    <Card padding={6} variant="default">
                         <h3 className="font-bold text-[14px] mb-4" style={{ color: 'var(--on-surface)' }}>{t('u.notes_de_gestion_interne')}</h3>
                         <Textarea invalid={hasError('remarques')}
                             name="remarques"
@@ -465,7 +466,7 @@ const EditClient = () => {
                             placeholder={t('u.ajoutez_des_notes_confidentielle')}
                             rows="4"
                         ></Textarea>
-                    </div>
+                    </Card>
 
                     {/* Blacklist Toggle */}
                     <div className="card shadow-l1 p-6" style={formData.liste_noire ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}}>
@@ -474,24 +475,15 @@ const EditClient = () => {
                                 <h3 className="text-sm font-extrabold" style={{ color: formData.liste_noire ? 'var(--danger)' : 'var(--on-surface)' }}>{t('u.liste_noire_2')}</h3>
                                 <p className="text-xs mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.bloquer_les_futures_locations')}</p>
                             </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="liste_noire"
-                                    checked={formData.liste_noire}
-                                    onChange={handleChange}
-                                    className="sr-only peer"
-                                />
-                                <div className="w-11 h-6 rounded-full peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ background: formData.liste_noire ? 'var(--danger)' : 'var(--stroke)', borderColor: 'var(--stroke)' }}></div>
-                            </label>
+                            <Switch label={t('u.liste_noire_2')} isLabelHidden value={Boolean(formData.liste_noire)} onChange={(v) => handleChange({ target: { name: 'liste_noire', type: 'checkbox', checked: v } })} />
                         </div>
                     </div>
 
                     {/* Historique des modifications */}
-                    <div className="rounded-lg p-6 border border-stroke bg-white">
+                    <Card padding={6} variant="default">
                         <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-slate-600">{t('u.historique')}</h3>
                         <AuditTimeline model="client" id={id} />
-                    </div>
+                    </Card>
 
                     {/* Danger Zone */}
                     <div className="rounded-lg p-6 border" style={{ background: 'var(--danger-bg)', borderColor: 'var(--danger)' }}>

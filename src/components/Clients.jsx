@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
 import { Link, useNavigate } from 'react-router-dom';
@@ -262,7 +263,7 @@ const Clients = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="card rounded-token overflow-hidden shadow-l1 flex flex-col">
+            <Card padding={0} variant="default" className="overflow-hidden flex flex-col">
                 {loading ? (
                     <div className="p-16 flex items-center justify-center"><Spinner size={28} /></div>
                 ) : clients.length === 0 ? (
@@ -397,7 +398,7 @@ const Clients = () => {
                         onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
                     />
                 )}
-            </div>
+            </Card>
 
             <ClientInfoModal isOpen={!!infoClient} client={infoClient} onClose={() => setInfoClient(null)} />
         </div>

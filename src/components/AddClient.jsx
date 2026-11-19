@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { Input, Select, Textarea } from './ui/Input';
 import { translateOr } from '../i18n/helpers';
@@ -473,14 +474,14 @@ const AddClient = () => {
                                     </div>
                                 </div>
 
-                            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-soft">
+                            <Card padding={5} variant="blue">
                                 <div className="flex items-start gap-3">
                                     <span className="material-symbols-outlined text-[18px] mt-0.5 text-blue-600">info</span>
                                     <p className="text-[12.5px] font-medium text-blue-700">
                                         {t('u.le_dossier_client_sera_automatiq')}
                                     </p>
                                 </div>
-                            </div>
+                            </Card>
                         </>
                     )}
                     </div>
@@ -488,7 +489,7 @@ const AddClient = () => {
             </form>
 
             {/* Bottom security + actions */}
-            <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+            <Card padding={4} variant="default" className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <span className="material-symbols-outlined">shield</span>
@@ -514,7 +515,7 @@ const AddClient = () => {
                         </Button>
                     )}
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Card from './ui/Card';
 import api, { fetchAllPages } from '../api';
 import { toast } from './Toast';
 import { downloadFile, openPdf } from '../utils/download';
@@ -26,10 +27,10 @@ const errText = (err, fallback) => {
 };
 
 const Stat = ({ label, value }) => (
-    <div className="bg-white border border-stroke rounded-token p-4">
+    <Card padding={4} variant="default">
         <p className="text-label-sm uppercase tracking-wider text-text-muted">{label}</p>
         <p className="text-xl font-bold text-on-surface mt-1">{value}</p>
-    </div>
+    </Card>
 );
 
 const Invoices = () => {
@@ -139,14 +140,9 @@ const Invoices = () => {
                 <span className="font-bold text-on-surface">
                     {v}
                     {inv.credit_notes?.length > 0 && (
-                        <button
-                            type="button"
-                            onClick={() => setExpanded(expanded === inv.id ? null : inv.id)}
-                            className="ms-2 text-label-sm text-primary hover:underline"
-                            aria-expanded={expanded === inv.id}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => setExpanded(expanded === inv.id ? null : inv.id)} aria-expanded={expanded === inv.id}>
                             {t('u.avoir_s', { n: inv.credit_notes.length })}
-                        </button>
+                        </Button>
                     )}
                 </span>
             ),

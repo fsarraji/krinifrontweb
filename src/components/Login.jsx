@@ -158,17 +158,16 @@ const Login = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 right={
-                                    <button
-                                        type="button"
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        iconOnly
+                                        icon={showPassword ? 'visibility_off' : 'visibility'}
                                         onClick={() => setShowPassword((v) => !v)}
-                                        className="absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-token text-text-disabled hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                                        className="absolute end-2 top-1/2 -translate-y-1/2"
                                         aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                                         aria-pressed={showPassword}
-                                    >
-                                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                                            {showPassword ? 'visibility_off' : 'visibility'}
-                                        </span>
-                                    </button>
+                                    />
                                 }
                             />
                         </Field>

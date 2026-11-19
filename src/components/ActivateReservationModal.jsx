@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { CheckboxInput } from '@astryxdesign/core';
+import Card from './ui/Card';
 import { translateOr } from '../i18n/helpers';
 import api from '../api';
 import DamageSelector from './DamageSelector';
@@ -85,7 +87,7 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
             )}
 
             <form id="activate-form" onSubmit={handleSubmit} className="space-y-6">
-                <section className="bg-white p-6 rounded-token border border-stroke">
+                <Card padding={6} variant="default">
                     {sectionTitle('speed', t('u.kilomtrage_carburant'))}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Field label={t('u.kilomtrage_au_dpart')} required>
@@ -103,32 +105,18 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
                             />
                         </div>
                     </div>
-                </section>
+                </Card>
 
-                <section className="bg-white p-6 rounded-token border border-stroke">
+                <Card padding={6} variant="default">
                     {sectionTitle('checklist', t('u.accessoires_inclus'))}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {VEHICLE_ACCESSORIES.map((item) => (
-                            <label
-                                key={item.id}
-                                className={`p-3 rounded-token border flex items-center gap-2 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-primary/30 ${formData[item.id] ? 'border-primary bg-primary-light text-primary' : 'border-stroke text-text-muted hover:bg-surface-hover'}`}
-                            >
-                                <input
-                                    type="checkbox"
-                                    className="sr-only"
-                                    checked={Boolean(formData[item.id])}
-                                    onChange={() => setFormData({ ...formData, [item.id]: !formData[item.id] })}
-                                />
-                                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
-                                    {formData[item.id] ? 'check_box' : 'check_box_outline_blank'}
-                                </span>
-                                <span className="text-xs font-bold">{translateOr(t, `acc.${item.id}`, item.label)}</span>
-                            </label>
+                            <CheckboxInput key={item.id} label={translateOr(t, `acc.${item.id}`, item.label)} value={Boolean(formData[item.id])} onChange={(c) => setFormData({ ...formData, [item.id]: c })} />
                         ))}
                     </div>
-                </section>
+                </Card>
 
-                <section className="bg-white p-6 rounded-token border border-stroke">
+                <Card padding={6} variant="default">
                     {sectionTitle('car_crash', t('u.tat_dgts_au_dpart'))}
                     <DamageSelector
                         damages={formData.damages}
@@ -145,7 +133,7 @@ const ActivateReservationModal = ({ isOpen, onClose, contract, onActivated }) =>
                             />
                         </Field>
                     </div>
-                </section>
+                </Card>
             </form>
         </Modal>
     );

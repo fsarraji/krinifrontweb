@@ -106,6 +106,7 @@ const InputControl = forwardRef(function InputControl({ type = 'text', value, on
             value={String(value ?? '')}
             onChange={(_v, e) => onChange?.(e)}
             hasClear={type === 'search'}
+            hasAutoFocus={props.autoFocus}
             {...edges}
         />
     );

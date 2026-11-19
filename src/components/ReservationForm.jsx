@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import Card from './ui/Card';
 import { Input, Textarea } from './ui/Input';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -235,15 +236,16 @@ const ReservationForm = () => {
                                     />
                                 </div>
                             </div>
-                            <button 
+                            <Button
+                                size="lg"
+                                icon="search"
+                                loading={loading}
                                 onClick={checkAvailability}
-                                disabled={loading || !formData.date_sortie || !formData.date_retour_prevue}
-                                className="w-full bg-primary hover:bg-primary-deep text-white py-4 rounded-xl font-bold text-base shadow-md shadow-primary-border/50 flex items-center justify-center gap-3 disabled:opacity-70 transition-all"
+                                disabled={!formData.date_sortie || !formData.date_retour_prevue}
+                                className="w-full"
                             >
-                                {loading && <span className="material-symbols-outlined animate-spin">progress_activity</span>}
-                                <span className="material-symbols-outlined">search</span>
                                 {loading ? t('u.recherche_en_cours') : t('u.rechercher_les_vhicules')}
-                            </button>
+                            </Button>
                         </div>
                     )}
                      {/* STEP 2: Vehicle */}
@@ -300,19 +302,10 @@ const ReservationForm = () => {
                             </div>
 
                             <div className="mt-8 flex gap-4 pt-6 border-t border-slate-100">
-                                <button 
-                                    onClick={() => setStep(1)}
-                                    className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
-                                >
-                                    {t('u.retour')}
-                                </button>
-                                <button 
-                                    onClick={() => setStep(3)}
-                                    disabled={!formData.vehicle}
-                                    className="flex-1 bg-primary hover:bg-primary-deep text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-primary-border/50 disabled:opacity-50 disabled:shadow-none transition-all"
-                                >
+                                <Button variant="secondary" onClick={() => setStep(1)}>{t('u.retour')}</Button>
+                                <Button onClick={() => setStep(3)} disabled={!formData.vehicle} className="flex-1">
                                     {t('u.continuer_avec_ce_vhicule')}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -322,13 +315,9 @@ const ReservationForm = () => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center justify-between">
                                 <div />
-                                <button 
-                                    onClick={() => setShowClientModal(true)}
-                                    className="text-xs font-bold text-primary-deep bg-primary-light/50 hover:bg-primary-light ring-1 ring-primary-light px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-sm">add</span>
+                                <Button variant="secondary" size="sm" icon="add" onClick={() => setShowClientModal(true)}>
                                     {t('u.nouveau_client')}
-                                </button>
+                                </Button>
                             </div>
 
                             <div className="space-y-6">
@@ -366,7 +355,7 @@ const ReservationForm = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl transition-colors border border-slate-200">
+                                    <Card padding={3} variant="muted" className="flex items-center justify-between transition-colors">
                                         <div>
                                             <p className="text-sm font-bold text-slate-900">{t('u.service_chauffeur')}</p>
                                             <p className="text-[10px] text-slate-500 font-medium">+50 DH/jour</p>
@@ -379,9 +368,9 @@ const ReservationForm = () => {
                                                 <div className={`absolute top-[2px] left-[2px] bg-white w-5 h-5 rounded-full transition-transform ${formData.chauffeur_service ? 'translate-x-5' : 'translate-x-0'}`}></div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Card>
                                 </div>
-                                
+
                                 {agencySettings.caution_active && (
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ps-1 mb-2">{t('u.caution')}</label>
@@ -439,20 +428,10 @@ const ReservationForm = () => {
                             </div>
                             
                             <div className="flex gap-4 pt-6 border-t border-slate-100">
-                                <button 
-                                    onClick={() => setStep(2)}
-                                    className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors text-sm"
-                                >
-                                    {t('u.retour')}
-                                </button>
-                                <button 
-                                    onClick={handleSubmit}
-                                    disabled={!formData.client || !formData.vehicle}
-                                    className="flex-1 bg-primary hover:bg-primary-deep text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-primary-border/50 flex items-center justify-center gap-3 disabled:opacity-50 transition-all"
-                                >
-                                    <span className="material-symbols-outlined">event_available</span>
+                                <Button variant="secondary" onClick={() => setStep(2)}>{t('u.retour')}</Button>
+                                <Button icon="event_available" onClick={handleSubmit} disabled={!formData.client || !formData.vehicle} className="flex-1">
                                     {t('u.valider_et_rserver')}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}

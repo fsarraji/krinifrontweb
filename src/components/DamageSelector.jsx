@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import { Input } from './ui/Input';
+import Button from './ui/Button';
 import carDiagram from '../assets/car_damage_diagram.webp';
 import { useI18n } from '../i18n/context';
 
@@ -104,22 +106,17 @@ const DamageSelector = ({ damages = [], onChange, readOnly = false, type = 'DEPA
                                             <p className="text-sm text-slate-700">{damage.description || <span className="text-sm italic text-slate-400">{t('u.aucune_description')}</span>}</p>
                                         ) : (
                                             <div className="space-y-2">
-                                                <input
+                                                <Input
                                                     type="text"
                                                     value={damage.description}
                                                     onChange={(e) => handleDescriptionChange(damage.id || index, e.target.value)}
                                                     placeholder={t('u.dcrire_l_anomalie_ex_rayure_boss')}
-                                                    className="w-full bg-transparent border-b border-slate-300 focus:border-red-500 focus:outline-none text-sm py-1 placeholder:text-slate-400"
                                                     autoFocus={activeDamageId === (damage.id || index)}
                                                 />
                                                 <div className="flex justify-end mt-1">
-                                                    <button 
-                                                        onClick={() => removeDamage(damage.id || index)}
-                                                        className="text-[10px] text-red-500 hover:text-red-700 font-bold uppercase tracking-wider flex items-center gap-1"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                                                    <Button variant="danger" size="sm" icon="delete" onClick={() => removeDamage(damage.id || index)}>
                                                         {t('u.supprimer')}
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </div>
                                         )}

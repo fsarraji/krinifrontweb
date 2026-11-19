@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
 import React, { useState, useEffect } from 'react';
@@ -286,7 +287,7 @@ const Reservations = () => {
             </div>
 
             {/* Data Table */}
-            <div className="card rounded-token overflow-hidden shadow-l1">
+            <Card padding={0} variant="default" className="overflow-hidden">
                 <Table
                     className="!border-0 !rounded-none"
                     caption={tab === 'demandes' ? t('res.caption.requests') : t('res.title')}
@@ -305,7 +306,7 @@ const Reservations = () => {
                         : (s) => { setReservationPageSize(s); setReservationPage(1); }
                     }
                 />
-            </div>
+            </Card>
         </div>
     );
 };

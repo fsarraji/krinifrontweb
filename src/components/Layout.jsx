@@ -1,9 +1,10 @@
 import React, { forwardRef, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { AppShell, SideNav, SideNavHeading, SideNavItem, SideNavSection, TopNav, TopNavHeading } from '@astryxdesign/core';
+import { AppShell, SideNav, SideNavHeading, SideNavItem, SideNavSection, TopNav, TopNavHeading, Token } from '@astryxdesign/core';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { jwtDecode } from 'jwt-decode';
 import NotificationCenter from './NotificationCenter';
+import Button from './ui/Button';
 import UserMenu from './ui/UserMenu';
 import { materialIcon } from './ui/navIcons';
 import LanguageSwitcher from './ui/LanguageSwitcher';
@@ -141,20 +142,8 @@ const Layout = ({ children }) => {
             heading={<TopNavHeading heading={agencyName} />}
             endContent={(
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setIsNotificationOpen((prev) => !prev)}
-                        className="relative w-9 h-9 rounded-token flex items-center justify-center text-on-surface-variant hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                        aria-label={bellLabel}
-                        title={bellLabel}
-                    >
-                        <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
-                        {notificationCount > 0 && (
-                            <span className="absolute top-0.5 end-0.5 min-w-4 h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white bg-danger">
-                                {notificationCount}
-                            </span>
-                        )}
-                    </button>
+                    <Button variant="ghost" iconOnly icon="notifications" onClick={() => setIsNotificationOpen((prev) => !prev)} aria-label={bellLabel} title={bellLabel} />
+                    {notificationCount > 0 && <Token color="red" size="sm" label={String(notificationCount)} />}
                     <LanguageSwitcher compact />
                 </div>
             )}

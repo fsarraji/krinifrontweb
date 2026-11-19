@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Card from './ui/Card';
 import { translateOr } from '../i18n/helpers';
 import Table from './ui/Table';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -389,14 +390,14 @@ const EditContract = () => {
       >
         <form id="prolong-form" onSubmit={handleProlong} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div className="bg-surface border border-stroke rounded-token p-3">
+            <Card padding={3} variant="default">
               <p className="text-label-sm uppercase tracking-wider text-text-muted mb-1">{t('u.retour_actuel')}</p>
               <p className="font-bold text-on-surface">{contract?.formatted_dates?.retour || contract?.formatted_dates?.end || ''}</p>
-            </div>
-            <div className="bg-surface border border-stroke rounded-token p-3">
+            </Card>
+            <Card padding={3} variant="default">
               <p className="text-label-sm uppercase tracking-wider text-text-muted mb-1">{t('u.jours_actuel')}</p>
               <p className="font-bold text-on-surface">{t('u.jours', { n: contract?.jours })}</p>
-            </div>
+            </Card>
           </div>
 
           <Field label={t('u.nouvelle_date_de_retour')} required hint={t('u.la_nouvelle_date_doit_tre_aprs_l')}>

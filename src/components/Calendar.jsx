@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Card from './ui/Card';
 import { useNavigate } from 'react-router-dom';
 import { fetchAllPages } from '../api';
 import SearchFilterBar from './SearchFilterBar';
@@ -174,7 +175,7 @@ const Calendar = () => {
             </div>
 
             {/* Gantt Timeline Board */}
-            <div dir="ltr" className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            <Card padding={0} variant="default" dir="ltr" className="overflow-hidden flex flex-col">
                 <div className="overflow-x-auto">
                     <div className="min-w-max flex flex-col">
                         {/* Days Header */}
@@ -301,7 +302,7 @@ const Calendar = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             {/* Contract Details Modal */}
             <Modal

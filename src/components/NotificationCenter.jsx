@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Button from './ui/Button';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -176,9 +177,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                             <p className="text-xs text-slate-500 font-medium">{t('u.non_lue_s', { n: notifications.filter(n => n.unread).length })}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} aria-label={t('u.fermer_les_notifications')} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors">
-                        <span className="material-symbols-outlined text-xl">close</span>
-                    </button>
+                    <Button variant="ghost" iconOnly icon="close" onClick={onClose} aria-label={t('u.fermer_les_notifications')} />
                 </div>
 
                 {/* Web Push Banner */}
@@ -188,12 +187,7 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                             <span className="material-symbols-outlined text-primary text-lg">campaign</span>
                             <p className="text-xs font-semibold text-primary-deep">{t('u.activer_les_notifications_naviga')}</p>
                         </div>
-                        <button
-                            onClick={requestWebPush}
-                            className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-lg text-xs shadow-sm transition-all"
-                        >
-                            {t('u.activer')}
-                        </button>
+                        <Button size="sm" onClick={requestWebPush}>{t('u.activer')}</Button>
                     </div>
                 )}
 
@@ -251,18 +245,8 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
 
                 {/* Footer Action */}
                 <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3">
-                    <button
-                        onClick={markAllRead}
-                        className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                        <span className="material-symbols-outlined text-sm">done_all</span> {t('u.tout_marquer_lu')}
-                    </button>
-                    <button
-                        onClick={refreshAlerts}
-                        className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                        <span className="material-symbols-outlined text-sm">refresh</span> {t('u.actualiser')}
-                    </button>
+                    <Button variant="secondary" icon="done_all" onClick={markAllRead} className="w-full">{t('u.tout_marquer_lu')}</Button>
+                    <Button variant="secondary" icon="refresh" onClick={refreshAlerts} className="w-full">{t('u.actualiser')}</Button>
                 </div>
             </div>
         </div>

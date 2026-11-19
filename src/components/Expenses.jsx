@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import api, { fetchAllPages } from '../api';
 import Dropdown from './Dropdown';
@@ -174,7 +175,7 @@ const Expenses = () => {
                     </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
+                <Card padding={4} variant="default" className="flex items-center justify-between h-20">
                     <div className="flex items-center gap-3.5 min-w-0">
                         <div className="w-11 h-11 bg-danger-bg text-danger rounded-xl flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">storefront</span>
@@ -184,9 +185,9 @@ const Expenses = () => {
                             <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalAgency)}</p>
                         </div>
                     </div>
-                </div>
+                </Card>
 
-                <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center justify-between h-20">
+                <Card padding={4} variant="default" className="flex items-center justify-between h-20">
                     <div className="flex items-center gap-3.5 min-w-0">
                         <div className="w-11 h-11 bg-surface-container-high text-primary rounded-xl flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">directions_car</span>
@@ -196,7 +197,7 @@ const Expenses = () => {
                             <p className="text-xl font-extrabold text-slate-900 mt-1 leading-none">{formatMoney(totalVehicles)}</p>
                         </div>
                     </div>
-                </div>
+                </Card>
             </div>
 
             {/* Search & Filter */}

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import Card from './ui/Card';
 import { Switch } from '@astryxdesign/core';
 import { Input } from './ui/Input';
 import Field from './ui/Field';
@@ -136,7 +137,7 @@ const GeofenceManager = ({ canEdit }) => {
     const activeCount = zones.filter((z) => z.is_active).length;
 
     return (
-        <section aria-labelledby="geofence-title" className="bg-white rounded-2xl shadow-sm border border-slate-200">
+        <Card padding={0} variant="default" aria-labelledby="geofence-title">
             <div className="p-6 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
                 <h2 id="geofence-title" className="text-xl font-extrabold font-headline text-slate-900 flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary" aria-hidden="true">share_location</span>
@@ -215,7 +216,7 @@ const GeofenceManager = ({ canEdit }) => {
                     )}
                 </div>
             </div>
-        </section>
+        </Card>
     );
 };
 
