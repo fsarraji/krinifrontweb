@@ -1,4 +1,6 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import Stepper from './ui/Stepper';
+import { CheckboxInput, Banner, Token } from '@astryxdesign/core';
 import Card from './ui/Card';
 import { Input, Textarea } from './ui/Input';
 import { translateOr } from '../i18n/helpers';
@@ -204,12 +206,6 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
 
   if (!contract) return null;
 
-  const stepState = (num) => {
-    if (step > num) return 'done';
-    if (step === num) return 'active';
-    return 'idle';
-  };
-
   const SectionTitle = ({ icon, title }) => (
     <div className="flex items-center gap-2 mb-4">
       <span className="material-symbols-outlined text-primary">{icon}</span>
@@ -254,74 +250,19 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
       subtitle={`${contract.client_name} ${contract.client_prenom} | ${contract.vehicle_name} (${contract.vehicle_matricule})`}
       footer={footerNode}
     >
-        {isEarlyReturn && (
-          <span className="mb-3 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-label-sm bg-warning-bg text-warning-dark">
-            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">schedule</span>
-            {t('u.retour_anticip')}
-          </span>
-        )}
+        {isEarlyReturn && <Token color="orange" label={t('u.retour_anticip')} />}
 
         {/* Step Indicators */}
-        <div className="pb-3 mb-4 border-b border-stroke flex items-center gap-2 shrink-0 overflow-x-auto no-scrollbar">
-          {STEPS.map((s, i) => {
-            const state = stepState(s.id);
-            return (
-              <React.Fragment key={s.id}>
-                {i > 0 && (
-                  <div className="step-line min-w-4 mx-0.5" style={step > s.id ? { background: 'var(--success)' } : {}}></div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => goToStep(s.id)}
-                  aria-current={step === s.id ? 'step' : undefined}
-                  className="flex items-center gap-1.5 shrink-0"
-                >
-                  <div
-                    className="step-dot text-white"
-                    style={
-                      {
-                        width: 30,
-                        height: 30,
-                        fontSize: 12,
-                        ...(state === 'done'
-                          ? { background: 'var(--success)' }
-                          : state === 'active'
-                              ? { background: 'var(--primary-container)' }
-                              : { background: 'var(--stroke)', color: 'var(--on-surface-variant)' })
-                      }
-                    }
-                  >
-                    {state === 'done' ? (
-                      <span className="material-symbols-outlined text-[16px]">check</span>
-                    ) : (
-                      <span className="material-symbols-outlined text-[16px]">{s.icon}</span>
-                    )}
-                  </div>
-                  <span
-                    className="text-[11px] whitespace-nowrap"
-                    style={
-                      state === 'active'
-                        ? { fontWeight: 700, color: 'var(--primary-container)' }
-                        : { fontWeight: state === 'done' ? 600 : 500, color: state === 'done' ? 'var(--on-surface)' : 'var(--on-surface-variant)', opacity: state === 'idle' ? 0.6 : 1 }
-                    }
-                  >
-                    {t(s.labelKey)}
-                  </span>
-                </button>
-              </React.Fragment>
-            );
-          })}
-        </div>
+        <Stepper
+          steps={STEPS.map((st) => ({ num: st.id, label: t(st.labelKey) }))}
+          currentStep={step}
+          onStepClick={goToStep}
+        />
 
         {/* Body */}
         <div className="space-y-4">
 
-          {error && (
-            <div className="bg-error/10 text-error p-3 rounded-xl border border-error/20 flex gap-3 items-center animate-in slide-in-from-top-2">
-              <span className="material-symbols-outlined">error</span>
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          )}
+          {error && <Banner status="error" title={error} />}
 
           {/* Step 1: Dates & KM */}
           {step === 1 && (
@@ -429,37 +370,20 @@ const CloseContractModal = ({ contract, onClose, onSuccess }) => {
                   <SectionTitle icon="checklist" title={t('u.vrification_des_accessoires')} />
                   <p className="text-[11px] font-medium mb-2" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.tat_au_dpart_indiqu_pour_compara')}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {Object.entries(ACCESSORY_LABELS).map(([key, { label: accLabel, icon }]) => {
+                    {Object.entries(ACCESSORY_LABELS).map(([key, { label: accLabel }]) => {
                       const label = translateOr(t, `acc.${key}`, accLabel);
                       const departurState = contract[key];
                       const returnState  = accessories[key];
                       const mismatch     = departurState && !returnState;
                       return (
-                        <label
-                          key={key}
-                          className={`check-item items-center gap-2 ${returnState ? 'on' : ''}`}
-                          style={{ padding: '6px 10px', ...(mismatch ? { background: 'var(--danger-bg)', borderColor: 'var(--danger)' } : {}) }}
-                        >
-                          <div className={`w-[18px] h-[18px] rounded flex items-center justify-center border-2 transition-all ${
-                            returnState ? 'text-white border-transparent' : 'border-slate-300 bg-white'
-                          }`} style={returnState ? { background: 'var(--success)' } : {}}>
-                            {returnState && <span className="material-symbols-outlined text-[12px] font-black">check</span>}
-                            <input
-                              type="checkbox"
-                              checked={returnState}
-                              onChange={e => setAccessories(prev => ({ ...prev, [key]: e.target.checked }))}
-                              className="hidden"
-                            />
-                          </div>
-                          <span className={`material-symbols-outlined text-base shrink-0 ${returnState ? '' : mismatch ? 'text-red-500' : 'text-slate-400'}`} style={returnState ? { color: 'var(--success)' } : {}}>{icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[11px] font-bold tracking-tight ${returnState ? 'text-on-surface' : 'text-slate-500'}`}>{label}</p>
-                            <p className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: 'var(--on-surface-variant)', opacity: departurState ? 0.8 : 0.5 }}>
-                              {t('u.dpart')}: {departurState ? t('u.prsent') : t('u.absent')}
-                              {mismatch && <span className="font-black underline ms-2" style={{ color: 'var(--danger)' }}>{t('u.manquant')}</span>}
-                            </p>
-                          </div>
-                        </label>
+                        <Card key={key} padding={2} variant={mismatch ? 'red' : returnState ? 'green' : 'muted'}>
+                          <CheckboxInput
+                            label={label}
+                            description={`${t('u.dpart')}: ${departurState ? t('u.prsent') : t('u.absent')}${mismatch ? ` — ${t('u.manquant')}` : ''}`}
+                            value={Boolean(returnState)}
+                            onChange={(checked) => setAccessories(prev => ({ ...prev, [key]: checked }))}
+                          />
+                        </Card>
                       );
                     })}
                   </div>

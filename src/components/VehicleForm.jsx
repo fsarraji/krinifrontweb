@@ -1,5 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
-import { CheckboxInput } from '@astryxdesign/core';
+import { CheckboxInput, SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import Card from './ui/Card';
 import { Input, Select } from './ui/Input';
 import React, { useState, useEffect } from 'react';
@@ -884,29 +884,11 @@ const VehicleForm = () => {
                                 </label>
                             </div>
                             <div className="mt-7">
-                                <span className="mb-3 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t('u.statut')}</span>
-                                <div className="grid gap-3 md:grid-cols-3">
-                                    {['Available', 'Maintenance', 'Rented'].map((status) => {
-                                        const active = formData.statut === status;
-                                        return (
-                                            <button
-                                                key={status}
-                                                type="button"
-                                                onClick={() => setFormData(prev => ({ ...prev, statut: status }))}
-                                                className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-4 text-sm transition ${
-                                                    active
-                                                        ? 'border-emerald-300 bg-emerald-50 font-semibold text-emerald-700'
-                                                        : 'border-slate-200 bg-white font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <span className="material-symbols-outlined text-[18px]">
-                                                    {status === 'Available' ? 'check_circle' : status === 'Maintenance' ? 'build' : 'key'}
-                                                </span>
-                                                <span>{t(`status.${status}`)}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                <SegmentedControl label={t('u.statut')} value={formData.statut} onChange={(status) => setFormData(prev => ({ ...prev, statut: status }))}>
+                                    {['Available', 'Maintenance', 'Rented'].map((status) => (
+                                        <SegmentedControlItem key={status} value={status} label={t(`status.${status}`)} />
+                                    ))}
+                                </SegmentedControl>
                             </div>
                         </>
                     )}
