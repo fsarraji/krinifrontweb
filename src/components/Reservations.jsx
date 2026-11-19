@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import PageLoading from './ui/PageLoading';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
@@ -12,7 +13,6 @@ import { messageBox } from './MessageBox';
 import StatusBadge from './ui/StatusBadge';
 import PageHeader from './ui/PageHeader';
 import Button from './ui/Button';
-import Spinner from './ui/Spinner';
 import Table from './ui/Table';
 import { formatMoney } from '../utils/formatters';
 import { getRole } from '../utils/userRole';
@@ -252,7 +252,7 @@ const Reservations = () => {
         },
     ];
 
-    if (loading) return <div className="flex justify-center items-center h-64"><Spinner size={26} /></div>;
+    if (loading) return <PageLoading />;
 
     return (
         <div className="flex flex-col h-full">

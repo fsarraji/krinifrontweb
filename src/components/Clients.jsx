@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import PageLoading from './ui/PageLoading';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useI18n } from '../i18n/context';
@@ -17,7 +18,6 @@ import Button from './ui/Button';
 import MetricCard from './ui/MetricCard';
 import ExportButton from './ui/ExportButton';
 import EmptyState from './ui/EmptyState';
-import Spinner from './ui/Spinner';
 import Table from './ui/Table';
 
 const PAGE_SIZE_DEFAULT = 10;
@@ -264,7 +264,7 @@ const Clients = () => {
             {/* Main Content Area */}
             <Card padding={0} variant="default" className="overflow-hidden flex flex-col">
                 {loading ? (
-                    <div className="p-16 flex items-center justify-center"><Spinner size={28} /></div>
+                    <PageLoading />
                 ) : clients.length === 0 ? (
                     <EmptyState icon="person_off" title={tr('clients.empty')} />
                 ) : viewMode === 'table' ? (

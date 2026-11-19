@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import StatusBadge from './ui/StatusBadge';
+import PageHeader from './ui/PageHeader';
 import { Input, Select } from './ui/Input';
 import Button from './ui/Button';
 import { tNow } from '../i18n/runtime';
@@ -417,25 +419,21 @@ const GpsTracking = () => {
             `}</style>
 
             {/* Header */}
-            <div className="px-8 pt-8 pb-6 flex items-end justify-between flex-shrink-0">
-                <div>
-                    <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>{subtitle}</p>
-                    <h2 className="font-bold text-[32px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>{t('u.suivi_gps')}</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                    {!fleetOpen && (
-                        <Button variant="secondary" iconOnly icon="format_list_bulleted" onClick={() => setFleetOpen(true)}  title={t('u.afficher_la_flotte')} aria-label={t('u.afficher_la_flotte')} />
+            <div className="px-8 pt-8 flex-shrink-0">
+                <PageHeader
+                    eyebrow={subtitle}
+                    title={t('u.suivi_gps')}
+                    actions={(
+                        <>
+                            {!fleetOpen && (
+                                <Button variant="secondary" iconOnly icon="format_list_bulleted" onClick={() => setFleetOpen(true)} title={t('u.afficher_la_flotte')} aria-label={t('u.afficher_la_flotte')} />
+                            )}
+                            <Button variant="secondary" icon="sensors" title={t('u.grer_les_dispositifs_gps_ajouter')} aria-label={t('u.grer_les_dispositifs_gps_ajouter')} onClick={openDevices}>{t('u.dispositifs')}</Button>
+                            <StatusBadge variant="success" label={`${movingCount} en mouvement`} />
+                            <StatusBadge variant="neutral" label={`${offlineCount} hors ligne`} />
+                        </>
                     )}
-                    <Button variant="secondary" icon="sensors" title={t('u.grer_les_dispositifs_gps_ajouter')} aria-label={t('u.grer_les_dispositifs_gps_ajouter')} onClick={openDevices}>{t('u.dispositifs')}</Button>
-                    <span className="badge" style={{ background: 'var(--success-bg)', color: 'var(--success-dark)' }}>
-                        <span className="badge-dot pulse" style={{ background: 'var(--success)' }}></span>
-                        {movingCount} en mouvement
-                    </span>
-                    <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-muted)' }}>
-                        <span className="badge-dot" style={{ background: 'var(--text-muted)' }}></span>
-                        {offlineCount} hors ligne
-                    </span>
-                </div>
+                />
             </div>
 
             {/* Content grid */}

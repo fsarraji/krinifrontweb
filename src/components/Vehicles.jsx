@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import EmptyState from './ui/EmptyState';
+import { apiErrorText } from '../utils/apiErrorText';
+import ErrorBanner from './ui/ErrorBanner';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,6 +34,7 @@ const Vehicles = () => {
     const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
@@ -63,6 +67,7 @@ const Vehicles = () => {
                 if (!cancelled) setVehicles(data);
             } catch (error) {
                 console.error("Erreur lors de la récupération des véhicules", error);
+                setLoadError(apiErrorText(error, t('common.loadError')));
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -191,6 +196,7 @@ const Vehicles = () => {
                             columns={EXPORT_COLUMNS}
                             label={t('contracts.exportCsv')}
                         />
+            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setReloadKey((k) => k + 1); }} className="mb-4" />}
                         <Button icon="add" variant="primary" onClick={() => navigate('/vehicles/new')}>
                             {t('veh.add')}
                         </Button>
@@ -287,10 +293,7 @@ const Vehicles = () => {
                 ) : (
                     /* Grid View */
                     filteredVehicles.length === 0 ? (
-                        <div className="p-16 text-center font-medium flex flex-col items-center gap-2" style={{ color: 'var(--on-surface-variant)' }}>
-                            <span className="material-symbols-outlined text-4xl" style={{ opacity: 0.4 }}>directions_car_off</span>
-                            <p>{t('veh.empty')}</p>
-                        </div>
+                        <EmptyState icon="directions_car_off" title={t('veh.empty')} />
                     ) : (
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {paginatedVehicles.map((vehicle) => (

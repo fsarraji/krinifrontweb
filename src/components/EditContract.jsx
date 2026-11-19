@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageHeader from './ui/PageHeader';
 import FormActions from './ui/FormActions';
 import Card from './ui/Card';
 import { translateOr } from '../i18n/helpers';
@@ -196,14 +197,13 @@ const EditContract = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 bg-slate-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-1">{t('u.rsum_du_contrat_2')}</p>
-          <h2 className="text-4xl font-extrabold text-primary">CTR-{String(id).padStart(5, '0')}</h2>
-        </div>
-        <FormActions onCancel={handleDiscard} onSubmit={handleSave} />
-      </div>
+      <PageHeader
+        as="h1"
+        back="/contracts"
+        eyebrow={t('u.rsum_du_contrat_2')}
+        title={`CTR-${String(id).padStart(5, '0')}`}
+        actions={<FormActions onCancel={handleDiscard} onSubmit={handleSave} />}
+      />
 
       {/* Main Grid */}
       <div className="space-y-6">

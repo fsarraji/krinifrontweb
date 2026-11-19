@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import PageHeader from './ui/PageHeader';
 import FormActions from './ui/FormActions';
 import ErrorBanner from './ui/ErrorBanner';
 import FileField from './ui/FileField';
@@ -427,26 +428,15 @@ const VehicleForm = () => {
     };
 
     return (
-        <div className="mx-auto max-w-[1500px] px-4 py-6 lg:px-8">
-            {/* Breadcrumb + header */}
-            <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        <Link to="/vehicles" className="hover:text-slate-600">{t('u.vhicules')}</Link>
-                        <span className="mx-1">›</span>
-                        {isEditMode ? t('u.modifier') : t('u.nouveau')}
-                    </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-                        {isEditMode ? t('u.modifier_un_vhicule') : t('u.ajouter_un_vhicule')}
-                    </h1>
-                    <p className="mt-1 text-sm text-slate-500">{t('u.compltez_les_informations_pour_e')}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {isEditMode && (
-                        <Button variant="danger" icon="delete" onClick={handleDelete}>{t('u.supprimer')}</Button>
-                    )}
-                </div>
-            </header>
+        <div className="w-full">
+            <PageHeader
+                as="h1"
+                back="/vehicles"
+                eyebrow={t('u.vhicules')}
+                title={isEditMode ? t('u.modifier_un_vhicule') : t('u.ajouter_un_vhicule')}
+                description={t('u.compltez_les_informations_pour_e')}
+                actions={isEditMode ? <Button variant="danger" icon="delete" onClick={handleDelete}>{t('u.supprimer')}</Button> : undefined}
+            />
 
             <ErrorBanner message={error} className="mb-5" />
 

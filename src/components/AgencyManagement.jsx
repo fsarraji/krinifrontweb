@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PageLoading from './ui/PageLoading';
 import { apiErrorText } from '../utils/apiErrorText';
 import Table from './ui/Table';
 import { Input, Textarea } from './ui/Input';
@@ -11,7 +12,6 @@ import Button from './ui/Button';
 import Modal from './ui/Modal';
 import Field from './ui/Field';
 import StatusBadge from './ui/StatusBadge';
-import Spinner from './ui/Spinner';
 import EmptyState from './ui/EmptyState';
 import PageHeader from './ui/PageHeader';
 import { useI18n } from '../i18n/context';
@@ -96,7 +96,7 @@ const AgencyManagement = () => {
     };
 
     if (loading) {
-        return <div className="flex justify-center py-20"><Spinner size={28} /></div>;
+        return <PageLoading />;
     }
 
     return (

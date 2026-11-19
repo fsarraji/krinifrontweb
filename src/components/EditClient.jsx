@@ -1,4 +1,5 @@
 import { tNow } from '../i18n/runtime';
+import PageHeader from './ui/PageHeader';
 import FormActions from './ui/FormActions';
 import ErrorBanner from './ui/ErrorBanner';
 import Field from './ui/Field';
@@ -194,28 +195,23 @@ const EditClient = () => {
     const rentalCount = contracts.length;
 
     return (
-        <div className="w-full px-4 py-6">
-            {/* Breadcrumb + header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                        <Link to="/clients" className="hover:underline">{t('u.clients')}</Link> / Modifier
-                    </p>
-                    <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                        {t('u.modifier_le_client')}
-                    </h1>
-                    <p className="text-[13px] font-medium mt-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>
-                        {formData.prenom} {formData.nom} — {formData.cin_passport || t('u.non_renseign', { label: cinLabelFor(formData.nationalite) })}
-                    </p>
-                </div>
-                <FormActions
-                    destructive={<Button variant="danger" icon="delete" onClick={handleDelete}>{t('u.supprimer')}</Button>}
-                    onCancel={() => navigate('/clients')}
-                    formId="client-form"
-                    submitIcon="save"
-                    loading={saving}
-                />
-            </div>
+        <div className="w-full">
+            <PageHeader
+                as="h1"
+                back="/clients"
+                eyebrow={t('u.clients')}
+                title={t('u.modifier_le_client')}
+                description={`${formData.prenom} ${formData.nom} — ${formData.cin_passport || t('u.non_renseign', { label: cinLabelFor(formData.nationalite) })}`}
+                actions={(
+                    <FormActions
+                        destructive={<Button variant="danger" icon="delete" onClick={handleDelete}>{t('u.supprimer')}</Button>}
+                        onCancel={() => navigate('/clients')}
+                        formId="client-form"
+                        submitIcon="save"
+                        loading={saving}
+                    />
+                )}
+            />
 
             <ErrorBanner message={error} className="mb-6" />
 

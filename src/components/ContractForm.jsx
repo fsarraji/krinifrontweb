@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import PageHeader from './ui/PageHeader';
 import FormActions from './ui/FormActions';
 import MoneyInput from './ui/MoneyInput';
 import Field from './ui/Field';
@@ -281,25 +282,22 @@ const ContractForm = () => {
         const selectedClient = clients.find(c => c.id == formData.client);
 
         return (
-            <div className="max-w-6xl mx-auto px-4 py-6" {...formProps}>
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                    <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                            {t('u.contrats_nouveau')}
-                        </p>
-                        <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                            {t('u.nouveau_contrat_de_location')}
-                        </h1>
-                    </div>
-                    <FormActions
-                        onCancel={() => navigate('/contracts')}
-                        onBack={currentStep > 1 ? handlePrev : undefined}
-                        onSubmit={currentStep < 4 ? handleNext : handleSubmit}
-                        submitLabel={currentStep < 4 ? t('u.suivant') : t('u.valider_le_contrat')}
-                        submitIcon={currentStep < 4 ? undefined : 'fact_check'}
-                    />
-                </div>
+            <div className="w-full" {...formProps}>
+                <PageHeader
+                    as="h1"
+                    back="/contracts"
+                    eyebrow={t('u.contrats_nouveau')}
+                    title={t('u.nouveau_contrat_de_location')}
+                    actions={(
+                        <FormActions
+                            onCancel={() => navigate('/contracts')}
+                            onBack={currentStep > 1 ? handlePrev : undefined}
+                            onSubmit={currentStep < 4 ? handleNext : handleSubmit}
+                            submitLabel={currentStep < 4 ? t('u.suivant') : t('u.valider_le_contrat')}
+                            submitIcon={currentStep < 4 ? undefined : 'fact_check'}
+                        />
+                    )}
+                />
 
                 {/* Stepper */}
                 <Stepper steps={steps} currentStep={currentStep} />

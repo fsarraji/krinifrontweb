@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { apiErrorText } from '../utils/apiErrorText';
+import ErrorBanner from './ui/ErrorBanner';
+import StatusBadge from './ui/StatusBadge';
+import PageHeader from './ui/PageHeader';
 import Card from './ui/Card';
 import { useNavigate } from 'react-router-dom';
 import { fetchAllPages } from '../api';
@@ -16,6 +20,8 @@ const Calendar = () => {
     const [vehicles, setVehicles] = useState([]);
     const [contracts, setContracts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
+    const [reloadKey, setReloadKey] = useState(0);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -56,12 +62,13 @@ const Calendar = () => {
                 setContracts(Array.isArray(contracts) ? contracts : []);
             } catch (error) {
                 console.error("Erreur chargement calendrier:", error);
+                setLoadError(apiErrorText(error, t('common.loadError')));
             } finally {
                 setLoading(false);
             }
         };
         fetchData();
-    }, []);
+    }, [reloadKey]);
 
     const getDayName = (day) => {
         const date = new Date(currentYear, currentMonth, day);
@@ -128,23 +135,22 @@ const Calendar = () => {
 
     return (
         <div className="flex flex-col gap-6">
-            {/* Header */}
-            <div className="flex flex-wrap justify-between items-end gap-4">
-                <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">{t('u.planning_flotte')}</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('u.planning_interactif_gantt')}</h2>
-                </div>
-
-                {/* Month Navigator Controls */}
-                <div className="flex items-center justify-between gap-1 sm:gap-3 w-full sm:w-auto bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-                    <Button variant="ghost" iconOnly icon="chevron_left" onClick={handlePrevMonth} aria-label={t('u.mois_prcdent')} title={t('u.mois_prcdent')} />
-                    <Button variant="secondary" size="sm" onClick={handleToday}>{t('u.aujourd_hui')}</Button>
-                    <span className="text-sm font-extrabold text-slate-900 px-1 sm:px-2 flex-1 sm:flex-none sm:min-w-[140px] text-center truncate">
-                        {monthDisplay}
-                    </span>
-                    <Button variant="ghost" iconOnly icon="chevron_right" onClick={handleNextMonth} aria-label={t('u.mois_suivant')} title={t('u.mois_suivant')} />
-                </div>
-            </div>
+            <PageHeader
+                eyebrow={t('u.planning_flotte')}
+                title={t('u.planning_interactif_gantt')}
+                className="!mb-0"
+                actions={(
+                    <div className="flex items-center justify-between gap-1 sm:gap-3 w-full sm:w-auto bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+                        <Button variant="ghost" iconOnly icon="chevron_left" onClick={handlePrevMonth} aria-label={t('u.mois_prcdent')} title={t('u.mois_prcdent')} />
+                        <Button variant="secondary" size="sm" onClick={handleToday}>{t('u.aujourd_hui')}</Button>
+                        <span className="text-sm font-extrabold text-slate-900 px-1 sm:px-2 flex-1 sm:flex-none sm:min-w-[140px] text-center truncate">
+                            {monthDisplay}
+                        </span>
+                        <Button variant="ghost" iconOnly icon="chevron_right" onClick={handleNextMonth} aria-label={t('u.mois_suivant')} title={t('u.mois_suivant')} />
+                    </div>
+                )}
+            />
+            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setLoading(true); setReloadKey((k) => k + 1); }} className="mb-4" />}
 
             {/* Search & Filter Bar */}
             <div>
@@ -334,9 +340,7 @@ const Calendar = () => {
                         <div className="flex justify-between items-center gap-4">
                             <dt className="text-label-sm uppercase tracking-wider text-text-muted">{t('u.statut')}</dt>
                             <dd>
-                                <span className={`px-3 py-1 text-label-sm rounded-full ${selectedContract.statut === 'EN_COURS' ? 'bg-success-bg text-success-dark ring-1 ring-success-border' : 'bg-primary-light text-primary-deep ring-1 ring-primary-border'}`}>
-                                    {selectedContract.statut === 'EN_COURS' ? t('u.en_cours_lou') : t('u.rserv')}
-                                </span>
+                                <StatusBadge variant={selectedContract.statut === 'EN_COURS' ? 'success' : 'info'} label={selectedContract.statut === 'EN_COURS' ? t('u.en_cours_lou') : t('u.rserv')} />
                             </dd>
                         </div>
                     </dl>

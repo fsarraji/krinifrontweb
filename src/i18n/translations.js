@@ -16,6 +16,7 @@ export const translations = {
         'lang.switch': 'Langue',
         'common.loading': 'Chargement…',
         'common.retry': 'Réessayer',
+        'common.loadError': 'Impossible de charger les données.',
 
         'nav.section.operations': 'Opérations',
         'nav.section.management': 'Gestion',
@@ -397,6 +398,7 @@ export const translations = {
         'common.all': 'الكل',
         'common.search': 'بحث',
         'common.retry': 'إعادة المحاولة',
+        'common.loadError': 'تعذّر تحميل البيانات.',
         'common.noResult': 'لا توجد نتائج',
         'common.prevPage': 'الصفحة السابقة',
         'common.nextPage': 'الصفحة التالية',

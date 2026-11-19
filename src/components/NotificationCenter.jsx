@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import PageLoading from './ui/PageLoading';
+import EmptyState from './ui/EmptyState';
 import Button from './ui/Button';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
 import { useNavigate } from 'react-router-dom';
@@ -203,12 +205,9 @@ const NotificationCenter = ({ isOpen, onClose, onCountChange }) => {
                 {/* Notifications List */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-3">
                     {loading ? (
-                        <div className="text-center py-12 font-bold text-primary">{t('u.chargement_des_notifications')}</div>
+                        <PageLoading />
                     ) : filteredItems.length === 0 ? (
-                        <div className="py-16 text-center text-slate-400 font-medium flex flex-col items-center gap-2">
-                            <span className="material-symbols-outlined text-4xl text-slate-300">notifications_off</span>
-                            <p>{t('u.aucune_notification_pour_le_mome')}</p>
-                        </div>
+                        <EmptyState icon="notifications_off" title={t('u.aucune_notification_pour_le_mome')} />
                     ) : (
                         filteredItems.map(item => (
                             <div

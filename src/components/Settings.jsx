@@ -1,4 +1,6 @@
 import { tNow } from '../i18n/runtime';
+import PageLoading from './ui/PageLoading';
+import PageHeader from './ui/PageHeader';
 import { toast } from './Toast';
 import MoneyInput from './ui/MoneyInput';
 import ErrorBanner from './ui/ErrorBanner';
@@ -248,24 +250,14 @@ const Settings = () => {
     };
 
     if (loading || accountLoading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <p className="text-slate-500 font-semibold animate-pulse">{t('u.chargement_des_paramtres')}</p>
-            </div>
-        );
+        return <PageLoading />;
     }
 
     const isOwner = userRole === 'OWNER' || userRole === 'SUPERADMIN';
 
     return (
         <div className="flex flex-col gap-6">
-            {/* Editorial Header Section */}
-            <div className="flex justify-between items-end">
-                <div>
-                    <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">{t('u.configuration')}</p>
-                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('u.paramtres')}</h2>
-                </div>
-            </div>
+            <PageHeader eyebrow={t('u.configuration')} title={t('u.paramtres')} className="!mb-0" />
 
             {/* Tabs */}
             <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StatusBadge from './ui/StatusBadge';
 import { apiErrorText } from '../utils/apiErrorText';
 import Card from './ui/Card';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core';
@@ -238,15 +239,9 @@ const Expenses = () => {
                         render: (_, e) => (
                             <div className="flex flex-col gap-1 items-start">
                                 {e.vehicle ? (
-                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-primary-light text-primary-deep ring-1 ring-primary-border">
-                                        <span className="material-symbols-outlined text-xs" aria-hidden="true">directions_car</span>
-                                        {t('u.vhicule_2', { id: e.vehicle })}
-                                    </span>
+                                    <StatusBadge variant="info" icon="directions_car" label={t('u.vhicule_2', { id: e.vehicle })} />
                                 ) : (
-                                    <span className="px-2.5 py-0.5 inline-flex items-center gap-1 text-label-sm rounded-full bg-danger-bg text-danger-dark ring-1 ring-danger-border">
-                                        <span className="material-symbols-outlined text-xs" aria-hidden="true">storefront</span>
-                                        {t('u.agence')}
-                                    </span>
+                                    <StatusBadge variant="neutral" icon="storefront" label={t('u.agence')} />
                                 )}
                                 <span className="text-xs text-text-muted font-medium">
                                     {CATEGORIES.find((c) => c.value === e.category)?.label || e.category}

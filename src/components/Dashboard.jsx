@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { apiErrorText } from '../utils/apiErrorText';
+import ErrorBanner from './ui/ErrorBanner';
 import Card from './ui/Card';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -20,6 +22,8 @@ const Dashboard = () => {
         recent_contracts: []
     });
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -29,11 +33,12 @@ const Dashboard = () => {
                 setLoading(false);
             } catch (error) {
                 console.error("Erreur lors de la récupération des données", error);
+                setLoadError(apiErrorText(error, t('common.loadError')));
                 setLoading(false);
             }
         };
         fetchDashboardData();
-    }, []);
+    }, [reloadKey]);
 
     if (loading) {
         return (
@@ -66,6 +71,7 @@ const Dashboard = () => {
                     <Button icon="add" onClick={() => navigate('/contracts/new')}>{t('dashboard.newContract')}</Button>
                 )}
             />
+            {loadError && <ErrorBanner message={loadError} onRetry={() => { setLoadError(''); setLoading(true); setReloadKey((k) => k + 1); }} className="mb-4" />}
 
             {/* Metric cards : 4 colonnes strictes comme krini_vantage_fleet.html */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">

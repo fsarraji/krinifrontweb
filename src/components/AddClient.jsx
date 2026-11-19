@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import PageHeader from './ui/PageHeader';
 import FormActions from './ui/FormActions';
 import ErrorBanner from './ui/ErrorBanner';
 import Field from './ui/Field';
@@ -189,18 +190,8 @@ const AddClient = () => {
 
 
     return (
-        <div className="w-full px-4 py-6">
-            {/* Breadcrumb + header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.6 }}>
-                        <span className="cursor-pointer hover:underline" onClick={() => navigate('/clients')}>{t('u.clients')}</span> / Nouveau client
-                    </p>
-                    <h1 className="font-bold text-[28px] tracking-tight" style={{ letterSpacing: '-0.02em', color: 'var(--on-surface)' }}>
-                        {t('u.ajouter_un_client')}
-                    </h1>
-                </div>
-            </div>
+        <div className="w-full">
+            <PageHeader as="h1" back="/clients" eyebrow={t('u.clients')} title={t('u.ajouter_un_client')} />
 
             <ErrorBanner message={error} className="mb-5" />
 
