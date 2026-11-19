@@ -1,4 +1,5 @@
 import { tNow } from '../i18n/runtime';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import PageLoading from './ui/PageLoading';
 import PageHeader from './ui/PageHeader';
 import { toast } from './Toast';
@@ -57,6 +58,7 @@ const Message = ({ msg }) => (msg.type === 'error' ? <ErrorBanner message={msg.t
 
 const Settings = () => {
     const { t } = useI18n();
+    const { formProps, markClean } = useUnsavedChanges();
     const [settings, setSettings] = useState({
         nom_agence: '',
         adresse: '',
@@ -200,6 +202,7 @@ const Settings = () => {
             setTraccarPassword('');
             setClearTraccarPassword(false);
 
+            markClean();
             toast.success(t('u.paramtres_sauvegards_avec_succs'));
         } catch (error) {
             console.error("Error saving settings:", error);
@@ -256,7 +259,7 @@ const Settings = () => {
     const isOwner = userRole === 'OWNER' || userRole === 'SUPERADMIN';
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6" {...formProps}>
             <PageHeader eyebrow={t('u.configuration')} title={t('u.paramtres')} className="!mb-0" />
 
             {/* Tabs */}

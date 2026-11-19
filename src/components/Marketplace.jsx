@@ -165,8 +165,8 @@ const Marketplace = () => {
                         valueDisplay="none"
                     />
                     <div className="flex justify-between mt-2 text-xs font-bold text-slate-400">
-                      <span>50 MAD</span>
-                      <span className="text-primary">1 000+ MAD</span>
+                      <span>{formatMoney(50, { decimals: 0 })}</span>
+                      <span className="text-primary">{formatMoney(1000, { decimals: 0 })}+</span>
                     </div>
                   </Card>
                 </div>

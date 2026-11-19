@@ -1,4 +1,7 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
+import { formatMoney } from '../utils/formatters';
+import { CHAUFFEUR_DAILY_RATE } from '../utils/pricing';
 import FormActions from './ui/FormActions';
 import MoneyInput from './ui/MoneyInput';
 import Field from './ui/Field';
@@ -19,6 +22,7 @@ import { useI18n } from '../i18n/context';
 
 const ReservationForm = () => {
     const { t } = useI18n();
+    const { formProps, markClean } = useUnsavedChanges();
     const navigate = useNavigate();
     const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
@@ -115,7 +119,7 @@ const ReservationForm = () => {
     const totalEstimate = () => {
         const days = diffDays();
         const base = quote && quote.total != null ? parseFloat(quote.total) : days * formData.prix_par_jour;
-        const chauffeur = formData.chauffeur_service ? 50 * days : 0;
+        const chauffeur = formData.chauffeur_service ? CHAUFFEUR_DAILY_RATE * days : 0;
         return base + chauffeur;
     };
 
@@ -156,6 +160,7 @@ const ReservationForm = () => {
             };
             await api.post('contracts/', dataToSubmit);
             toast.success(t('u.rservation_cre_avec_succs'));
+            markClean();
             navigate('/reservations');
         } catch (error) {
             console.error("Erreur lors de la création", error);
@@ -170,7 +175,7 @@ const ReservationForm = () => {
     );
 
     return (
-        <div className="bg-surface">
+        <div className="bg-surface" {...formProps}>
             {/* Header Section */}
             <PageHeader
                 eyebrow={t('u.fleet_concierge')}
@@ -285,7 +290,7 @@ const ReservationForm = () => {
                                             </h4>
                                             <div className="flex flex-wrap items-center gap-2 mt-1">
                                                 <span className="text-[10px] px-2 py-1 rounded-md bg-slate-200 text-slate-700 font-mono font-bold uppercase tracking-wider">{vehicle.matricule_actuel || vehicle.matricule}</span>
-                                                <span className="text-sm text-primary font-bold">{vehicle.prix_par_jour} DH/j</span>
+                                                <span className="text-sm text-primary font-bold">{formatMoney(vehicle.prix_par_jour, { decimals: 0 })}/j</span>
                                             </div>
                                         </div>
                                         {formData.vehicle === vehicle.id && (
@@ -357,7 +362,7 @@ const ReservationForm = () => {
                                     <Card padding={3} variant="muted" className="flex items-center justify-between transition-colors">
                                         <div>
                                             <p className="text-sm font-bold text-slate-900">{t('u.service_chauffeur')}</p>
-                                            <p className="text-[10px] text-slate-500 font-medium">+50 DH/jour</p>
+                                            <p className="text-[10px] text-slate-500 font-medium">+{formatMoney(CHAUFFEUR_DAILY_RATE, { decimals: 0 })}/jour</p>
                                         </div>
                                         <div 
                                             onClick={() => setFormData({...formData, chauffeur_service: !formData.chauffeur_service})}

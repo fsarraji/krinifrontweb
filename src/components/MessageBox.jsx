@@ -11,14 +11,9 @@ export const messageBox = {
     success: (message, title = tNow('u.succs')) => open('success', title, message),
     error: (message, title = tNow('u.erreur')) => open('error', title, message),
     warning: (message, title = tNow('u.attention')) => open('warning', title, message),
-    confirm: (message, title = tNow('u.confirmation'), options = {}) => open(
-        'confirm',
-        title,
-        message,
-        options.confirmText,
-        options.cancelText,
-        options.destructive
-    ).then((confirmed) => { if (confirmed && options.onConfirm) options.onConfirm(confirmed); }),
+    // confirm = ask + rappel onConfirm : même rendu, mêmes libellés par défaut.
+    confirm: (message, title = tNow('u.confirmation'), options = {}) => messageBox.ask(message, title, options)
+        .then((confirmed) => { if (confirmed && options.onConfirm) options.onConfirm(confirmed); }),
     // Variante « promesse » : resolve(true/false) — remplace window.confirm.
     ask: (message, title = tNow('u.confirmation'), options = {}) => open(
         options.destructive ? 'danger' : 'confirm',

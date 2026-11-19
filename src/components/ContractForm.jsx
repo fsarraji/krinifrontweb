@@ -1,4 +1,5 @@
 import { apiErrorText } from '../utils/apiErrorText';
+import { CHAUFFEUR_DAILY_RATE } from '../utils/pricing';
 import PageHeader from './ui/PageHeader';
 import FormActions from './ui/FormActions';
 import MoneyInput from './ui/MoneyInput';
@@ -215,7 +216,7 @@ const ContractForm = () => {
         const totalEstimate = () => {
             const days = diffDays();
             const base = quote && quote.total != null ? parseFloat(quote.total) : days * formData.prix_par_jour;
-            const chauffeur = formData.chauffeur_service ? 50 * days : 0; // Exemple: 50 DH/jour pour le chauffeur
+            const chauffeur = formData.chauffeur_service ? CHAUFFEUR_DAILY_RATE * days : 0;
             return base + chauffeur;
         };
     

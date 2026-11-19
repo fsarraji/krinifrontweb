@@ -359,7 +359,7 @@ const EditClient = () => {
                         <div className="w-full grid grid-cols-2 gap-4 text-start border-t pt-6" style={{ borderColor: 'var(--stroke)' }}>
                             <div>
                                 <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.total_dpens')}</p>
-                                <p className="text-lg font-extrabold" style={{ color: 'var(--primary-container)' }}>{totalSpent.toLocaleString()} MAD</p>
+                                <p className="text-lg font-extrabold" style={{ color: 'var(--primary-container)' }}>{formatMoney(totalSpent)}</p>
                             </div>
                             <div>
                                 <p className="text-[10px] uppercase font-bold mb-1" style={{ color: 'var(--on-surface-variant)', opacity: 0.7 }}>{t('u.locations')}</p>

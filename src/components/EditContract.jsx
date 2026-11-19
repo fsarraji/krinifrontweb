@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import PageHeader from './ui/PageHeader';
 import FormActions from './ui/FormActions';
 import Card from './ui/Card';
@@ -22,6 +23,7 @@ import { useI18n } from '../i18n/context';
 
 const EditContract = () => {
   const { t } = useI18n();
+  const { formProps, markClean } = useUnsavedChanges();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -67,6 +69,7 @@ const EditContract = () => {
   const handleSave = async () => {
     try {
       await api.patch(`contracts/${id}/`, formData);
+      markClean();
       navigate('/contracts');
     } catch (e) {
       console.error('Save error', e);
@@ -196,7 +199,7 @@ const EditContract = () => {
   if (!contract) return <div className="flex items-center justify-center h-64 text-error font-bold">{t('u.contrat_non_trouv')}</div>;
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 bg-slate-50/30 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200">
+    <div className="w-full" {...formProps}>
       <PageHeader
         as="h1"
         back="/contracts"
