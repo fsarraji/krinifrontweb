@@ -255,24 +255,33 @@ const Contracts = () => {
                                 </>
                             ),
                         },
-                        { key: 'montant_total', label: t('contracts.col.amount'), render: (v) => <strong>{formatMoney(v)}</strong> },
                         {
-                            key: 'reste_a_payer', label: t('contracts.col.remaining'),
-                            render: (v) => (
-                                <span className={Number(v) > 0 ? 'font-semibold text-error' : 'text-on-surface-variant'}>
-                                    {formatMoney(v ?? 0)}
-                                </span>
+                            key: 'montant_total', label: t('contracts.col.amount'),
+                            render: (v, contract) => (
+                                <>
+                                    <div><strong>{formatMoney(v)}</strong></div>
+                                    {Number(contract.reste_a_payer) > 0 && (
+                                        <div className="text-label-sm font-semibold text-error">
+                                            {t('contracts.col.remaining')} : {formatMoney(contract.reste_a_payer)}
+                                        </div>
+                                    )}
+                                </>
                             ),
                         },
-                        { key: 'statut', label: t('contracts.col.status'), render: (v) => <StatusBadge status={v} /> },
                         {
-                            key: 'payment_status', label: t('contracts.col.payment'),
-                            render: (v) => (
-                                <StatusBadge
-                                    variant={v === 'Paid' ? 'success' : v === 'Partial' ? 'warning' : 'danger'}
-                                    label={v === 'Paid' ? t('pay.paid') : v === 'Partial' ? t('pay.partial') : t('pay.unpaid')}
-                                />
-                            ),
+                            key: 'statut', label: t('contracts.col.status'),
+                            render: (v, contract) => {
+                                const p = contract.payment_status;
+                                return (
+                                    <div className="flex flex-col items-start gap-1">
+                                        <StatusBadge status={v} />
+                                        <StatusBadge
+                                            variant={p === 'Paid' ? 'success' : p === 'Partial' ? 'warning' : 'danger'}
+                                            label={p === 'Paid' ? t('pay.paid') : p === 'Partial' ? t('pay.partial') : t('pay.unpaid')}
+                                        />
+                                    </div>
+                                );
+                            },
                         },
                         {
                             key: 'actions', label: t('contracts.col.actions'), align: 'right',
