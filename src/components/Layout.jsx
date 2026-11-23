@@ -29,6 +29,7 @@ const NAV_SECTIONS = [
             { path: '/calendar', labelKey: 'nav.calendar', icon: 'calendar_month', roles: OPS_STAFF },
             { path: '/contracts', labelKey: 'nav.contracts', icon: 'description', roles: OPS_STAFF },
             { path: '/maintenance', labelKey: 'nav.maintenance', icon: 'build', roles: OPS_STAFF },
+            { path: '/infractions', labelKey: 'nav.infractions', icon: 'gavel', roles: OPS_STAFF },
         ],
     },
     {

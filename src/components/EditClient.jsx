@@ -21,6 +21,7 @@ import api from '../api';
 import { toast } from './Toast';
 import { messageBox } from './MessageBox';
 import AuditTimeline from './AuditTimeline';
+import ClientNarsaFields from './ClientNarsaFields';
 import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstants';
 import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
 import { optimizeImageFile } from '../utils/imageUtils';
@@ -311,6 +312,9 @@ const EditClient = () => {
                                 </div>
                             </div>
                         </div>
+
+                    {/* Données exigées par NARSA (noms/adresse en arabe, localité...) */}
+                    <ClientNarsaFields formData={formData} onChange={handleChange} />
 
                     {/* Section 3: Rental History */}
                     <Table

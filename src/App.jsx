@@ -28,6 +28,7 @@ const Payments = lazy(() => import('./components/Payments'));
 const Expenses = lazy(() => import('./components/Expenses'));
 const Invoices = lazy(() => import('./components/Invoices'));
 const Reports = lazy(() => import('./components/Reports'));
+const Infractions = lazy(() => import('./components/Infractions'));
 const Maintenance = lazy(() => import('./components/Maintenance'));
 const Marketplace = lazy(() => import('./components/Marketplace'));
 const Settings = lazy(() => import('./components/Settings'));
@@ -71,6 +72,7 @@ function App() {
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/maintenance" element={<Maintenance />} />
+            <Route path="/infractions" element={<Infractions />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route element={<ProtectedRoute roles={['SUPERADMIN']} />}>
