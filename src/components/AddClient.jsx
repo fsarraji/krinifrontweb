@@ -18,6 +18,7 @@ import { SEXE_OPTIONS, NATIONALITES, cinLabelFor } from '../utils/clientConstant
 import { UNIQUE_FIELDS, UNIQUE_MSG, checkUnique as apiCheckUnique } from '../utils/clientUniqueness';
 import { optimizeImageFile } from '../utils/imageUtils';
 import Stepper from './ui/Stepper';
+import ClientNarsaFields from './ClientNarsaFields';
 import { useI18n } from '../i18n/context';
 
 const AddClient = () => {
@@ -38,7 +39,14 @@ const AddClient = () => {
         nationalite: '',
         permis_conduite: '',
         date_delivrance_permis: '',
-        remarques: ''
+        remarques: '',
+        nom_ar: '',
+        prenom_ar: '',
+        adresse_ar: '',
+        type_document: '',
+        localite_narsa: '',
+        permis_etranger: false,
+        adresse_etrangere: false
     });
     const [files, setFiles] = useState({
         scan_cin: null,
@@ -390,6 +398,8 @@ const AddClient = () => {
                                         <FileField label={t('u.scan_permis_de_conduire')} value={files.scan_permis} onChange={(file) => setFile('scan_permis', file)} accept="image/*,.pdf" placeholder={t('u.glisser_un_fichier_ou_parcourir')} />
                                     </div>
                                 </div>
+
+                            <ClientNarsaFields formData={formData} onChange={handleChange} />
 
                             <Card padding={5} variant="blue">
                                 <div className="flex items-start gap-3">
