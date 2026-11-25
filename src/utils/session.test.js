@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clearSession, getClaims, hasSession, setTokens } from './session';
+import { clearSession, getClaims, hasSession, homePathFor, setTokens } from './session';
 
 const fakeJwt = (claims) => {
     const enc = (o) => btoa(JSON.stringify(o)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
@@ -29,5 +29,13 @@ describe('session', () => {
         clearSession();
         expect(localStorage.getItem('access_token')).toBeNull();
         expect(localStorage.getItem('sidebar_collapsed')).toBe('true');
+    });
+});
+
+describe('homePathFor', () => {
+    it('envoie le client vers son espace et le personnel vers le tableau de bord', () => {
+        expect(homePathFor('CLIENT')).toBe('/espace-client');
+        expect(homePathFor('OWNER')).toBe('/dashboard');
+        expect(homePathFor(undefined)).toBe('/dashboard');
     });
 });

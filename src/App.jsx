@@ -33,6 +33,12 @@ const Maintenance = lazy(() => import('./components/Maintenance'));
 const Marketplace = lazy(() => import('./components/Marketplace'));
 const Settings = lazy(() => import('./components/Settings'));
 const NotFound = lazy(() => import('./components/NotFound'));
+const ClientRoute = lazy(() => import('./components/client/ClientRoute'));
+const ClientHome = lazy(() => import('./components/client/ClientHome'));
+const ClientContracts = lazy(() => import('./components/client/ClientContracts'));
+const ClientContractDetail = lazy(() => import('./components/client/ClientContractDetail'));
+const ClientReservations = lazy(() => import('./components/client/ClientReservations'));
+const ClientProfile = lazy(() => import('./components/client/ClientProfile'));
 
 function App() {
   return (
@@ -52,6 +58,13 @@ function App() {
           <Route path="/" element={<Navigate to={hasSession() ? '/dashboard' : '/login'} />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/espace-client" element={<ClientRoute />}>
+            <Route index element={<ClientHome />} />
+            <Route path="contrats" element={<ClientContracts />} />
+            <Route path="contrats/:id" element={<ClientContractDetail />} />
+            <Route path="reservations" element={<ClientReservations />} />
+            <Route path="profil" element={<ClientProfile />} />
+          </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/vehicles" element={<Vehicles />} />

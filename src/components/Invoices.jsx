@@ -135,6 +135,7 @@ const Invoices = () => {
             render: (v, inv) => (
                 <span className="font-bold text-on-surface">
                     {v}
+                    <div className="text-label-sm font-normal text-text-muted">{inv.client_name}</div>
                     {inv.credit_notes?.length > 0 && (
                         <Button variant="ghost" size="sm" onClick={() => setExpanded(expanded === inv.id ? null : inv.id)} aria-expanded={expanded === inv.id}>
                             {t('u.avoir_s', { n: inv.credit_notes.length })}
@@ -143,11 +144,18 @@ const Invoices = () => {
                 </span>
             ),
         },
-        { key: 'client_name', label: t('u.client'), sortable: true },
         { key: 'date_emission', label: t('u.date'), sortable: true, render: (v) => formatDate(v) },
-        { key: 'montant_ht', label: t('u.ht'), align: 'right', sortable: true, render: (v) => formatMoney(v) },
-        { key: 'montant_tva', label: t('u.tva'), align: 'right', render: (v) => formatMoney(v) },
-        { key: 'montant_ttc', label: t('u.ttc'), align: 'right', sortable: true, render: (v) => <strong>{formatMoney(v)}</strong> },
+        {
+            key: 'montant_ttc', label: t('u.ttc'), align: 'right', sortable: true,
+            render: (v, inv) => (
+                <>
+                    <div><strong>{formatMoney(v)}</strong></div>
+                    <div className="text-label-sm text-text-muted">
+                        {t('u.ht')} {formatMoney(inv.montant_ht)} · {t('u.tva')} {formatMoney(inv.montant_tva)}
+                    </div>
+                </>
+            ),
+        },
         {
             key: 'statut', label: t('u.statut'),
             render: (v) => <StatusBadge status={v} />,

@@ -18,6 +18,7 @@ const renderAt = (path, roles) =>
         <MemoryRouter initialEntries={[path]}>
             <Routes>
                 <Route path="/login" element={<p>login page</p>} />
+                <Route path="/espace-client" element={<p>client home</p>} />
                 <Route path="/dashboard" element={<p>dashboard page</p>} />
                 <Route element={<ProtectedRoute roles={roles} />}>
                     <Route path="/secret" element={<p>secret page</p>} />
@@ -38,10 +39,10 @@ describe('ProtectedRoute', () => {
         expect(screen.getByText('secret page')).toBeInTheDocument();
     });
 
-    it('refuse un compte CLIENT', () => {
+    it('renvoie un compte CLIENT vers son espace, sans accès au personnel', () => {
         setTokens({ access: jwt({ role: 'CLIENT' }), refresh: 'r' });
         renderAt('/secret');
-        expect(screen.getByText('login page')).toBeInTheDocument();
+        expect(screen.getByText('client home')).toBeInTheDocument();
     });
 
     it('renvoie un OWNER hors d\'une route SUPERADMIN vers le dashboard', () => {

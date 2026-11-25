@@ -121,10 +121,24 @@ const Maintenance = () => {
     const totalCost = visible.reduce((s, r) => s + Number(r.cost || 0), 0);
 
     const columns = [
-        { key: 'date', label: t('u.date'), sortable: true, render: (v) => formatDate(v) },
-        { key: 'vehicle_matricule', label: t('u.vhicule'), sortable: true, render: (v) => <strong>{v}</strong> },
-        { key: 'type_label', label: t('u.type'), sortable: true, render: (_, r) => typeLabels[r.type] || r.type_label },
-        { key: 'km', label: t('u.km'), align: 'right', sortable: true, render: (v) => formatNumber(v) },
+        {
+            key: 'date', label: t('u.date'), sortable: true,
+            render: (v, r) => (
+                <>
+                    <div>{formatDate(v)}</div>
+                    <div className="text-label-sm text-text-muted">{formatNumber(r.km)} {t('veh.kmUnit')}</div>
+                </>
+            ),
+        },
+        {
+            key: 'vehicle_matricule', label: t('u.vhicule'), sortable: true,
+            render: (v, r) => (
+                <>
+                    <div><strong>{v}</strong></div>
+                    <div className="text-label-sm text-text-muted">{typeLabels[r.type] || r.type_label}</div>
+                </>
+            ),
+        },
         { key: 'cost', label: t('u.cot'), align: 'right', sortable: true, render: (v) => formatMoney(v) },
         {
             key: 'prochain_km', label: t('u.prochaine_chance'),

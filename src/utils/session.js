@@ -1,5 +1,8 @@
 // Gestion centralisée de la session (tokens JWT).
 export const STAFF_ROLES = ['OWNER', 'EMPLOYEE', 'SUPERADMIN'];
+export const CLIENT_ROLE = 'CLIENT';
+// Page d'accueil selon le rôle : le personnel va au tableau de bord, le client à son espace.
+export const homePathFor = (role) => (role === CLIENT_ROLE ? '/espace-client' : '/dashboard');
 
 export const getAccessToken = () => localStorage.getItem('access_token');
 export const getRefreshToken = () => localStorage.getItem('refresh_token');
