@@ -154,11 +154,21 @@ const Reports = () => {
                             <Table
                                 columns={[
                                     { key: 'time', label: t('u.heure') },
-                                    { key: 'client', label: t('u.client') },
-                                    { key: 'vehicle', label: t('u.vhicule') },
-                                    { key: 'method', label: t('u.mode') },
-                                    { key: 'reference', label: t('u.rfrence') },
-                                    { key: 'received_by', label: t('u.reu_par') },
+                                    {
+                                        key: 'client', label: t('u.client'),
+                                        render: (v, r) => (<><div>{v}</div><div className="text-label-sm text-text-muted">{r.vehicle}</div></>),
+                                    },
+                                    {
+                                        key: 'method', label: t('u.mode'),
+                                        render: (v, r) => (
+                                            <>
+                                                <div>{v}</div>
+                                                {(r.reference || r.received_by) && (
+                                                    <div className="text-label-sm text-text-muted">{[r.reference, r.received_by].filter(Boolean).join(' · ')}</div>
+                                                )}
+                                            </>
+                                        ),
+                                    },
                                     { key: 'amount', label: t('u.montant'), right: true, render: money },
                                 ]}
                                 rows={data.payments || []}
@@ -175,8 +185,10 @@ const Reports = () => {
                             </div>
                             <Table
                                 columns={[
-                                    { key: 'matricule', label: t('u.matricule') },
-                                    { key: 'vehicle', label: t('u.vhicule') },
+                                    {
+                                        key: 'vehicle', label: t('u.vhicule'),
+                                        render: (v, r) => (<><div>{v}</div><div className="text-label-sm text-text-muted">{r.matricule}</div></>),
+                                    },
                                     { key: 'rentals', label: t('u.locations'), right: true },
                                     { key: 'days_rented', label: t('u.jours_lous'), right: true },
                                     { key: 'occupancy_rate', label: 'Occupation', right: true, render: v => `${v} %` },
@@ -215,8 +227,10 @@ const Reports = () => {
                             </div>
                             <Table
                                 columns={[
-                                    { key: 'matricule', label: t('u.matricule') },
-                                    { key: 'vehicle', label: t('u.vhicule') },
+                                    {
+                                        key: 'vehicle', label: t('u.vhicule'),
+                                        render: (v, r) => (<><div>{v}</div><div className="text-label-sm text-text-muted">{r.matricule}</div></>),
+                                    },
                                     { key: 'revenue', label: t('u.revenus'), right: true, render: money },
                                     { key: 'expenses', label: t('u.dpenses'), right: true, render: money },
                                     { key: 'net', label: t('u.net'), right: true, render: (v) => <span className={Number(v) < 0 ? 'text-danger-dark font-bold' : 'font-bold'}>{money(v)}</span> },
@@ -229,8 +243,10 @@ const Reports = () => {
                     {tab === 'clients' && (
                         <Table
                             columns={[
-                                { key: 'client', label: t('u.client') },
-                                { key: 'telephone', label: t('u.tlphone') },
+                                {
+                                    key: 'client', label: t('u.client'),
+                                    render: (v, r) => (<><div>{v}</div><div className="text-label-sm text-text-muted">{r.telephone}</div></>),
+                                },
                                 { key: 'contracts', label: t('u.contrats'), right: true },
                                 { key: 'total', label: t('u.total'), right: true, render: money },
                                 { key: 'paid', label: t('u.pay'), right: true, render: money },
