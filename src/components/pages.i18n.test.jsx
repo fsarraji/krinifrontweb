@@ -55,7 +55,7 @@ describe('Vehicles page', () => {
         renderPage('ar', <Vehicles />);
         expect(await screen.findByText('إدارة الأسطول')).toBeInTheDocument();
         expect(screen.getByText('إجمالي الأسطول')).toBeInTheDocument();
-        expect(screen.getByText('الترقيم')).toBeInTheDocument();
+        expect(screen.getByText('السيارة')).toBeInTheDocument();
         expect(screen.getAllByText('متاحة').length).toBeGreaterThan(0);
     });
 });

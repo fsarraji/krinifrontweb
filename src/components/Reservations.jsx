@@ -227,8 +227,15 @@ const Reservations = () => {
                 );
             },
         },
-        { key: 'vehicle_name', label: t('res.col.vehicle'), className: 'text-on-surface-variant' },
-        { key: 'dates', label: t('res.col.dates'), className: 'text-on-surface-variant', render: (_, r) => requestDates(r) },
+        {
+            key: 'vehicle_name', label: t('res.col.vehicle'), className: 'text-on-surface-variant',
+            render: (v, r) => (
+                <>
+                    <div className="font-medium">{v}</div>
+                    <div className="text-label-sm">{requestDates(r)}</div>
+                </>
+            ),
+        },
         { key: 'prix_par_jour', label: t('res.col.price'), render: (v) => (v ? <strong>{formatMoney(v)}</strong> : '—') },
         { key: 'statut', label: t('res.col.status'), render: (v) => <StatusBadge status={v} /> },
         {

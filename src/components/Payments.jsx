@@ -68,7 +68,7 @@ const Payments = () => {
         return (
             <div className="flex flex-col gap-6">
                 <div className="h-8 w-64 bg-slate-200 animate-pulse rounded-xl"></div>
-                <SkeletonTable rows={5} cols={6} />
+                <SkeletonTable rows={5} cols={4} />
             </div>
         );
     }
@@ -135,8 +135,15 @@ const Payments = () => {
                 rows={paginatedPayments}
                 emptyTitle={t('payments.empty')}
                 columns={[
-                    { key: 'id', label: t('payments.col.id'), className: 'whitespace-nowrap text-xs font-bold text-text-muted', render: (v) => `#${v.toString().padStart(4, '0')}` },
-                    { key: 'payment_date', label: t('payments.col.date'), className: 'whitespace-nowrap font-medium', render: (_, p) => formatDateTime(p.payment_date || p.created_at) },
+                    {
+                        key: 'payment_date', label: t('payments.col.date'), className: 'whitespace-nowrap',
+                        render: (_, p) => (
+                            <>
+                                <div className="font-medium">{formatDateTime(p.payment_date || p.created_at)}</div>
+                                <div className="text-label-sm font-bold text-text-muted">#{p.id.toString().padStart(4, '0')}</div>
+                            </>
+                        ),
+                    },
                     {
                         key: 'contract', label: t('payments.col.contract'), className: 'whitespace-nowrap',
                         render: (v) => (
@@ -147,10 +154,14 @@ const Payments = () => {
                         ),
                     },
                     {
-                        key: 'payment_method', label: t('payments.col.method'), className: 'whitespace-nowrap',
-                        render: (v) => <StatusBadge variant="neutral" label={methodLabel(v)} />,
+                        key: 'payment_method', label: t('payments.col.method'),
+                        render: (v, p) => (
+                            <>
+                                <StatusBadge variant="neutral" label={methodLabel(v)} />
+                                {p.reference && <div className="mt-1 max-w-[180px] truncate font-mono text-label-sm text-text-muted">{p.reference}</div>}
+                            </>
+                        ),
                     },
-                    { key: 'reference', label: t('payments.col.reference'), className: 'whitespace-nowrap text-xs font-mono text-text-muted truncate max-w-[150px]', render: (v) => v || '—' },
                     { key: 'amount', label: t('payments.col.amount'), align: 'right', render: (v) => <span className="font-extrabold text-success">+{formatMoney(v)}</span> },
                 ]}
                 footer={visiblePayments.length > 0 && (

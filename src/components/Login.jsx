@@ -5,7 +5,7 @@ import api from '../api';
 import Button from './ui/Button';
 import Field from './ui/Field';
 import { Input } from './ui/Input';
-import { hasSession, setTokens } from '../utils/session';
+import { getClaims, hasSession, homePathFor, setTokens } from '../utils/session';
 import LanguageSwitcher from './ui/LanguageSwitcher';
 import { useI18n } from '../i18n/context';
 
@@ -45,7 +45,7 @@ const Login = () => {
     const { t } = useI18n();
 
     // Déjà connecté : inutile de revoir l'écran de connexion.
-    if (hasSession()) return <Navigate to="/dashboard" replace />;
+    if (hasSession()) return <Navigate to={homePathFor(getClaims()?.role)} replace />;
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -54,7 +54,7 @@ const Login = () => {
         try {
             const { data } = await api.post('token/', { username, password });
             setTokens({ access: data.access, refresh: data.refresh });
-            navigate('/dashboard');
+            navigate(homePathFor(getClaims()?.role));
         } catch (err) {
             setError(loginErrorMessage(err, t));
         } finally {

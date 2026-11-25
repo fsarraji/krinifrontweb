@@ -307,8 +307,15 @@ const Clients = () => {
                                     </>
                                 ),
                             },
-                            { key: 'cin_passport', label: tr('clients.col.cin'), className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm font-bold">{v}</span> },
-                            { key: 'permis_conduite', label: tr('clients.col.license'), className: 'text-on-surface-variant', render: (v) => <span className="font-mono text-label-sm">{v || '—'}</span> },
+                            {
+                                key: 'cin_passport', label: tr('clients.col.cin'), className: 'text-on-surface-variant',
+                                render: (v, client) => (
+                                    <>
+                                        <div className="font-mono text-label-sm font-bold">{v}</div>
+                                        <div className="font-mono text-label-sm">{tr('clients.col.license')} : {client.permis_conduite || '—'}</div>
+                                    </>
+                                ),
+                            },
                             { key: 'statut', label: tr('clients.col.status'), render: (_, client) => <ClientStatus client={client} /> },
                             {
                                 key: 'actions', label: tr('clients.col.actions'), align: 'right',

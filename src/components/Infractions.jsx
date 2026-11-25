@@ -171,9 +171,15 @@ const Infractions = () => {
                 loading={loading}
                 emptyTitle={t('infra.empty')}
                 columns={[
-                    { key: 'reference_pv', label: t('infra.pv'), className: 'font-semibold' },
-                    { key: 'matricule', label: t('infra.plate') },
-                    { key: 'date_infraction', label: t('infra.date'), render: (v) => formatDate(v) },
+                    {
+                        key: 'reference_pv', label: t('infra.pv'),
+                        render: (v, row) => (
+                            <>
+                                <div className="font-semibold">{v}</div>
+                                <div className="text-label-sm text-text-muted">{row.matricule} · {formatDate(row.date_infraction)}</div>
+                            </>
+                        ),
+                    },
                     {
                         key: 'contract', label: t('infra.contract'),
                         render: (_, row) => {

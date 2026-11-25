@@ -174,8 +174,15 @@ const Subscriptions = () => {
                             </div>
                         ),
                     },
-                    { key: 'plan', label: t('u.plan'), render: (v) => <StatusBadge variant="info" label={planLabel(v)} /> },
-                    { key: 'price', label: t('u.prix_mensuel_mad'), render: (v) => <strong>{formatMoney(v)}</strong> },
+                    {
+                        key: 'plan', label: t('u.plan'),
+                        render: (v, r) => (
+                            <>
+                                <StatusBadge variant="info" label={planLabel(v)} />
+                                <div className="mt-1 text-label-sm font-bold">{formatMoney(r.price)}</div>
+                            </>
+                        ),
+                    },
                     {
                         key: 'start_date', label: t('u.priode'),
                         render: (_, sub) => (

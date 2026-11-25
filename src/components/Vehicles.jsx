@@ -177,7 +177,7 @@ const Vehicles = () => {
             <div className="flex flex-col gap-6">
                 <div className="h-8 w-64 bg-slate-200 animate-pulse rounded-xl"></div>
                 <SkeletonCards count={4} />
-                <SkeletonTable rows={6} cols={7} />
+                <SkeletonTable rows={6} cols={5} />
             </div>
         );
     }
@@ -262,13 +262,20 @@ const Vehicles = () => {
                                         <div>
                                             <span className="font-semibold text-on-surface">{vehicle.marque_name} {vehicle.modele_name}</span>
                                             <span className="ms-1.5 font-normal text-label-sm text-text-muted">{vehicle.annee}</span>
+                                            <div className="text-label-sm text-text-muted">{vehicle.matricule_actuel || vehicle.matricule}</div>
                                         </div>
                                     </div>
                                 ),
                             },
-                            { key: 'matricule', label: t('veh.col.plate'), className: 'text-on-surface-variant', render: (_, v) => v.matricule_actuel || v.matricule },
-                            { key: 'carburant', label: t('veh.col.fuel'), className: 'text-on-surface-variant' },
-                            { key: 'kilometrage', label: t('veh.col.km'), className: 'text-on-surface-variant', render: (v) => `${formatNumber(v ? parseInt(v, 10) : 0)} ${t('veh.kmUnit')}` },
+                            {
+                                key: 'kilometrage', label: t('veh.col.km'), className: 'text-on-surface-variant',
+                                render: (v, vehicle) => (
+                                    <>
+                                        <div>{formatNumber(v ? parseInt(v, 10) : 0)} {t('veh.kmUnit')}</div>
+                                        {vehicle.carburant && <div className="text-label-sm">{vehicle.carburant}</div>}
+                                    </>
+                                ),
+                            },
                             {
                                 key: 'statut', label: t('veh.col.status'),
                                 render: (_, vehicle) => (vehicle.is_deleted ? (
